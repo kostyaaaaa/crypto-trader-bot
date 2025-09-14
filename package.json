@@ -2,7 +2,7 @@
   "name": "crypto-trader-bot",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./src/index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js"
@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "nodemon": "^3.1.10"
-  }
+    "nodemon": "^3.1.10",
+    "ws": "^8.18.3"
+  },
+  "type": "module"
 }
