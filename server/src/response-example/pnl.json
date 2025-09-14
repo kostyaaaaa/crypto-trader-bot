@@ -1,0 +1,22 @@
+[
+  {
+    "symbol": "MILKUSDT",
+    "incomeType": "REALIZED_PNL",
+    "income": "0.00306233",
+    "asset": "USDT",
+    "time": 1757773711000,
+    "info": "11989658",
+    "tranId": 10082011989658,
+    "tradeId": "11989658"
+  },
+  {
+    "symbol": "MILKUSDT",
+    "incomeType": "REALIZED_PNL",
+    "income": "0.03106086",
+    "asset": "USDT",
+    "time": 1757773711000,
+    "info": "11989659",
+    "tranId": 10082011989659,
+    "tradeId": "11989659"
+  }
+]
