@@ -1,0 +1,20 @@
+{
+  "name": "trader-bot",
+  "version": "1.0.0",
+  "main": "./src/index.js",
+  "scripts": {
+    "dev": "nodemon --config ./.nodemon.json src/index.js",
+    "start": "node src/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "type": "module",
+  "dependencies": {
+    "axios": "^1.12.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "nodemon": "^3.1.10",
+    "ws": "^8.18.3"
+  }
+}
