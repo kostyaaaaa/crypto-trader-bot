@@ -1,0 +1,37 @@
+{
+  "hash": "01be2fda",
+  "configHash": "05f52a26",
+  "lockfileHash": "cb7baae8",
+  "browserHash": "508495da",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "cda159bb",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "20786b65",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "23285bf1",
+      "needsInterop": true
+    },
+    "react-apexcharts": {
+      "src": "../../node_modules/react-apexcharts/dist/react-apexcharts.min.js",
+      "file": "react-apexcharts.js",
+      "fileHash": "f5a7354c",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "chunk-7CE7OA3O": {
+      "file": "chunk-7CE7OA3O.js"
+    }
+  }
+}
