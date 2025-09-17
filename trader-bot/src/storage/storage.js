@@ -10,7 +10,7 @@ const USE_FILES = process.env.USE_FILES === 'true';
  * @param {object} doc - документ { symbol, time, ... }
  * @param {number} [maxDocs=2000] - максимум документів для зберігання
  */
-export async function saveDoc(collection, doc, maxDocs = 2000) {
+export async function saveDoc(collection, doc, maxDocs = 200) {
   if (USE_FILES) {
     let db = [];
     try {

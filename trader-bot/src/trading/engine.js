@@ -1,15 +1,36 @@
 // trading/engine.js
 import { loadDocs } from '../storage/storage.js';
 import { calculatePositionSize } from './risk.js';
-import { addPosition } from './positions.js';
+import { addPosition, getActivePositions } from './positions.js';
 import { preparePosition } from './prepare.js';
 
 export async function tradingEngine(symbol, config) {
   const lookback = 3;
   const analysisHistory = await loadDocs('analysis', symbol, lookback);
+  const activePositions = await getActivePositions(symbol);
+  if (activePositions.length > 0) {
+    // console.log(`⚠️ ${symbol}: позиція вже відкрита, нову не створюю`);
+    return;
+  }
+  // cooldown: дивимось останню угоду в history
+  const history = await loadDocs('history', symbol, 50);
+  if (history?.length) {
+    const lastClosed = [...history].reverse().find((p) => p.symbol === symbol);
+    if (lastClosed?.closedAt) {
+      const minutesSince =
+        (Date.now() - new Date(lastClosed.closedAt).getTime()) / 60000;
+      const cooldown = config.strategy.entry.cooldownMin || 0;
+      if (minutesSince < cooldown) {
+        console.log(
+          `⏸️ ${symbol}: cooldown ${cooldown}m, залишилось ${(cooldown - minutesSince).toFixed(1)}m`,
+        );
+        return;
+      }
+    }
+  }
 
   if (!analysisHistory || analysisHistory.length < lookback) {
-    console.log(`⚠️ Not enough analysis history for ${symbol}`);
+    // console.log(`⚠️ Not enough analysis history for ${symbol}`);
     return;
   }
 
@@ -34,7 +55,7 @@ export async function tradingEngine(symbol, config) {
   const { scores } = analysis;
 
   const minScore = entry.minScore[majority];
-  // if (scores[majority] < minScore) return;
+  if (scores[majority] < minScore) return;
 
   // 4. Розрахунок розміру угоди
   const size = calculatePositionSize({

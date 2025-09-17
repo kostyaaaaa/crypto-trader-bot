@@ -6,13 +6,15 @@ import { analyzeOpenInterest } from '../modules/openinterest/analyze-openinteres
 import { analyzeVolatility } from '../modules/volatility/analyze-volatility.js';
 import { analyzeFunding } from '../modules/funding/analyze-funding.js';
 import { analyzeCorrelation } from '../modules/correlation/analyze-correlation.js';
-import { saveDoc } from '../storage/storage.js';
+import { saveDoc, loadDocs } from '../storage/storage.js';
+import { aggregateCandles } from '../utils/candles.js';
 
 export async function finalAnalyzer({
   symbol = 'ETHUSDT',
   analysisConfig = {},
 } = {}) {
   const {
+    candleTimeframe = '1m', // нове поле: 1m або 5m
     oiWindow = 10,
     liqWindow = 20,
     liqSentWindow = 5,
@@ -23,10 +25,15 @@ export async function finalAnalyzer({
     moduleThresholds = {}, // теж з analysisConfig
   } = analysisConfig;
 
+  // --- завантажуємо сирі 1m свічки ---
+  const rawCandles = await loadDocs('candles', symbol, 500);
+  // --- агрегуємо якщо треба ---
+  const candles = aggregateCandles(rawCandles, candleTimeframe);
+
   const modules = {};
 
   // --- Trend (EMA/RSI) ---
-  modules.trend = await analyzeCandles(symbol);
+  modules.trend = await analyzeCandles(symbol, candles);
 
   // --- Liquidity ---
   modules.liquidity = await analyzeLiquidity(symbol, liqWindow);
@@ -53,8 +60,7 @@ export async function finalAnalyzer({
       const strength = v[side] || 0;
       const threshold = moduleThresholds[k] || 0;
 
-      // Якщо сила сигналу нижча за поріг — ігноруємо
-      if (strength < threshold) return acc;
+      if (strength < threshold) return acc; // відкидаємо слабкі сигнали
 
       return acc + strength * (weights[k] || 0);
     }, 0);
@@ -83,10 +89,11 @@ export async function finalAnalyzer({
   const result = {
     time: new Date().toISOString(),
     symbol,
+    timeframe: candleTimeframe, // записуємо у результат
     modules,
     scores: {
-      LONG: scoreLONG.toFixed(1),
-      SHORT: scoreSHORT.toFixed(1),
+      LONG: Number(scoreLONG.toFixed(1)),
+      SHORT: Number(scoreSHORT.toFixed(1)),
     },
     coverage: `${filledModules}/${Object.keys(modules).length}`,
     bias,
