@@ -1,4 +1,6 @@
-export const options: any = {
+import type { ApexOptions } from 'apexcharts';
+
+export const options: ApexOptions = {
   series: [
     {
       data: [

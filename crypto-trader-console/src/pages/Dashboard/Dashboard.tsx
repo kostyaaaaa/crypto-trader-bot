@@ -1,11 +1,11 @@
 import { useState, type FC } from 'react';
 import { CardWrapper, CustomChart, Checkbox } from '../../components';
 import './Dashboard.css';
-import { availibleCoinList } from './constant';
+import { availableCoinList } from './constant';
 import useDashboard from './useDashboard';
 
 const Dashboard: FC = () => {
-  const [coinList, setCoinList] = useState(availibleCoinList);
+  const [coinList, setCoinList] = useState(availableCoinList);
 
   const { spotUSDBalance, futuresUSDBalance, accountPnlData } = useDashboard();
   const currentPnl = accountPnlData?.realizedPnL ?? 0;
@@ -14,7 +14,7 @@ const Dashboard: FC = () => {
   const handleChangeCoinList = (id: string) => () =>
     setCoinList((prevList) =>
       prevList.map((coin) =>
-        coin.id === id ? { ...coin, isAvailible: !coin.isAvailible } : coin,
+        coin.id === id ? { ...coin, isAvailable: !coin.isAvailable } : coin,
       ),
     );
 
@@ -46,7 +46,7 @@ const Dashboard: FC = () => {
           <Checkbox
             key={coin.id}
             label={coin.label}
-            checked={coin.isAvailible}
+            checked={coin.isAvailable}
             handleChange={handleChangeCoinList(coin.id)}
           />
         ))}

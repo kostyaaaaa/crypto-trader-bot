@@ -1,0 +1,124 @@
+name: CI - Build and Test All Projects
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  # Test Server Project
+  test-server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./server
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './server/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check JavaScript syntax
+        run: |
+          echo "Checking syntax for all JavaScript files..."
+          find src -name "*.js" -exec node --check {} \;
+
+      - name: Verify server can start (dry run)
+        run: |
+          echo "Verifying server entry point..."
+          node --check src/index.js
+          echo "✅ Server syntax check passed"
+
+  # Test Crypto Trader Console (React/TypeScript)
+  test-console:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./crypto-trader-console
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './crypto-trader-console/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript compilation
+        run: npx tsc -b --noEmit
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Build project
+        run: npm run build
+
+      - name: Verify build output
+        run: |
+          if [ -d "dist" ]; then
+            echo "✅ Build successful - dist folder created"
+            ls -la dist/
+          else
+            echo "❌ Build failed - dist folder not found"
+            exit 1
+          fi
+
+  # Test Trader Bot Project
+  test-trader-bot:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./trader-bot
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './trader-bot/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check JavaScript syntax
+        run: |
+          echo "Checking syntax for all JavaScript files..."
+          find src -name "*.js" -exec node --check {} \;
+
+      - name: Verify trader bot can start (dry run)
+        run: |
+          echo "Verifying trader bot entry point..."
+          node --check src/index.js
+          echo "✅ Trader bot syntax check passed"
+
+  # Summary job that depends on all others
+  ci-complete:
+    runs-on: ubuntu-latest
+    needs: [test-server, test-console, test-trader-bot]
+
+    steps:
+      - name: All checks passed
+        run: |
+          echo "🎉 All projects passed compilation and build checks!"
+          echo "✅ Server: JavaScript syntax validated"
+          echo "✅ Console: TypeScript compiled, linted, and built successfully"  
+          echo "✅ Trader Bot: JavaScript syntax validated"
+          echo ""
+          echo "Ready for merge! 🚀"
