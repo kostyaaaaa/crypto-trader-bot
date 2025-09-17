@@ -34,7 +34,8 @@ const useDashboard = () => {
       const data = await getSpotBalance();
       setSpotBalance(
         data.balances.filter(
-          (b: any) => parseFloat(b.free) > 0 || parseFloat(b.locked) > 0,
+          (b: { free: string; locked: string }) =>
+            parseFloat(b.free) > 0 || parseFloat(b.locked) > 0,
         ),
       );
 
@@ -49,7 +50,8 @@ const useDashboard = () => {
       const data = await getFuturesBalance();
       setFuturesBalance(
         data.positions.filter(
-          (b: any) => parseFloat(b.free) > 0 || parseFloat(b.locked) > 0,
+          // @ts-expect-error TODO: fix this
+          (b) => parseFloat(b.free) > 0 || parseFloat(b.locked) > 0,
         ),
       );
 
