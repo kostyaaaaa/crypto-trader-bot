@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "prettier": "prettier --write .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "install": "cd crypto-trader-console && npm install && cd ../trader-bot && npm install && cd ../server && npm install"
   },
   "author": "",
   "license": "ISC",
