@@ -16,9 +16,7 @@
       }
     ],
     "riskUsd": 1,
-    "analysisRefs": [
-      "2025-09-17T14:33:55.925Z"
-    ],
+    "analysisRefs": ["2025-09-17T14:33:55.925Z"],
     "lastAddAt": "2025-09-17T15:02:10.197Z",
     "adds": 1,
     "updates": [
@@ -72,9 +70,7 @@
       }
     ],
     "riskUsd": 1,
-    "analysisRefs": [
-      "2025-09-17T14:37:12.616Z"
-    ],
+    "analysisRefs": ["2025-09-17T14:37:12.616Z"],
     "lastPartialAt": "2025-09-17T14:41:10.088Z",
     "updates": [
       {
@@ -118,9 +114,7 @@
       }
     ],
     "riskUsd": 1,
-    "analysisRefs": [
-      "2025-09-17T14:46:10.080Z"
-    ],
+    "analysisRefs": ["2025-09-17T14:46:10.080Z"],
     "lastAddAt": "2025-09-17T14:52:10.164Z",
     "adds": 2,
     "updates": [
@@ -182,9 +176,7 @@
       }
     ],
     "riskUsd": 1,
-    "analysisRefs": [
-      "2025-09-17T15:15:10.108Z"
-    ],
+    "analysisRefs": ["2025-09-17T15:15:10.108Z"],
     "lastPartialAt": "2025-09-17T15:19:11.245Z",
     "updates": [
       {
@@ -236,9 +228,7 @@
       }
     ],
     "riskUsd": 1,
-    "analysisRefs": [
-      "2025-09-17T15:25:11.250Z"
-    ],
+    "analysisRefs": ["2025-09-17T15:25:11.250Z"],
     "lastAddAt": "2025-09-17T15:30:11.316Z",
     "adds": 1,
     "updates": [
@@ -272,9 +262,7 @@
     "stopPrice": 0.13101577,
     "takeProfits": [],
     "riskUsd": 1,
-    "analysisRefs": [
-      "2025-09-17T15:30:11.256Z"
-    ],
+    "analysisRefs": ["2025-09-17T15:30:11.256Z"],
     "lastPartialAt": "2025-09-17T15:44:11.417Z",
     "updates": [
       {
@@ -324,9 +312,7 @@
       }
     ],
     "riskUsd": 1,
-    "analysisRefs": [
-      "2025-09-17T15:47:11.272Z"
-    ],
+    "analysisRefs": ["2025-09-17T15:47:11.272Z"],
     "lastAddAt": "2025-09-17T15:50:11.460Z",
     "adds": 1,
     "updates": [
@@ -384,9 +370,7 @@
       }
     ],
     "riskUsd": 1,
-    "analysisRefs": [
-      "2025-09-17T15:55:32.601Z"
-    ],
+    "analysisRefs": ["2025-09-17T15:55:32.601Z"],
     "lastAddAt": "2025-09-17T16:04:02.699Z",
     "adds": 2,
     "updates": [
@@ -445,9 +429,7 @@
       }
     ],
     "riskUsd": 1,
-    "analysisRefs": [
-      "2025-09-17T16:17:32.636Z"
-    ],
+    "analysisRefs": ["2025-09-17T16:17:32.636Z"],
     "lastPartialAt": "2025-09-17T16:20:02.733Z",
     "updates": [
       {
@@ -489,9 +471,7 @@
       }
     ],
     "riskUsd": 1,
-    "analysisRefs": [
-      "2025-09-17T16:20:32.624Z"
-    ],
+    "analysisRefs": ["2025-09-17T16:20:32.624Z"],
     "lastPartialAt": "2025-09-17T16:31:12.720Z",
     "updates": [
       {
@@ -514,9 +494,7 @@
     "stopPrice": 0.13011846999999999,
     "takeProfits": [],
     "riskUsd": 1,
-    "analysisRefs": [
-      "2025-09-17T16:31:27.686Z"
-    ],
+    "analysisRefs": ["2025-09-17T16:31:27.686Z"],
     "lastPartialAt": "2025-09-17T16:37:09.538Z",
     "updates": [
       {

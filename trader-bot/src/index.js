@@ -1,15 +1,15 @@
-import { TickerStepWS } from "./modules/candles/ticker-step.js";
-import { OrderBookStepWS } from "./modules/orderbook/order-book-step.js";
-import { LiquidationsStepWS } from "./modules/liquidations/liquidations-step.js";
-import { LongShortRatioStep } from "./modules/longshort/long-short-ratio-step.js";
-import { OpenInterestStep } from "./modules/openinterest/open-interest-step.js";
-import { BtcStepWS } from "./modules/correlation/btc-step.js";
-import { FundingStep } from "./modules/funding/funding-step.js";
-import { finalAnalyzer } from "./utils/final-analyzer.js";
-import { tradingEngine } from "./trading/engine.js";
-import { monitorPositions } from "./trading/monitor.js";
+import { TickerStepWS } from './modules/candles/ticker-step.js';
+import { OrderBookStepWS } from './modules/orderbook/order-book-step.js';
+import { LiquidationsStepWS } from './modules/liquidations/liquidations-step.js';
+import { LongShortRatioStep } from './modules/longshort/long-short-ratio-step.js';
+import { OpenInterestStep } from './modules/openinterest/open-interest-step.js';
+import { BtcStepWS } from './modules/correlation/btc-step.js';
+import { FundingStep } from './modules/funding/funding-step.js';
+import { finalAnalyzer } from './utils/final-analyzer.js';
+import { tradingEngine } from './trading/engine.js';
+import { monitorPositions } from './trading/monitor.js';
 
-import { ANALYSIS_CONFIG } from "./constants/mock.js";
+import { ANALYSIS_CONFIG } from './constants/mock.js';
 
 // === 1. Запускаємо BTC WebSocket для кореляції ===
 // BtcStepWS("BTCUSDT");
