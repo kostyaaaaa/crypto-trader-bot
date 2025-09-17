@@ -3,10 +3,10 @@
 // Середній дисбаланс між bid/ask → сила покупців чи продавців
 // 0.5 = баланс, >0.5 → LONG, <0.5 → SHORT
 
-import { loadDocs } from "../../storage/storage.js";
+import { loadDocs } from '../../storage/storage.js';
 
-export async function analyzeLiquidity(symbol = "ETHUSDT", window = 20) {
-  const liquidity = await loadDocs("liquidity", symbol, window);
+export async function analyzeLiquidity(symbol = 'ETHUSDT', window = 20) {
+  const liquidity = await loadDocs('liquidity', symbol, window);
   if (!liquidity || liquidity.length < window) {
     console.log(`⚠️ Not enough liquidity data for ${symbol}, need ${window}`);
     return null;
@@ -14,12 +14,12 @@ export async function analyzeLiquidity(symbol = "ETHUSDT", window = 20) {
 
   // середні показники
   const avgImbalance =
-      liquidity.reduce((s, c) => s + parseFloat(c.avgImbalance), 0) /
-      liquidity.length;
+    liquidity.reduce((s, c) => s + parseFloat(c.avgImbalance), 0) /
+    liquidity.length;
 
   const avgSpread =
-      liquidity.reduce((s, c) => s + parseFloat(c.avgSpread), 0) /
-      liquidity.length;
+    liquidity.reduce((s, c) => s + parseFloat(c.avgSpread), 0) /
+    liquidity.length;
 
   // базові очки: відхилення від 0.5 (тобто рівноваги)
   const diff = avgImbalance - 0.5; // >0 → LONG, <0 → SHORT
@@ -36,9 +36,9 @@ export async function analyzeLiquidity(symbol = "ETHUSDT", window = 20) {
   shortScore = Math.round(Math.max(0, Math.min(100, shortScore)));
 
   // сигнал
-  let signal = "NEUTRAL";
-  if (longScore > shortScore) signal = "LONG";
-  else if (shortScore > longScore) signal = "SHORT";
+  let signal = 'NEUTRAL';
+  if (longScore > shortScore) signal = 'LONG';
+  else if (shortScore > longScore) signal = 'SHORT';
 
   return {
     symbol,

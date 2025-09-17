@@ -3,14 +3,16 @@
 // EMA(9) vs EMA(21) → напрямок тренду
 // RSI(14) → перепроданість/перекупленість
 
-import { EMA, RSI } from "../../utils/getEMAAndRSI.js";
-import { loadDocs } from "../../storage/storage.js";
+import { EMA, RSI } from '../../utils/getEMAAndRSI.js';
+import { loadDocs } from '../../storage/storage.js';
 
-export async function analyzeCandles(symbol = "ETHUSDT") {
-  const candles = await loadDocs("candles", symbol, 100);
+export async function analyzeCandles(symbol = 'ETHUSDT') {
+  const candles = await loadDocs('candles', symbol, 100);
 
   if (!candles || candles.length < 21) {
-    console.log(`⏳ Only ${candles?.length || 0} candles for ${symbol}, need ≥21...`);
+    console.log(
+      `⏳ Only ${candles?.length || 0} candles for ${symbol}, need ≥21...`,
+    );
     return null;
   }
 
@@ -51,9 +53,9 @@ export async function analyzeCandles(symbol = "ETHUSDT") {
   shortScore = Math.max(0, Math.min(100, shortScore));
 
   // визначаємо сигнал
-  let signal = "NEUTRAL";
-  if (longScore > shortScore) signal = "LONG";
-  else if (shortScore > longScore) signal = "SHORT";
+  let signal = 'NEUTRAL';
+  if (longScore > shortScore) signal = 'LONG';
+  else if (shortScore > longScore) signal = 'SHORT';
 
   return {
     symbol,

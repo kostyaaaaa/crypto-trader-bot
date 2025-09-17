@@ -6,22 +6,22 @@
 //
 // Мета: агрегувати ліквідність → середній дисбаланс (imbalance) та спред
 
-import WebSocket from "ws";
-import { saveDoc } from "../../storage/storage.js";
+import WebSocket from 'ws';
+import { saveDoc } from '../../storage/storage.js';
 
-export function OrderBookStepWS(symbol = "BTCUSDT") {
+export function OrderBookStepWS(symbol = 'BTCUSDT') {
   const ws = new WebSocket(
-      `wss://fstream.binance.com/ws/${symbol.toLowerCase()}@depth10@100ms`,
+    `wss://fstream.binance.com/ws/${symbol.toLowerCase()}@depth10@100ms`,
   );
 
   let imbalances = [];
   let spreads = [];
 
-  ws.on("open", () => {
+  ws.on('open', () => {
     console.log(`✅ Connected to Binance OrderBook WS (${symbol})`);
   });
 
-  ws.on("message", (msg) => {
+  ws.on('message', (msg) => {
     const data = JSON.parse(msg.toString());
     if (!data.b || !data.a) return;
 
@@ -29,12 +29,12 @@ export function OrderBookStepWS(symbol = "BTCUSDT") {
     const asks = data.a;
 
     const bidValue = bids.reduce(
-        (sum, [price, qty]) => sum + parseFloat(price) * parseFloat(qty),
-        0,
+      (sum, [price, qty]) => sum + parseFloat(price) * parseFloat(qty),
+      0,
     );
     const askValue = asks.reduce(
-        (sum, [price, qty]) => sum + parseFloat(price) * parseFloat(qty),
-        0,
+      (sum, [price, qty]) => sum + parseFloat(price) * parseFloat(qty),
+      0,
     );
 
     const imbalance = bidValue / (bidValue + askValue);
@@ -44,12 +44,12 @@ export function OrderBookStepWS(symbol = "BTCUSDT") {
     spreads.push(spread);
   });
 
-  ws.on("error", (err) => {
-    console.error("❌ WS error:", err.message);
+  ws.on('error', (err) => {
+    console.error('❌ WS error:', err.message);
   });
 
-  ws.on("close", () => {
-    console.log("⚠️ WS closed, reconnecting...");
+  ws.on('close', () => {
+    console.log('⚠️ WS closed, reconnecting...');
     setTimeout(() => OrderBookStepWS(symbol), 5000);
   });
 
@@ -58,7 +58,7 @@ export function OrderBookStepWS(symbol = "BTCUSDT") {
     if (imbalances.length === 0) return;
 
     const avgImbalance =
-        imbalances.reduce((a, b) => a + b, 0) / imbalances.length;
+      imbalances.reduce((a, b) => a + b, 0) / imbalances.length;
     const avgSpread = spreads.reduce((a, b) => a + b, 0) / spreads.length;
 
     const liquidityCandle = {
@@ -69,7 +69,7 @@ export function OrderBookStepWS(symbol = "BTCUSDT") {
     };
 
     // зберігаємо у storage
-    await saveDoc("liquidity", liquidityCandle);
+    await saveDoc('liquidity', liquidityCandle);
 
     // чистимо буфери
     imbalances = [];

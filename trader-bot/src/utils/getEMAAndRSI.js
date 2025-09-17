@@ -11,7 +11,7 @@ export function EMA(values, period) {
   if (!values || values.length < period) return null;
 
   const k = 2 / (period + 1); // множник згладжування
-  let ema = values[0];        // починаємо з першого значення
+  let ema = values[0]; // починаємо з першого значення
 
   for (let i = 1; i < values.length; i++) {
     ema = values[i] * k + ema * (1 - k);
@@ -40,5 +40,5 @@ export function RSI(values, period = 14) {
   }
 
   const rs = gains / (losses || 1); // щоб уникнути ділення на 0
-  return 100 - 100 / (1 + rs);      // формула RSI
+  return 100 - 100 / (1 + rs); // формула RSI
 }

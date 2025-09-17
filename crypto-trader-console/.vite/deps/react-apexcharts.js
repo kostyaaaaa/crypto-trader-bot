@@ -3568,15 +3568,13 @@ var init_apexcharts_esm = __esm({
       },
       Defs: {
         pattern: K(function (t2, e2, i2) {
-          return this.put(new ce())
-            .update(i2)
-            .attr({
-              x: 0,
-              y: 0,
-              width: t2,
-              height: e2,
-              patternUnits: 'userSpaceOnUse',
-            });
+          return this.put(new ce()).update(i2).attr({
+            x: 0,
+            y: 0,
+            width: t2,
+            height: e2,
+            patternUnits: 'userSpaceOnUse',
+          });
         }),
       },
     }),
@@ -20457,13 +20455,11 @@ var init_apexcharts_esm = __esm({
                       updateRot: function () {},
                       createHandle: function (t4, e4, i3, a3, s2) {
                         return 'l' === s2 || 'r' === s2
-                          ? t4
-                              .circle(8)
-                              .css({
-                                'stroke-width': 1,
-                                stroke: '#333',
-                                fill: '#fff',
-                              })
+                          ? t4.circle(8).css({
+                              'stroke-width': 1,
+                              stroke: '#333',
+                              fill: '#fff',
+                            })
                           : t4.circle(0);
                       },
                       updateHandle: function (t4, e4) {
@@ -27576,15 +27572,13 @@ var init_apexcharts_esm = __esm({
                 })),
                 t3.forEach(function (t4, n3) {
                   var o3 = t4.length === i2.globals.dataPoints,
-                    l3 = e2.graphics
-                      .group()
-                      .attr({
-                        class: 'apexcharts-series',
-                        'data:longestSeries': o3,
-                        seriesName: v.escapeString(i2.globals.seriesNames[n3]),
-                        rel: n3 + 1,
-                        'data:realIndex': n3,
-                      });
+                    l3 = e2.graphics.group().attr({
+                      class: 'apexcharts-series',
+                      'data:longestSeries': o3,
+                      seriesName: v.escapeString(i2.globals.seriesNames[n3]),
+                      rel: n3 + 1,
+                      'data:realIndex': n3,
+                    });
                   ((e2.dataRadiusOfPercent[n3] = []),
                     (e2.dataRadius[n3] = []),
                     (e2.angleArr[n3] = []),

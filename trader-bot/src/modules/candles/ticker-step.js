@@ -2,20 +2,20 @@
 // --- Збирає 1-хвилинні свічки (kline_1m) + дані з bookTicker (bid/ask) ---
 // Використовується для збереження історії "candle + середній bid/ask/spread"
 
-import WebSocket from "ws";
-import { saveDoc } from "../../storage/storage.js";
+import WebSocket from 'ws';
+import { saveDoc } from '../../storage/storage.js';
 
-export function TickerStepWS(symbol = "ETHUSDT") {
+export function TickerStepWS(symbol = 'ETHUSDT') {
   const lower = symbol.toLowerCase();
 
   // WS для 1-хв свічок
   const wsKline = new WebSocket(
-      `wss://fstream.binance.com/ws/${lower}@kline_1m`,
+    `wss://fstream.binance.com/ws/${lower}@kline_1m`,
   );
 
   // WS для best bid/ask (оновлюється дуже часто)
   const wsBook = new WebSocket(
-      `wss://fstream.binance.com/ws/${lower}@bookTicker`,
+    `wss://fstream.binance.com/ws/${lower}@bookTicker`,
   );
 
   // буфери для середнього bid/ask за хвилину
@@ -24,7 +24,7 @@ export function TickerStepWS(symbol = "ETHUSDT") {
   let count = 0;
 
   // Кожен update з bookTicker → накопичуємо bid/ask
-  wsBook.on("message", (msg) => {
+  wsBook.on('message', (msg) => {
     const data = JSON.parse(msg.toString());
     bidSum += parseFloat(data.b); // best bid
     askSum += parseFloat(data.a); // best ask
@@ -32,7 +32,7 @@ export function TickerStepWS(symbol = "ETHUSDT") {
   });
 
   // Kline (свічки): приходять кожну хвилину
-  wsKline.on("message", async (msg) => {
+  wsKline.on('message', async (msg) => {
     const data = JSON.parse(msg.toString());
     const k = data.k;
 
@@ -52,7 +52,7 @@ export function TickerStepWS(symbol = "ETHUSDT") {
       };
 
       // зберігаємо у storage (файл або Mongo)
-      await saveDoc("candles", candle);
+      await saveDoc('candles', candle);
 
       // чистимо буфери
       bidSum = 0;
@@ -61,13 +61,13 @@ export function TickerStepWS(symbol = "ETHUSDT") {
     }
   });
 
-  wsKline.on("open", () => console.log(`✅ Connected to ${symbol} kline_1m`));
-  wsBook.on("open", () => console.log(`✅ Connected to ${symbol} bookTicker`));
+  wsKline.on('open', () => console.log(`✅ Connected to ${symbol} kline_1m`));
+  wsBook.on('open', () => console.log(`✅ Connected to ${symbol} bookTicker`));
 
-  wsKline.on("error", (err) =>
-      console.error("❌ Kline WS error:", err.message),
+  wsKline.on('error', (err) =>
+    console.error('❌ Kline WS error:', err.message),
   );
-  wsBook.on("error", (err) =>
-      console.error("❌ BookTicker WS error:", err.message),
+  wsBook.on('error', (err) =>
+    console.error('❌ BookTicker WS error:', err.message),
   );
 }
