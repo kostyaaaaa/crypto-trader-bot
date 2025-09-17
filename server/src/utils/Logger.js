@@ -18,7 +18,6 @@ class Logger {
     return this;
   }
 
-  // Ensure logs directory exists
   ensureLogsDirectory() {
     if (!fs.existsSync(this.logsDir)) {
       fs.mkdirSync(this.logsDir, { recursive: true });
@@ -32,7 +31,7 @@ class Logger {
 
   // Get log file path for today
   getLogFilePath(level) {
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
     return path.join(this.logsDir, `${today}-${level}.logs`);
   }
 

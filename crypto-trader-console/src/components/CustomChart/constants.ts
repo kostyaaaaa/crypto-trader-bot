@@ -246,15 +246,15 @@ export const options: any = {
     },
   ],
   chart: {
-    type: "candlestick",
+    type: 'candlestick',
     height: 350,
   },
   title: {
-    text: "ETH_USDT",
-    align: "left",
+    text: 'ETH_USDT',
+    align: 'left',
   },
   xaxis: {
-    type: "datetime",
+    type: 'datetime',
   },
   yaxis: {
     tooltip: {

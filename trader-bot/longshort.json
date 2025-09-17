@@ -1,0 +1,586 @@
+[
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:10:00.000Z",
+    "longPct": 73.11,
+    "shortPct": 26.889999999999997,
+    "ratio": 2.7189,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:10:00.000Z",
+    "longPct": 73.11,
+    "shortPct": 26.889999999999997,
+    "ratio": 2.7189,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:15:00.000Z",
+    "longPct": 73.22999999999999,
+    "shortPct": 26.77,
+    "ratio": 2.7355,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:15:00.000Z",
+    "longPct": 73.22999999999999,
+    "shortPct": 26.77,
+    "ratio": 2.7355,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:15:00.000Z",
+    "longPct": 73.22999999999999,
+    "shortPct": 26.77,
+    "ratio": 2.7355,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:20:00.000Z",
+    "longPct": 73.22999999999999,
+    "shortPct": 26.77,
+    "ratio": 2.7355,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:20:00.000Z",
+    "longPct": 73.22999999999999,
+    "shortPct": 26.77,
+    "ratio": 2.7355,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:25:00.000Z",
+    "longPct": 73.2,
+    "shortPct": 26.8,
+    "ratio": 2.7313,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:25:00.000Z",
+    "longPct": 73.2,
+    "shortPct": 26.8,
+    "ratio": 2.7313,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:25:00.000Z",
+    "longPct": 73.2,
+    "shortPct": 26.8,
+    "ratio": 2.7313,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:30:00.000Z",
+    "longPct": 73.32,
+    "shortPct": 26.68,
+    "ratio": 2.7481,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:30:00.000Z",
+    "longPct": 73.32,
+    "shortPct": 26.68,
+    "ratio": 2.7481,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:30:00.000Z",
+    "longPct": 73.32,
+    "shortPct": 26.68,
+    "ratio": 2.7481,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:35:00.000Z",
+    "longPct": 73.42999999999999,
+    "shortPct": 26.57,
+    "ratio": 2.7636,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:35:00.000Z",
+    "longPct": 73.42999999999999,
+    "shortPct": 26.57,
+    "ratio": 2.7636,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:35:00.000Z",
+    "longPct": 73.42999999999999,
+    "shortPct": 26.57,
+    "ratio": 2.7636,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:35:00.000Z",
+    "longPct": 73.42999999999999,
+    "shortPct": 26.57,
+    "ratio": 2.7636,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:35:00.000Z",
+    "longPct": 73.42999999999999,
+    "shortPct": 26.57,
+    "ratio": 2.7636,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:35:00.000Z",
+    "longPct": 73.42999999999999,
+    "shortPct": 26.57,
+    "ratio": 2.7636,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:40:00.000Z",
+    "longPct": 73.47,
+    "shortPct": 26.529999999999998,
+    "ratio": 2.7693,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:40:00.000Z",
+    "longPct": 73.47,
+    "shortPct": 26.529999999999998,
+    "ratio": 2.7693,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:40:00.000Z",
+    "longPct": 73.47,
+    "shortPct": 26.529999999999998,
+    "ratio": 2.7693,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:40:00.000Z",
+    "longPct": 73.47,
+    "shortPct": 26.529999999999998,
+    "ratio": 2.7693,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:40:00.000Z",
+    "longPct": 73.47,
+    "shortPct": 26.529999999999998,
+    "ratio": 2.7693,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:40:00.000Z",
+    "longPct": 73.47,
+    "shortPct": 26.529999999999998,
+    "ratio": 2.7693,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:45:00.000Z",
+    "longPct": 73.5,
+    "shortPct": 26.5,
+    "ratio": 2.7736,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:50:00.000Z",
+    "longPct": 73.47,
+    "shortPct": 26.529999999999998,
+    "ratio": 2.7693,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:50:00.000Z",
+    "longPct": 73.47,
+    "shortPct": 26.529999999999998,
+    "ratio": 2.7693,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:50:00.000Z",
+    "longPct": 73.47,
+    "shortPct": 26.529999999999998,
+    "ratio": 2.7693,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:50:00.000Z",
+    "longPct": 73.47,
+    "shortPct": 26.529999999999998,
+    "ratio": 2.7693,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:50:00.000Z",
+    "longPct": 73.47,
+    "shortPct": 26.529999999999998,
+    "ratio": 2.7693,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:55:00.000Z",
+    "longPct": 73.37,
+    "shortPct": 26.63,
+    "ratio": 2.7552,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:55:00.000Z",
+    "longPct": 73.37,
+    "shortPct": 26.63,
+    "ratio": 2.7552,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:55:00.000Z",
+    "longPct": 73.37,
+    "shortPct": 26.63,
+    "ratio": 2.7552,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:55:00.000Z",
+    "longPct": 73.37,
+    "shortPct": 26.63,
+    "ratio": 2.7552,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T18:55:00.000Z",
+    "longPct": 73.37,
+    "shortPct": 26.63,
+    "ratio": 2.7552,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T19:00:00.000Z",
+    "longPct": 73.35000000000001,
+    "shortPct": 26.650000000000002,
+    "ratio": 2.7523,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T19:05:00.000Z",
+    "longPct": 73.36,
+    "shortPct": 26.640000000000004,
+    "ratio": 2.7538,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T19:05:00.000Z",
+    "longPct": 73.36,
+    "shortPct": 26.640000000000004,
+    "ratio": 2.7538,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T19:05:00.000Z",
+    "longPct": 73.36,
+    "shortPct": 26.640000000000004,
+    "ratio": 2.7538,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T19:05:00.000Z",
+    "longPct": 73.36,
+    "shortPct": 26.640000000000004,
+    "ratio": 2.7538,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T19:05:00.000Z",
+    "longPct": 73.36,
+    "shortPct": 26.640000000000004,
+    "ratio": 2.7538,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T19:10:00.000Z",
+    "longPct": 73.44000000000001,
+    "shortPct": 26.56,
+    "ratio": 2.7651,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T19:10:00.000Z",
+    "longPct": 73.44000000000001,
+    "shortPct": 26.56,
+    "ratio": 2.7651,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-16T19:10:00.000Z",
+    "longPct": 73.44000000000001,
+    "shortPct": 26.56,
+    "ratio": 2.7651,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T05:50:00.000Z",
+    "longPct": 75.26,
+    "shortPct": 24.740000000000002,
+    "ratio": 3.042,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T05:50:00.000Z",
+    "longPct": 75.26,
+    "shortPct": 24.740000000000002,
+    "ratio": 3.042,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T05:50:00.000Z",
+    "longPct": 75.26,
+    "shortPct": 24.740000000000002,
+    "ratio": 3.042,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T05:55:00.000Z",
+    "longPct": 75.19,
+    "shortPct": 24.81,
+    "ratio": 3.0306,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T05:55:00.000Z",
+    "longPct": 75.19,
+    "shortPct": 24.81,
+    "ratio": 3.0306,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T05:55:00.000Z",
+    "longPct": 75.19,
+    "shortPct": 24.81,
+    "ratio": 3.0306,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T05:55:00.000Z",
+    "longPct": 75.19,
+    "shortPct": 24.81,
+    "ratio": 3.0306,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:00:00.000Z",
+    "longPct": 75.22999999999999,
+    "shortPct": 24.77,
+    "ratio": 3.0371,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:00:00.000Z",
+    "longPct": 75.22999999999999,
+    "shortPct": 24.77,
+    "ratio": 3.0371,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:00:00.000Z",
+    "longPct": 75.22999999999999,
+    "shortPct": 24.77,
+    "ratio": 3.0371,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:10:00.000Z",
+    "longPct": 75.4,
+    "shortPct": 24.6,
+    "ratio": 3.065,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:10:00.000Z",
+    "longPct": 75.4,
+    "shortPct": 24.6,
+    "ratio": 3.065,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:10:00.000Z",
+    "longPct": 75.4,
+    "shortPct": 24.6,
+    "ratio": 3.065,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:15:00.000Z",
+    "longPct": 75.38,
+    "shortPct": 24.62,
+    "ratio": 3.0617,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:15:00.000Z",
+    "longPct": 75.38,
+    "shortPct": 24.62,
+    "ratio": 3.0617,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:15:00.000Z",
+    "longPct": 75.38,
+    "shortPct": 24.62,
+    "ratio": 3.0617,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:20:00.000Z",
+    "longPct": 75.39,
+    "shortPct": 24.610000000000003,
+    "ratio": 3.0634,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:20:00.000Z",
+    "longPct": 75.39,
+    "shortPct": 24.610000000000003,
+    "ratio": 3.0634,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:20:00.000Z",
+    "longPct": 75.39,
+    "shortPct": 24.610000000000003,
+    "ratio": 3.0634,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:20:00.000Z",
+    "longPct": 75.39,
+    "shortPct": 24.610000000000003,
+    "ratio": 3.0634,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:25:00.000Z",
+    "longPct": 75.47,
+    "shortPct": 24.529999999999998,
+    "ratio": 3.0766,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:25:00.000Z",
+    "longPct": 75.47,
+    "shortPct": 24.529999999999998,
+    "ratio": 3.0766,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:25:00.000Z",
+    "longPct": 75.47,
+    "shortPct": 24.529999999999998,
+    "ratio": 3.0766,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:25:00.000Z",
+    "longPct": 75.47,
+    "shortPct": 24.529999999999998,
+    "ratio": 3.0766,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:25:00.000Z",
+    "longPct": 75.47,
+    "shortPct": 24.529999999999998,
+    "ratio": 3.0766,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:25:00.000Z",
+    "longPct": 75.47,
+    "shortPct": 24.529999999999998,
+    "ratio": 3.0766,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:30:00.000Z",
+    "longPct": 74.62,
+    "shortPct": 25.380000000000003,
+    "ratio": 2.9401,
+    "signal": "SHORT"
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T06:30:00.000Z",
+    "longPct": 74.62,
+    "shortPct": 25.380000000000003,
+    "ratio": 2.9401,
+    "signal": "SHORT"
+  }
+]
