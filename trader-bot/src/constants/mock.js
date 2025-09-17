@@ -12,7 +12,7 @@ export const ANALYSIS_CONFIG = {
 
       // --- Ваги модулів у підсумковому скорі ---
       weights: {
-        trend: 0.25, // тренд найбільш ваanalysisConfigажливий
+        trend: 0.25, // тренд найбільш ваажливий
         liquidity: 0.2,
         funding: 0.15,
         liquidations: 0.15,
