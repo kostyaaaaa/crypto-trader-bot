@@ -19,8 +19,6 @@ export const ANALYSIS_CONFIG = {
         openInterest: 0.15,
         correlation: 0.1,
       },
-
-      // --- Мінімальна сила сигналів від кожного модуля (0–100) ---
       moduleThresholds: {
         trend: 40,
         liquidity: 30,
