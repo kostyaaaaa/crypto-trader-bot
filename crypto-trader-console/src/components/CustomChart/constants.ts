@@ -1,4 +1,4 @@
-export const options: any = {
+export const options = {
   series: [
     {
       data: [
