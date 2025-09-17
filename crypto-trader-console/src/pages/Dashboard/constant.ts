@@ -1,22 +1,22 @@
-export const availibleCoinList = [
+export const availableCoinList = [
   {
     id: '1',
-    isAvailible: true,
+    isAvailable: true,
     label: 'BTC',
   },
   {
     id: '2',
-    isAvailible: true,
+    isAvailable: true,
     label: 'ETH',
   },
   {
     id: '3',
-    isAvailible: true,
+    isAvailable: true,
     label: 'SOL',
   },
   {
     id: '4',
-    isAvailible: true,
+    isAvailable: true,
     label: 'PEPE',
   },
 ];
