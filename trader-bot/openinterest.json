@@ -1,513 +1,1402 @@
 [
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:15:00.000Z",
-    "price": 0.7045,
-    "openInterest": 533608613,
-    "openInterestValue": 376300793.8876
+    "time": "2025-09-17T14:55:00.000Z",
+    "price": 0.6884,
+    "openInterest": 545945555,
+    "openInterestValue": 376213216.59762007
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T14:50:00.000Z",
+    "price": 0.12837,
+    "openInterest": 87686442,
+    "openInterestValue": 11301028.64496
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T14:55:00.000Z",
+    "price": 0.6888,
+    "openInterest": 545945555,
+    "openInterestValue": 376213216.59762007
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T14:55:00.000Z",
+    "price": 0.12793,
+    "openInterest": 87738380,
+    "openInterestValue": 11272140.114391
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T14:55:00.000Z",
+    "price": 0.6882,
+    "openInterest": 545945555,
+    "openInterestValue": 376213216.59762007
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T14:55:00.000Z",
+    "price": 0.12742,
+    "openInterest": 87738380,
+    "openInterestValue": 11272140.114391
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T14:55:00.000Z",
+    "price": 0.6877,
+    "openInterest": 545945555,
+    "openInterestValue": 376213216.59762007
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T14:55:00.000Z",
+    "price": 0.1276,
+    "openInterest": 87738380,
+    "openInterestValue": 11272140.114391
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T14:55:00.000Z",
+    "price": 0.6896,
+    "openInterest": 545945555,
+    "openInterestValue": 376213216.59762007
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:00:00.000Z",
+    "price": 0.1276,
+    "openInterest": 87096897,
+    "openInterestValue": 11031887.20010031
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T14:55:00.000Z",
+    "price": 0.6919,
+    "openInterest": 545945555,
+    "openInterestValue": 376213216.59762007
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:00:00.000Z",
+    "price": 0.12897,
+    "openInterest": 87096897,
+    "openInterestValue": 11031887.20010031
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:00:00.000Z",
+    "price": 0.6919,
+    "openInterest": 546213987,
+    "openInterestValue": 375659882.15430117
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:00:00.000Z",
+    "price": 0.12856,
+    "openInterest": 87096897,
+    "openInterestValue": 11031887.20010031
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:00:00.000Z",
+    "price": 0.6921,
+    "openInterest": 546213987,
+    "openInterestValue": 375659882.15430117
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:00:00.000Z",
+    "price": 0.12943,
+    "openInterest": 87096897,
+    "openInterestValue": 11031887.20010031
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:00:00.000Z",
+    "price": 0.6915,
+    "openInterest": 546213987,
+    "openInterestValue": 375659882.15430117
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:00:00.000Z",
+    "price": 0.12931,
+    "openInterest": 87096897,
+    "openInterestValue": 11031887.20010031
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:05:00.000Z",
+    "price": 0.6915,
+    "openInterest": 546103256,
+    "openInterestValue": 377685011.8496
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:00:00.000Z",
+    "price": 0.1285,
+    "openInterest": 87096897,
+    "openInterestValue": 11031887.20010031
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:05:00.000Z",
+    "price": 0.12887,
+    "openInterest": 87245993,
+    "openInterestValue": 11276308.15860897
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:05:00.000Z",
+    "price": 0.6909,
+    "openInterest": 546103256,
+    "openInterestValue": 377685011.8496
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:05:00.000Z",
+    "price": 0.6907,
+    "openInterest": 546103256,
+    "openInterestValue": 377685011.8496
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:05:00.000Z",
+    "price": 0.12784,
+    "openInterest": 87245993,
+    "openInterestValue": 11276308.15860897
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:05:00.000Z",
+    "price": 0.6906,
+    "openInterest": 546103256,
+    "openInterestValue": 377685011.8496
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:05:00.000Z",
+    "price": 0.12764,
+    "openInterest": 87245993,
+    "openInterestValue": 11276308.15860897
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:05:00.000Z",
+    "price": 0.6903,
+    "openInterest": 546103256,
+    "openInterestValue": 377685011.8496
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:10:00.000Z",
+    "price": 0.1277,
+    "openInterest": 87343349,
+    "openInterestValue": 11146409.69941749
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:05:00.000Z",
+    "price": 0.6908,
+    "openInterest": 546103256,
+    "openInterestValue": 377685011.8496
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:10:00.000Z",
+    "price": 0.12846,
+    "openInterest": 87343349,
+    "openInterestValue": 11146409.69941749
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:10:00.000Z",
+    "price": 0.6904,
+    "openInterest": 546330921,
+    "openInterestValue": 377077601.6742
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:10:00.000Z",
+    "price": 0.12852,
+    "openInterest": 87343349,
+    "openInterestValue": 11146409.69941749
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:10:00.000Z",
+    "price": 0.6899,
+    "openInterest": 546330921,
+    "openInterestValue": 377077601.6742
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:10:00.000Z",
+    "price": 0.12903,
+    "openInterest": 87343349,
+    "openInterestValue": 11146409.69941749
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:10:00.000Z",
+    "price": 0.6906,
+    "openInterest": 546330921,
+    "openInterestValue": 377077601.6742
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:10:00.000Z",
+    "price": 0.12734,
+    "openInterest": 87343349,
+    "openInterestValue": 11146409.69941749
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:10:00.000Z",
+    "price": 0.6907,
+    "openInterest": 546330921,
+    "openInterestValue": 377077601.6742
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:10:00.000Z",
+    "price": 0.12858,
+    "openInterest": 87343349,
+    "openInterestValue": 11146409.69941749
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:10:00.000Z",
+    "price": 0.6902,
+    "openInterest": 546330921,
+    "openInterestValue": 377077601.6742
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:15:00.000Z",
+    "price": 0.12895,
+    "openInterest": 87436679,
+    "openInterestValue": 11227165.11957502
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:15:00.000Z",
+    "price": 0.6914,
+    "openInterest": 546368634,
+    "openInterestValue": 377453094.02879274
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:15:00.000Z",
+    "price": 0.12952,
+    "openInterest": 87436679,
+    "openInterestValue": 11227165.11957502
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:15:00.000Z",
+    "price": 0.6918,
+    "openInterest": 546368634,
+    "openInterestValue": 377453094.02879274
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:15:00.000Z",
+    "price": 0.12918,
+    "openInterest": 87436679,
+    "openInterestValue": 11227165.11957502
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:15:00.000Z",
+    "price": 0.6913,
+    "openInterest": 546368634,
+    "openInterestValue": 377453094.02879274
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:15:00.000Z",
+    "price": 0.12933,
+    "openInterest": 87436679,
+    "openInterestValue": 11227165.11957502
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:20:00.000Z",
+    "price": 0.691,
+    "openInterest": 546530836,
+    "openInterestValue": 377934680.954667
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:15:00.000Z",
+    "price": 0.13077,
+    "openInterest": 87436679,
+    "openInterestValue": 11227165.11957502
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:20:00.000Z",
+    "price": 0.6912,
+    "openInterest": 546530836,
+    "openInterestValue": 377934680.954667
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:20:00.000Z",
+    "price": 0.13137,
+    "openInterest": 87631506,
+    "openInterestValue": 11336769.6286869
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:15:00.000Z",
-    "price": 0.7045,
-    "openInterest": 533608613,
-    "openInterestValue": 376300793.8876
+    "time": "2025-09-17T15:20:00.000Z",
+    "price": 0.6912,
+    "openInterest": 546530836,
+    "openInterestValue": 377934680.954667
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:20:00.000Z",
+    "price": 0.13059,
+    "openInterest": 87631506,
+    "openInterestValue": 11336769.6286869
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:20:00.000Z",
+    "price": 0.691,
+    "openInterest": 546530836,
+    "openInterestValue": 377934680.954667
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:20:00.000Z",
+    "price": 0.13128,
+    "openInterest": 87631506,
+    "openInterestValue": 11336769.6286869
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:20:00.000Z",
+    "price": 0.69,
+    "openInterest": 546530836,
+    "openInterestValue": 377934680.954667
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:25:00.000Z",
+    "price": 0.13119,
+    "openInterest": 88441326,
+    "openInterestValue": 11599473.4688007
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:25:00.000Z",
+    "price": 0.131,
+    "openInterest": 88441326,
+    "openInterestValue": 11599473.4688007
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:20:00.000Z",
+    "price": 0.6899,
+    "openInterest": 546530836,
+    "openInterestValue": 377934680.954667
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:15:00.000Z",
-    "price": 0.7047,
-    "openInterest": 533608613,
-    "openInterestValue": 376300793.8876
+    "time": "2025-09-17T15:25:00.000Z",
+    "price": 0.6905,
+    "openInterest": 546793018,
+    "openInterestValue": 377560578.929
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:25:00.000Z",
+    "price": 0.13193,
+    "openInterest": 88441326,
+    "openInterestValue": 11599473.4688007
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:15:00.000Z",
-    "price": 0.7046,
-    "openInterest": 533608613,
-    "openInterestValue": 376300793.8876
+    "time": "2025-09-17T15:25:00.000Z",
+    "price": 0.6892,
+    "openInterest": 546793018,
+    "openInterestValue": 377560578.929
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:25:00.000Z",
+    "price": 0.13155,
+    "openInterest": 88441326,
+    "openInterestValue": 11599473.4688007
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:15:00.000Z",
-    "price": 0.7055,
-    "openInterest": 533608613,
-    "openInterestValue": 376300793.8876
+    "time": "2025-09-17T15:25:00.000Z",
+    "price": 0.6881,
+    "openInterest": 546793018,
+    "openInterestValue": 377560578.929
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:25:00.000Z",
+    "price": 0.13082,
+    "openInterest": 88441326,
+    "openInterestValue": 11599473.4688007
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:15:00.000Z",
-    "price": 0.7062,
-    "openInterest": 533608613,
-    "openInterestValue": 376300793.8876
+    "time": "2025-09-17T15:25:00.000Z",
+    "price": 0.6883,
+    "openInterest": 546793018,
+    "openInterestValue": 377560578.929
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:25:00.000Z",
+    "price": 0.13001,
+    "openInterest": 88441326,
+    "openInterestValue": 11599473.4688007
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:20:00.000Z",
-    "price": 0.7057,
-    "openInterest": 533391518,
-    "openInterestValue": 376348520.400127
+    "time": "2025-09-17T15:25:00.000Z",
+    "price": 0.6887,
+    "openInterest": 546793018,
+    "openInterestValue": 377560578.929
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:25:00.000Z",
+    "price": 0.12855,
+    "openInterest": 88441326,
+    "openInterestValue": 11599473.4688007
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:25:00.000Z",
-    "price": 0.7032,
-    "openInterest": 533574524,
-    "openInterestValue": 376429938.23489517
+    "time": "2025-09-17T15:25:00.000Z",
+    "price": 0.6908,
+    "openInterest": 546793018,
+    "openInterestValue": 377560578.929
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:30:00.000Z",
+    "price": 0.12844,
+    "openInterest": 88329317,
+    "openInterestValue": 11517259.64363
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:30:00.000Z",
-    "price": 0.7024,
-    "openInterest": 534158307,
-    "openInterestValue": 375833784.8052
+    "time": "2025-09-17T15:30:00.000Z",
+    "price": 0.6899,
+    "openInterest": 546589053,
+    "openInterestValue": 376217245.1799
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:30:00.000Z",
+    "price": 0.12961,
+    "openInterest": 88329317,
+    "openInterestValue": 11517259.64363
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:30:00.000Z",
-    "price": 0.7018,
-    "openInterest": 534158307,
-    "openInterestValue": 375833784.8052
+    "time": "2025-09-17T15:30:00.000Z",
+    "price": 0.6901,
+    "openInterest": 546589053,
+    "openInterestValue": 376217245.1799
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:30:00.000Z",
+    "price": 0.13074,
+    "openInterest": 88329317,
+    "openInterestValue": 11517259.64363
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:30:00.000Z",
-    "price": 0.7011,
-    "openInterest": 534158307,
-    "openInterestValue": 375833784.8052
+    "time": "2025-09-17T15:30:00.000Z",
+    "price": 0.6902,
+    "openInterest": 546589053,
+    "openInterestValue": 376217245.1799
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:30:00.000Z",
+    "price": 0.12989,
+    "openInterest": 88329317,
+    "openInterestValue": 11517259.64363
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:30:00.000Z",
-    "price": 0.7021,
-    "openInterest": 534158307,
-    "openInterestValue": 375833784.8052
+    "time": "2025-09-17T15:35:00.000Z",
+    "price": 0.6898,
+    "openInterest": 546848284,
+    "openInterestValue": 377653424.9304
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:30:00.000Z",
+    "price": 0.12912,
+    "openInterest": 88329317,
+    "openInterestValue": 11517259.64363
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:30:00.000Z",
-    "price": 0.7019,
-    "openInterest": 534158307,
-    "openInterestValue": 375833784.8052
+    "time": "2025-09-17T15:35:00.000Z",
+    "price": 0.6889,
+    "openInterest": 546848284,
+    "openInterestValue": 377653424.9304
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:30:00.000Z",
+    "price": 0.12956,
+    "openInterest": 88329317,
+    "openInterestValue": 11517259.64363
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:30:00.000Z",
-    "price": 0.7027,
-    "openInterest": 534158307,
-    "openInterestValue": 375833784.8052
+    "time": "2025-09-17T15:35:00.000Z",
+    "price": 0.6893,
+    "openInterest": 546848284,
+    "openInterestValue": 377653424.9304
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:35:00.000Z",
+    "price": 0.12974,
+    "openInterest": 88624214,
+    "openInterestValue": 11493051.28543558
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:35:00.000Z",
+    "price": 0.12926,
+    "openInterest": 88624214,
+    "openInterestValue": 11493051.28543558
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:35:00.000Z",
-    "price": 0.7026,
-    "openInterest": 533212845,
-    "openInterestValue": 374226706.56897736
+    "time": "2025-09-17T15:35:00.000Z",
+    "price": 0.6886,
+    "openInterest": 546848284,
+    "openInterestValue": 377653424.9304
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:35:00.000Z",
-    "price": 0.7018,
-    "openInterest": 533212845,
-    "openInterestValue": 374226706.56897736
+    "time": "2025-09-17T15:35:00.000Z",
+    "price": 0.6886,
+    "openInterest": 546848284,
+    "openInterestValue": 377653424.9304
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:35:00.000Z",
+    "price": 0.12964,
+    "openInterest": 88624214,
+    "openInterestValue": 11493051.28543558
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:35:00.000Z",
-    "price": 0.7011,
-    "openInterest": 533212845,
-    "openInterestValue": 374226706.56897736
+    "time": "2025-09-17T15:35:00.000Z",
+    "price": 0.6892,
+    "openInterest": 546848284,
+    "openInterestValue": 377653424.9304
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:40:00.000Z",
+    "price": 0.13018,
+    "openInterest": 88841158,
+    "openInterestValue": 11520533.13357954
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:40:00.000Z",
+    "price": 0.12967,
+    "openInterest": 88841158,
+    "openInterestValue": 11520533.13357954
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:35:00.000Z",
-    "price": 0.7012,
-    "openInterest": 533212845,
-    "openInterestValue": 374226706.56897736
+    "time": "2025-09-17T15:40:00.000Z",
+    "price": 0.6883,
+    "openInterest": 546832590,
+    "openInterestValue": 376439554.956
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:35:00.000Z",
-    "price": 0.7003,
-    "openInterest": 533212845,
-    "openInterestValue": 374226706.56897736
+    "time": "2025-09-17T15:40:00.000Z",
+    "price": 0.6877,
+    "openInterest": 546832590,
+    "openInterestValue": 376439554.956
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:40:00.000Z",
+    "price": 0.12952,
+    "openInterest": 88841158,
+    "openInterestValue": 11520533.13357954
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:35:00.000Z",
-    "price": 0.6998,
-    "openInterest": 533212845,
-    "openInterestValue": 374226706.56897736
+    "time": "2025-09-17T15:40:00.000Z",
+    "price": 0.6876,
+    "openInterest": 546832590,
+    "openInterestValue": 376439554.956
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:40:00.000Z",
+    "price": 0.13048,
+    "openInterest": 88841158,
+    "openInterestValue": 11520533.13357954
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:40:00.000Z",
-    "price": 0.701,
-    "openInterest": 532959785,
-    "openInterestValue": 373498217.328
+    "time": "2025-09-17T15:40:00.000Z",
+    "price": 0.6876,
+    "openInterest": 546832590,
+    "openInterestValue": 376439554.956
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:40:00.000Z",
+    "price": 0.13098,
+    "openInterest": 88841158,
+    "openInterestValue": 11520533.13357954
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:40:00.000Z",
-    "price": 0.701,
-    "openInterest": 532959785,
-    "openInterestValue": 373498217.328
+    "time": "2025-09-17T15:40:00.000Z",
+    "price": 0.6882,
+    "openInterest": 546832590,
+    "openInterestValue": 376439554.956
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:40:00.000Z",
+    "price": 0.13111,
+    "openInterest": 88841158,
+    "openInterestValue": 11520533.13357954
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:40:00.000Z",
-    "price": 0.7008,
-    "openInterest": 532959785,
-    "openInterestValue": 373498217.328
+    "time": "2025-09-17T15:40:00.000Z",
+    "price": 0.6871,
+    "openInterest": 546832590,
+    "openInterestValue": 376439554.956
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:45:00.000Z",
+    "price": 0.13115,
+    "openInterest": 89033167,
+    "openInterestValue": 11648900.13598592
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:45:00.000Z",
-    "price": 0.7016,
-    "openInterest": 532882146,
-    "openInterestValue": 373550384.346
+    "time": "2025-09-17T15:45:00.000Z",
+    "price": 0.6882,
+    "openInterest": 546900519,
+    "openInterestValue": 375976682.56196463
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:45:00.000Z",
+    "price": 0.12994,
+    "openInterest": 89033167,
+    "openInterestValue": 11648900.13598592
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:45:00.000Z",
-    "price": 0.7012,
-    "openInterest": 532882146,
-    "openInterestValue": 373550384.346
+    "time": "2025-09-17T15:45:00.000Z",
+    "price": 0.6875,
+    "openInterest": 546900519,
+    "openInterestValue": 375976682.56196463
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:45:00.000Z",
+    "price": 0.12813,
+    "openInterest": 89033167,
+    "openInterestValue": 11648900.13598592
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:45:00.000Z",
+    "price": 0.12712,
+    "openInterest": 89033167,
+    "openInterestValue": 11648900.13598592
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:45:00.000Z",
-    "price": 0.7014,
-    "openInterest": 532882146,
-    "openInterestValue": 373550384.346
+    "time": "2025-09-17T15:45:00.000Z",
+    "price": 0.6879,
+    "openInterest": 546900519,
+    "openInterestValue": 375976682.56196463
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:45:00.000Z",
+    "price": 0.12836,
+    "openInterest": 89033167,
+    "openInterestValue": 11648900.13598592
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:45:00.000Z",
-    "price": 0.7017,
-    "openInterest": 532882146,
-    "openInterestValue": 373550384.346
+    "time": "2025-09-17T15:50:00.000Z",
+    "price": 0.6882,
+    "openInterest": 547103193,
+    "openInterestValue": 376243451.2265165
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:50:00.000Z",
-    "price": 0.7008,
-    "openInterest": 532803688,
-    "openInterestValue": 373679522.2425728
+    "time": "2025-09-17T15:50:00.000Z",
+    "price": 0.688,
+    "openInterest": 547103193,
+    "openInterestValue": 376243451.2265165
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:45:00.000Z",
+    "price": 0.12888,
+    "openInterest": 89033167,
+    "openInterestValue": 11648900.13598592
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:50:00.000Z",
-    "price": 0.7015,
-    "openInterest": 532803688,
-    "openInterestValue": 373679522.2425728
+    "time": "2025-09-17T15:50:00.000Z",
+    "price": 0.6871,
+    "openInterest": 547103193,
+    "openInterestValue": 376243451.2265165
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:50:00.000Z",
+    "price": 0.12825,
+    "openInterest": 87721768,
+    "openInterestValue": 11175998.8641504
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:50:00.000Z",
+    "price": 0.12835,
+    "openInterest": 87721768,
+    "openInterestValue": 11175998.8641504
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:50:00.000Z",
-    "price": 0.7021,
-    "openInterest": 532803688,
-    "openInterestValue": 373679522.2425728
+    "time": "2025-09-17T15:50:00.000Z",
+    "price": 0.687,
+    "openInterest": 547103193,
+    "openInterestValue": 376243451.2265165
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:50:00.000Z",
-    "price": 0.7031,
-    "openInterest": 532803688,
-    "openInterestValue": 373679522.2425728
+    "time": "2025-09-17T15:50:00.000Z",
+    "price": 0.6882,
+    "openInterest": 547103193,
+    "openInterestValue": 376243451.2265165
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:55:00.000Z",
+    "price": 0.12898,
+    "openInterest": 87765338,
+    "openInterestValue": 11277380.7767086
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:50:00.000Z",
-    "price": 0.7024,
-    "openInterest": 532803688,
-    "openInterestValue": 373679522.2425728
+    "time": "2025-09-17T15:50:00.000Z",
+    "price": 0.6886,
+    "openInterest": 547103193,
+    "openInterestValue": 376243451.2265165
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:55:00.000Z",
+    "price": 0.12885,
+    "openInterest": 87765338,
+    "openInterestValue": 11277380.7767086
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:50:00.000Z",
-    "price": 0.7019,
-    "openInterest": 532803688,
-    "openInterestValue": 373679522.2425728
+    "time": "2025-09-17T15:55:00.000Z",
+    "price": 0.6896,
+    "openInterest": 547045008,
+    "openInterestValue": 375984033.9984
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:55:00.000Z",
+    "price": 0.12758,
+    "openInterest": 87765338,
+    "openInterestValue": 11277380.7767086
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:55:00.000Z",
-    "price": 0.7015,
-    "openInterest": 532929939,
-    "openInterestValue": 374329989.1536
+    "time": "2025-09-17T15:55:00.000Z",
+    "price": 0.69,
+    "openInterest": 547045008,
+    "openInterestValue": 375984033.9984
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:55:00.000Z",
+    "price": 0.12771,
+    "openInterest": 87765338,
+    "openInterestValue": 11277380.7767086
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:55:00.000Z",
-    "price": 0.7014,
-    "openInterest": 532929939,
-    "openInterestValue": 374329989.1536
+    "time": "2025-09-17T15:55:00.000Z",
+    "price": 0.689,
+    "openInterest": 547045008,
+    "openInterestValue": 375984033.9984
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:55:00.000Z",
+    "price": 0.1277,
+    "openInterest": 87765338,
+    "openInterestValue": 11277380.7767086
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:00:00.000Z",
-    "price": 0.7019,
-    "openInterest": 533000866,
-    "openInterestValue": 373846807.4124
+    "time": "2025-09-17T15:55:00.000Z",
+    "price": 0.6887,
+    "openInterest": 547045008,
+    "openInterestValue": 375984033.9984
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:55:00.000Z",
+    "price": 0.12817,
+    "openInterest": 87765338,
+    "openInterestValue": 11277380.7767086
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:00:00.000Z",
-    "price": 0.7008,
-    "openInterest": 533000866,
-    "openInterestValue": 373846807.4124
+    "time": "2025-09-17T15:55:00.000Z",
+    "price": 0.6892,
+    "openInterest": 547045008,
+    "openInterestValue": 375984033.9984
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.000Z",
+    "price": 0.12868,
+    "openInterest": 87666241,
+    "openInterestValue": 11178204.91714706
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:00:00.000Z",
-    "price": 0.7011,
-    "openInterest": 533000866,
-    "openInterestValue": 373846807.4124
+    "time": "2025-09-17T15:55:00.000Z",
+    "price": 0.6891,
+    "openInterest": 547045008,
+    "openInterestValue": 375984033.9984
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.000Z",
+    "price": 0.12855,
+    "openInterest": 87666241,
+    "openInterestValue": 11178204.91714706
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:05:00.000Z",
-    "price": 0.7008,
-    "openInterest": 532827862,
-    "openInterestValue": 373565614.0482
+    "time": "2025-09-17T16:00:00.000Z",
+    "price": 0.6881,
+    "openInterest": 547092796,
+    "openInterestValue": 376782808.6052
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.000Z",
+    "price": 0.12727,
+    "openInterest": 87666241,
+    "openInterestValue": 11178204.91714706
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:05:00.000Z",
-    "price": 0.7009,
-    "openInterest": 532827862,
-    "openInterestValue": 373565614.0482
+    "time": "2025-09-17T16:00:00.000Z",
+    "price": 0.6877,
+    "openInterest": 547092796,
+    "openInterestValue": 376782808.6052
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.000Z",
+    "price": 0.12776,
+    "openInterest": 87666241,
+    "openInterestValue": 11178204.91714706
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.000Z",
+    "price": 0.12667,
+    "openInterest": 87666241,
+    "openInterestValue": 11178204.91714706
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:05:00.000Z",
-    "price": 0.6996,
-    "openInterest": 532827862,
-    "openInterestValue": 373565614.0482
+    "time": "2025-09-17T16:05:00.000Z",
+    "price": 0.6877,
+    "openInterest": 547185162,
+    "openInterestValue": 375916206.294
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:05:00.000Z",
+    "price": 0.12672,
+    "openInterest": 87401201,
+    "openInterestValue": 11200463.90815
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:05:00.000Z",
-    "price": 0.6996,
-    "openInterest": 532827862,
-    "openInterestValue": 373565614.0482
+    "time": "2025-09-17T16:05:00.000Z",
+    "price": 0.6872,
+    "openInterest": 547185162,
+    "openInterestValue": 375916206.294
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:05:00.000Z",
+    "price": 0.12724,
+    "openInterest": 87401201,
+    "openInterestValue": 11200463.90815
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:05:00.000Z",
-    "price": 0.7003,
-    "openInterest": 532827862,
-    "openInterestValue": 373565614.0482
+    "time": "2025-09-17T16:05:00.000Z",
+    "price": 0.6865,
+    "openInterest": 547185162,
+    "openInterestValue": 375916206.294
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:10:00.000Z",
-    "price": 0.7007,
-    "openInterest": 532709660,
-    "openInterestValue": 372683678.136
+    "time": "2025-09-17T16:05:00.000Z",
+    "price": 0.6866,
+    "openInterest": 547185162,
+    "openInterestValue": 375916206.294
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:05:00.000Z",
+    "price": 0.12726,
+    "openInterest": 87401201,
+    "openInterestValue": 11200463.90815
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:10:00.000Z",
-    "price": 0.7009,
-    "openInterest": 532709660,
-    "openInterestValue": 372683678.136
+    "time": "2025-09-17T16:05:00.000Z",
+    "price": 0.6875,
+    "openInterest": 547185162,
+    "openInterestValue": 375916206.294
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:10:00.000Z",
+    "price": 0.1282,
+    "openInterest": 87374431,
+    "openInterestValue": 11065097.94184
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T05:50:00.000Z",
-    "price": 0.6769,
-    "openInterest": 550569003,
-    "openInterestValue": 372201664.11588275
+    "time": "2025-09-17T16:10:00.000Z",
+    "price": 0.6873,
+    "openInterest": 547333150,
+    "openInterestValue": 375637614.3440375
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:10:00.000Z",
+    "price": 0.12796,
+    "openInterest": 87374431,
+    "openInterestValue": 11065097.94184
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:10:00.000Z",
+    "price": 0.12767,
+    "openInterest": 87374431,
+    "openInterestValue": 11065097.94184
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T05:50:00.000Z",
-    "price": 0.6772,
-    "openInterest": 550569003,
-    "openInterestValue": 372201664.11588275
+    "time": "2025-09-17T16:10:00.000Z",
+    "price": 0.6872,
+    "openInterest": 547333150,
+    "openInterestValue": 375637614.3440375
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T05:50:00.000Z",
-    "price": 0.6783,
-    "openInterest": 550569003,
-    "openInterestValue": 372201664.11588275
+    "time": "2025-09-17T16:10:00.000Z",
+    "price": 0.6871,
+    "openInterest": 547333150,
+    "openInterestValue": 375637614.3440375
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:10:00.000Z",
+    "price": 0.12778,
+    "openInterest": 87374431,
+    "openInterestValue": 11065097.94184
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T05:55:00.000Z",
-    "price": 0.6785,
-    "openInterest": 550282259,
-    "openInterestValue": 373056670.8027475
+    "time": "2025-09-17T16:10:00.000Z",
+    "price": 0.6874,
+    "openInterest": 547333150,
+    "openInterestValue": 375637614.3440375
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:10:00.000Z",
+    "price": 0.12813,
+    "openInterest": 87374431,
+    "openInterestValue": 11065097.94184
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T05:55:00.000Z",
-    "price": 0.6795,
-    "openInterest": 550282259,
-    "openInterestValue": 373056670.8027475
+    "time": "2025-09-17T16:10:00.000Z",
+    "price": 0.6867,
+    "openInterest": 547333150,
+    "openInterestValue": 375637614.3440375
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:10:00.000Z",
+    "price": 0.12921,
+    "openInterest": 87374431,
+    "openInterestValue": 11065097.94184
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T05:55:00.000Z",
-    "price": 0.6804,
-    "openInterest": 550282259,
-    "openInterestValue": 373056670.8027475
+    "time": "2025-09-17T16:10:00.000Z",
+    "price": 0.6858,
+    "openInterest": 547333150,
+    "openInterestValue": 375637614.3440375
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:15:00.000Z",
+    "price": 0.12956,
+    "openInterest": 87298191,
+    "openInterestValue": 11153216.88216
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T05:55:00.000Z",
-    "price": 0.6799,
-    "openInterest": 550282259,
-    "openInterestValue": 373056670.8027475
+    "time": "2025-09-17T16:15:00.000Z",
+    "price": 0.6846,
+    "openInterest": 547188453,
+    "openInterestValue": 376301499.1281
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:15:00.000Z",
+    "price": 0.12838,
+    "openInterest": 87298191,
+    "openInterestValue": 11153216.88216
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:00:00.000Z",
-    "price": 0.6806,
-    "openInterest": 550436342,
-    "openInterestValue": 374520899.7777332
+    "time": "2025-09-17T16:15:00.000Z",
+    "price": 0.6847,
+    "openInterest": 547188453,
+    "openInterestValue": 376301499.1281
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:15:00.000Z",
+    "price": 0.12774,
+    "openInterest": 87298191,
+    "openInterestValue": 11153216.88216
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:00:00.000Z",
-    "price": 0.6802,
-    "openInterest": 550436342,
-    "openInterestValue": 374520899.7777332
+    "time": "2025-09-17T16:15:00.000Z",
+    "price": 0.684,
+    "openInterest": 547188453,
+    "openInterestValue": 376301499.1281
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:15:00.000Z",
+    "price": 0.12748,
+    "openInterest": 87298191,
+    "openInterestValue": 11153216.88216
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:00:00.000Z",
-    "price": 0.6812,
-    "openInterest": 550436342,
-    "openInterestValue": 374520899.7777332
+    "time": "2025-09-17T16:20:00.000Z",
+    "price": 0.6844,
+    "openInterest": 546469157,
+    "openInterestValue": 372664581.5045427
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:15:00.000Z",
+    "price": 0.12775,
+    "openInterest": 87298191,
+    "openInterestValue": 11153216.88216
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:10:00.000Z",
-    "price": 0.679,
-    "openInterest": 550925564,
-    "openInterestValue": 373606634.28447914
+    "time": "2025-09-17T16:20:00.000Z",
+    "price": 0.6849,
+    "openInterest": 546469157,
+    "openInterestValue": 372664581.5045427
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:15:00.000Z",
+    "price": 0.12685,
+    "openInterest": 87298191,
+    "openInterestValue": 11153216.88216
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:10:00.000Z",
-    "price": 0.6789,
-    "openInterest": 550925564,
-    "openInterestValue": 373606634.28447914
+    "time": "2025-09-17T16:20:00.000Z",
+    "price": 0.6852,
+    "openInterest": 546469157,
+    "openInterestValue": 372664581.5045427
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:20:00.000Z",
+    "price": 0.12783,
+    "openInterest": 87189262,
+    "openInterestValue": 11120741.00681068
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:10:00.000Z",
-    "price": 0.6787,
-    "openInterest": 550925564,
-    "openInterestValue": 373606634.28447914
+    "time": "2025-09-17T16:20:00.000Z",
+    "price": 0.6848,
+    "openInterest": 546469157,
+    "openInterestValue": 372664581.5045427
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:20:00.000Z",
+    "price": 0.12671,
+    "openInterest": 87189262,
+    "openInterestValue": 11120741.00681068
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:15:00.000Z",
-    "price": 0.6798,
-    "openInterest": 551050682,
-    "openInterestValue": 374061534.82791185
+    "time": "2025-09-17T16:20:00.000Z",
+    "price": 0.6852,
+    "openInterest": 546469157,
+    "openInterestValue": 372664581.5045427
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:20:00.000Z",
+    "price": 0.1276,
+    "openInterest": 87189262,
+    "openInterestValue": 11120741.00681068
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:25:00.000Z",
+    "price": 0.12694,
+    "openInterest": 87198614,
+    "openInterestValue": 11090968.72784642
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:15:00.000Z",
-    "price": 0.6792,
-    "openInterest": 551050682,
-    "openInterestValue": 374061534.82791185
+    "time": "2025-09-17T16:25:00.000Z",
+    "price": 0.686,
+    "openInterest": 545983313,
+    "openInterestValue": 373780176.0798
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:15:00.000Z",
-    "price": 0.6796,
-    "openInterest": 551050682,
-    "openInterestValue": 374061534.82791185
+    "time": "2025-09-17T16:25:00.000Z",
+    "price": 0.6862,
+    "openInterest": 545983313,
+    "openInterestValue": 373780176.0798
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:25:00.000Z",
+    "price": 0.12715,
+    "openInterest": 87198614,
+    "openInterestValue": 11090968.72784642
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:20:00.000Z",
-    "price": 0.6793,
-    "openInterest": 551082340,
-    "openInterestValue": 374057349.8307602
+    "time": "2025-09-17T16:25:00.000Z",
+    "price": 0.6873,
+    "openInterest": 545983313,
+    "openInterestValue": 373780176.0798
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:25:00.000Z",
+    "price": 0.12708,
+    "openInterest": 87198614,
+    "openInterestValue": 11090968.72784642
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:20:00.000Z",
-    "price": 0.6788,
-    "openInterest": 551082340,
-    "openInterestValue": 374057349.8307602
+    "time": "2025-09-17T16:30:00.000Z",
+    "price": 0.6886,
+    "openInterest": 545894400,
+    "openInterestValue": 375212382.01344
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:25:00.000Z",
+    "price": 0.12663,
+    "openInterest": 87198614,
+    "openInterestValue": 11090968.72784642
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:20:00.000Z",
-    "price": 0.6799,
-    "openInterest": 551082340,
-    "openInterestValue": 374057349.8307602
+    "time": "2025-09-17T16:30:00.000Z",
+    "price": 0.6871,
+    "openInterest": 545894400,
+    "openInterestValue": 375212382.01344
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:25:00.000Z",
+    "price": 0.12678,
+    "openInterest": 87198614,
+    "openInterestValue": 11090968.72784642
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:20:00.000Z",
-    "price": 0.6797,
-    "openInterest": 551082340,
-    "openInterestValue": 374057349.8307602
+    "time": "2025-09-17T16:30:00.000Z",
+    "price": 0.6864,
+    "openInterest": 545894400,
+    "openInterestValue": 375212382.01344
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:30:00.000Z",
+    "price": 0.12732,
+    "openInterest": 87328974,
+    "openInterestValue": 11087401.81328568
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:30:00.000Z",
+    "price": 0.12781,
+    "openInterest": 87328974,
+    "openInterestValue": 11087401.81328568
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:25:00.000Z",
-    "price": 0.6806,
-    "openInterest": 550891094,
-    "openInterestValue": 374440676.5918
+    "time": "2025-09-17T16:30:00.000Z",
+    "price": 0.6877,
+    "openInterest": 545894400,
+    "openInterestValue": 375212382.01344
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:25:00.000Z",
-    "price": 0.6823,
-    "openInterest": 550891094,
-    "openInterestValue": 374440676.5918
+    "time": "2025-09-17T16:30:00.000Z",
+    "price": 0.6881,
+    "openInterest": 545894400,
+    "openInterestValue": 375212382.01344
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:30:00.000Z",
+    "price": 0.12803,
+    "openInterest": 87328974,
+    "openInterestValue": 11087401.81328568
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:25:00.000Z",
-    "price": 0.6818,
-    "openInterest": 550891094,
-    "openInterestValue": 374440676.5918
+    "time": "2025-09-17T16:35:00.000Z",
+    "price": 0.6883,
+    "openInterest": 545774526,
+    "openInterestValue": 375384406.65870273
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:30:00.000Z",
+    "price": 0.12887,
+    "openInterest": 87328974,
+    "openInterestValue": 11087401.81328568
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:25:00.000Z",
-    "price": 0.682,
-    "openInterest": 550891094,
-    "openInterestValue": 374440676.5918
+    "time": "2025-09-17T16:35:00.000Z",
+    "price": 0.6888,
+    "openInterest": 545774526,
+    "openInterestValue": 375384406.65870273
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:30:00.000Z",
+    "price": 0.13009,
+    "openInterest": 87328974,
+    "openInterestValue": 11087401.81328568
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:25:00.000Z",
-    "price": 0.6819,
-    "openInterest": 550891094,
-    "openInterestValue": 374440676.5918
+    "time": "2025-09-17T16:35:00.000Z",
+    "price": 0.6875,
+    "openInterest": 545774526,
+    "openInterestValue": 375384406.65870273
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:35:00.000Z",
+    "price": 0.12997,
+    "openInterest": 87275122,
+    "openInterestValue": 11162488.1038
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:25:00.000Z",
-    "price": 0.6816,
-    "openInterest": 550891094,
-    "openInterestValue": 374440676.5918
+    "time": "2025-09-17T16:35:00.000Z",
+    "price": 0.6865,
+    "openInterest": 545774526,
+    "openInterestValue": 375384406.65870273
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:35:00.000Z",
+    "price": 0.12915,
+    "openInterest": 87275122,
+    "openInterestValue": 11162488.1038
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:30:00.000Z",
-    "price": 0.6827,
-    "openInterest": 550671673,
-    "openInterestValue": 375558080.986
+    "time": "2025-09-17T16:35:00.000Z",
+    "price": 0.6867,
+    "openInterest": 545774526,
+    "openInterestValue": 375384406.65870273
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:40:00.000Z",
+    "price": 0.12905,
+    "openInterest": 87262594,
+    "openInterestValue": 11276172.7486631
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:30:00.000Z",
-    "price": 0.6817,
-    "openInterest": 550671673,
-    "openInterestValue": 375558080.986
+    "time": "2025-09-17T16:35:00.000Z",
+    "price": 0.6863,
+    "openInterest": 545774526,
+    "openInterestValue": 375384406.65870273
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:40:00.000Z",
+    "price": 0.12836,
+    "openInterest": 87262594,
+    "openInterestValue": 11276172.7486631
   }
 ]

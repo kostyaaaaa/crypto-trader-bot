@@ -1,367 +1,1002 @@
 [
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": -0.00022041
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T12:00:00.000Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T16:00:00.000Z",
-    "fundingRate": -0.00015537
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T04:00:00.004Z",
-    "fundingRate": -0.00014684
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": -0.00037214
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:00.003Z",
+    "fundingRate": 0.00005
   }
 ]

@@ -50,7 +50,6 @@ export function TickerStepWS(symbol = 'ETHUSDT') {
         avgAsk: count > 0 ? askSum / count : null,
         spread: count > 0 ? askSum / count - bidSum / count : null,
       };
-
       // зберігаємо у storage (файл або Mongo)
       await saveDoc('candles', candle);
 

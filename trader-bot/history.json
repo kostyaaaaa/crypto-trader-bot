@@ -1,61 +1,5 @@
 [
   {
-    "id": "ENAUSDT_1758119772614",
-    "symbol": "ENAUSDT",
-    "side": "SHORT",
-    "size": 8.4,
-    "leverage": 5,
-    "openedAt": "2025-09-17T14:36:12.614Z",
-    "status": "CLOSED",
-    "entryPrice": 0.6890000000000001,
-    "stopPrice": 0.6842465999999999,
-    "takeProfits": [
-      {
-        "price": 0.680732,
-        "sizePct": 30
-      }
-    ],
-    "riskUsd": 1,
-    "analysisRefs": [
-      "2025-09-17T14:33:55.925Z"
-    ],
-    "lastAddAt": "2025-09-17T15:02:10.197Z",
-    "adds": 1,
-    "updates": [
-      {
-        "time": "2025-09-17T15:02:10.197Z",
-        "action": "ADD",
-        "addSize": 10,
-        "price": 0.6915,
-        "newSize": 20,
-        "newEntry": 0.6890000000000001
-      },
-      {
-        "time": "2025-09-17T16:10:02.681Z",
-        "action": "TP",
-        "sizePct": 40,
-        "price": 0.6862
-      },
-      {
-        "time": "2025-09-17T16:20:02.680Z",
-        "action": "TP",
-        "sizePct": 30,
-        "price": 0.6822
-      },
-      {
-        "time": "2025-09-17T16:21:02.687Z",
-        "action": "STOP LOSS",
-        "price": 0.6848
-      }
-    ],
-    "lastPartialAt": "2025-09-17T16:20:02.680Z",
-    "trailActive": true,
-    "trailAnchor": 0.6822,
-    "closedAt": "2025-09-17T16:21:02.687Z",
-    "exitPrice": 0.6848,
-    "exitReason": "STOP LOSS"
-  },
-  {
     "id": "HIFIUSDT_1758120010080",
     "symbol": "HIFIUSDT",
     "side": "SHORT",
@@ -426,6 +370,62 @@
     "exitReason": "STOP LOSS"
   },
   {
+    "id": "ENAUSDT_1758119772614",
+    "symbol": "ENAUSDT",
+    "side": "SHORT",
+    "size": 8.4,
+    "leverage": 5,
+    "openedAt": "2025-09-17T14:36:12.614Z",
+    "status": "CLOSED",
+    "entryPrice": 0.6890000000000001,
+    "stopPrice": 0.6842465999999999,
+    "takeProfits": [
+      {
+        "price": 0.680732,
+        "sizePct": 30
+      }
+    ],
+    "riskUsd": 1,
+    "analysisRefs": [
+      "2025-09-17T14:33:55.925Z"
+    ],
+    "lastAddAt": "2025-09-17T15:02:10.197Z",
+    "adds": 1,
+    "updates": [
+      {
+        "time": "2025-09-17T15:02:10.197Z",
+        "action": "ADD",
+        "addSize": 10,
+        "price": 0.6915,
+        "newSize": 20,
+        "newEntry": 0.6890000000000001
+      },
+      {
+        "time": "2025-09-17T16:10:02.681Z",
+        "action": "TP",
+        "sizePct": 40,
+        "price": 0.6862
+      },
+      {
+        "time": "2025-09-17T16:20:02.680Z",
+        "action": "TP",
+        "sizePct": 30,
+        "price": 0.6822
+      },
+      {
+        "time": "2025-09-17T16:21:02.687Z",
+        "action": "STOP LOSS",
+        "price": 0.6848
+      }
+    ],
+    "lastPartialAt": "2025-09-17T16:20:02.680Z",
+    "trailActive": true,
+    "trailAnchor": 0.6822,
+    "closedAt": "2025-09-17T16:21:02.687Z",
+    "exitPrice": 0.6848,
+    "exitReason": "STOP LOSS"
+  },
+  {
     "id": "HIFIUSDT_1758125972655",
     "symbol": "HIFIUSDT",
     "side": "SHORT",
@@ -467,40 +467,6 @@
     "closedAt": "2025-09-17T16:23:02.754Z",
     "exitPrice": 0.12766,
     "exitReason": "STOP LOSS"
-  },
-  {
-    "id": "ENAUSDT_1758126152633",
-    "symbol": "ENAUSDT",
-    "side": "LONG",
-    "size": 6,
-    "leverage": 5,
-    "openedAt": "2025-09-17T16:22:32.633Z",
-    "status": "OPEN",
-    "entryPrice": 0.6845,
-    "stopPrice": 0.6762859999999999,
-    "takeProfits": [
-      {
-        "price": 0.689976,
-        "sizePct": 30
-      },
-      {
-        "price": 0.692714,
-        "sizePct": 30
-      }
-    ],
-    "riskUsd": 1,
-    "analysisRefs": [
-      "2025-09-17T16:20:32.624Z"
-    ],
-    "lastPartialAt": "2025-09-17T16:31:12.720Z",
-    "updates": [
-      {
-        "time": "2025-09-17T16:31:12.720Z",
-        "action": "TP",
-        "sizePct": 40,
-        "price": 0.6876
-      }
-    ]
   },
   {
     "id": "HIFIUSDT_1758126807726",

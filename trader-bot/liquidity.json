@@ -1,478 +1,1202 @@
 [
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:16:05.459Z",
-    "avgImbalance": 0.688,
+    "time": "2025-09-17T14:58:10.001Z",
+    "avgImbalance": 0.513,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T14:58:10.086Z",
+    "avgImbalance": 0.393,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:17:05.465Z",
-    "avgImbalance": 0.718,
+    "time": "2025-09-17T14:59:10.004Z",
+    "avgImbalance": 0.568,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T14:59:10.087Z",
+    "avgImbalance": 0.54,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:18:05.466Z",
-    "avgImbalance": 0.71,
+    "time": "2025-09-17T15:00:10.009Z",
+    "avgImbalance": 0.559,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:00:10.106Z",
+    "avgImbalance": 0.509,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:19:05.467Z",
-    "avgImbalance": 0.698,
+    "time": "2025-09-17T15:01:10.009Z",
+    "avgImbalance": 0.492,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:01:10.106Z",
+    "avgImbalance": 0.392,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:20:05.472Z",
-    "avgImbalance": 0.625,
+    "time": "2025-09-17T15:02:10.010Z",
+    "avgImbalance": 0.468,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:02:10.107Z",
+    "avgImbalance": 0.463,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:21:05.474Z",
-    "avgImbalance": 0.565,
+    "time": "2025-09-17T15:03:09.998Z",
+    "avgImbalance": 0.524,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:03:10.092Z",
+    "avgImbalance": 0.519,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:22:05.477Z",
-    "avgImbalance": 0.542,
+    "time": "2025-09-17T15:04:10.000Z",
+    "avgImbalance": 0.447,
     "avgSpread": 0
   },
   {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:23:31.877Z",
-    "avgImbalance": 0.543,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:26:33.292Z",
-    "avgImbalance": 0.497,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:28:40.478Z",
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:04:10.082Z",
     "avgImbalance": 0.503,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:30:21.761Z",
-    "avgImbalance": 0.424,
+    "time": "2025-09-17T15:05:10.001Z",
+    "avgImbalance": 0.455,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:05:10.084Z",
+    "avgImbalance": 0.557,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:31:21.728Z",
-    "avgImbalance": 0.437,
+    "time": "2025-09-17T15:06:10.001Z",
+    "avgImbalance": 0.515,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:06:10.085Z",
+    "avgImbalance": 0.58,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:32:21.727Z",
-    "avgImbalance": 0.466,
+    "time": "2025-09-17T15:07:10.003Z",
+    "avgImbalance": 0.519,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:07:10.084Z",
+    "avgImbalance": 0.419,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:33:21.728Z",
-    "avgImbalance": 0.47,
+    "time": "2025-09-17T15:08:10.004Z",
+    "avgImbalance": 0.522,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:08:10.085Z",
+    "avgImbalance": 0.548,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:34:21.730Z",
+    "time": "2025-09-17T15:09:10.006Z",
+    "avgImbalance": 0.502,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:09:10.086Z",
+    "avgImbalance": 0.452,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:10:10.006Z",
+    "avgImbalance": 0.459,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:10:10.087Z",
     "avgImbalance": 0.409,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:35:21.731Z",
-    "avgImbalance": 0.323,
+    "time": "2025-09-17T15:11:10.007Z",
+    "avgImbalance": 0.529,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:11:10.088Z",
+    "avgImbalance": 0.459,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:36:21.732Z",
-    "avgImbalance": 0.355,
+    "time": "2025-09-17T15:12:10.009Z",
+    "avgImbalance": 0.502,
     "avgSpread": 0
   },
   {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:37:21.736Z",
-    "avgImbalance": 0.379,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:38:21.736Z",
-    "avgImbalance": 0.336,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:39:21.737Z",
-    "avgImbalance": 0.417,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:40:21.737Z",
-    "avgImbalance": 0.516,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:41:21.738Z",
-    "avgImbalance": 0.489,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:42:21.739Z",
-    "avgImbalance": 0.468,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:43:21.739Z",
-    "avgImbalance": 0.44,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:44:21.741Z",
-    "avgImbalance": 0.402,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:45:21.743Z",
-    "avgImbalance": 0.365,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:46:21.744Z",
-    "avgImbalance": 0.369,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:47:21.745Z",
-    "avgImbalance": 0.363,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:49:43.114Z",
-    "avgImbalance": 0.382,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:50:43.113Z",
-    "avgImbalance": 0.396,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:52:41.845Z",
-    "avgImbalance": 0.394,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:53:41.846Z",
-    "avgImbalance": 0.365,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:54:48.581Z",
-    "avgImbalance": 0.413,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:55:48.582Z",
-    "avgImbalance": 0.466,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:56:48.583Z",
-    "avgImbalance": 0.416,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:57:48.584Z",
-    "avgImbalance": 0.42,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:58:48.587Z",
-    "avgImbalance": 0.408,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T18:59:48.587Z",
-    "avgImbalance": 0.397,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:02:36.770Z",
-    "avgImbalance": 0.567,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:04:17.954Z",
-    "avgImbalance": 0.578,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:06:04.989Z",
-    "avgImbalance": 0.572,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:07:04.990Z",
-    "avgImbalance": 0.579,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:08:17.460Z",
-    "avgImbalance": 0.575,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:09:52.287Z",
-    "avgImbalance": 0.556,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:10:52.287Z",
-    "avgImbalance": 0.544,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:12:51.038Z",
-    "avgImbalance": 0.428,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:13:51.038Z",
-    "avgImbalance": 0.408,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-16T19:15:45.793Z",
-    "avgImbalance": 0.422,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "SOLUSDT",
-    "time": "2025-09-16T19:16:45.322Z",
-    "avgImbalance": 0.577,
-    "avgSpread": 0.01,
-    "signal": "LONG"
-  },
-  {
-    "symbol": "ADAUSDT",
-    "time": "2025-09-16T19:16:45.342Z",
-    "avgImbalance": 0.507,
-    "avgSpread": 0,
-    "signal": "NEUTRAL"
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-17T05:53:32.793Z",
-    "avgImbalance": 0.517,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-17T05:54:32.795Z",
-    "avgImbalance": 0.496,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-17T05:55:32.798Z",
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:12:10.090Z",
     "avgImbalance": 0.474,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T05:56:32.798Z",
-    "avgImbalance": 0.515,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-17T05:58:01.120Z",
-    "avgImbalance": 0.537,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-17T05:59:54.480Z",
-    "avgImbalance": 0.444,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:00:54.478Z",
-    "avgImbalance": 0.427,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:02:17.048Z",
-    "avgImbalance": 0.407,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:03:17.050Z",
-    "avgImbalance": 0.405,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:04:17.052Z",
-    "avgImbalance": 0.371,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:05:38.473Z",
-    "avgImbalance": 0.327,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:14:09.436Z",
-    "avgImbalance": 0.494,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:15:32.660Z",
+    "time": "2025-09-17T15:13:10.008Z",
     "avgImbalance": 0.482,
     "avgSpread": 0
   },
   {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:13:10.090Z",
+    "avgImbalance": 0.446,
+    "avgSpread": 0
+  },
+  {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:16:32.661Z",
+    "time": "2025-09-17T15:14:10.009Z",
+    "avgImbalance": 0.52,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:14:10.089Z",
+    "avgImbalance": 0.474,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:15:10.010Z",
+    "avgImbalance": 0.535,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:15:10.091Z",
+    "avgImbalance": 0.331,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:16:10.011Z",
+    "avgImbalance": 0.468,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:16:10.091Z",
+    "avgImbalance": 0.442,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:17:10.012Z",
+    "avgImbalance": 0.498,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:17:10.098Z",
+    "avgImbalance": 0.46,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:18:11.171Z",
+    "avgImbalance": 0.483,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:18:11.224Z",
+    "avgImbalance": 0.528,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:19:11.174Z",
+    "avgImbalance": 0.495,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:19:11.225Z",
+    "avgImbalance": 0.577,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:20:11.177Z",
+    "avgImbalance": 0.481,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:20:11.225Z",
+    "avgImbalance": 0.504,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:21:11.178Z",
+    "avgImbalance": 0.51,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:21:11.235Z",
     "avgImbalance": 0.501,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:17:32.663Z",
-    "avgImbalance": 0.502,
+    "time": "2025-09-17T15:22:11.178Z",
+    "avgImbalance": 0.507,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:22:11.242Z",
+    "avgImbalance": 0.463,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:18:32.664Z",
+    "time": "2025-09-17T15:23:11.180Z",
     "avgImbalance": 0.473,
     "avgSpread": 0
   },
   {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:19:32.665Z",
-    "avgImbalance": 0.513,
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:23:11.242Z",
+    "avgImbalance": 0.515,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:20:32.666Z",
-    "avgImbalance": 0.52,
+    "time": "2025-09-17T15:24:11.180Z",
+    "avgImbalance": 0.484,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:24:11.242Z",
+    "avgImbalance": 0.624,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:21:32.668Z",
-    "avgImbalance": 0.53,
+    "time": "2025-09-17T15:25:11.181Z",
+    "avgImbalance": 0.499,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:25:11.243Z",
+    "avgImbalance": 0.69,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:23:55.862Z",
-    "avgImbalance": 0.436,
+    "time": "2025-09-17T15:26:11.181Z",
+    "avgImbalance": 0.588,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:26:11.244Z",
+    "avgImbalance": 0.618,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:25:23.040Z",
-    "avgImbalance": 0.413,
+    "time": "2025-09-17T15:27:11.182Z",
+    "avgImbalance": 0.576,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:27:11.245Z",
+    "avgImbalance": 0.529,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:26:23.042Z",
-    "avgImbalance": 0.424,
+    "time": "2025-09-17T15:28:11.184Z",
+    "avgImbalance": 0.6,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:28:11.246Z",
+    "avgImbalance": 0.568,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:27:23.042Z",
-    "avgImbalance": 0.47,
+    "time": "2025-09-17T15:29:11.183Z",
+    "avgImbalance": 0.581,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:29:11.246Z",
+    "avgImbalance": 0.599,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:28:50.916Z",
-    "avgImbalance": 0.473,
+    "time": "2025-09-17T15:30:11.189Z",
+    "avgImbalance": 0.567,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:30:11.246Z",
+    "avgImbalance": 0.522,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:29:50.917Z",
-    "avgImbalance": 0.468,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:30:50.923Z",
+    "time": "2025-09-17T15:31:11.192Z",
     "avgImbalance": 0.55,
     "avgSpread": 0
   },
   {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:31:55.723Z",
-    "avgImbalance": 0.531,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:32:55.710Z",
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:31:11.248Z",
     "avgImbalance": 0.498,
     "avgSpread": 0
   },
   {
     "symbol": "ENAUSDT",
-    "time": "2025-09-17T06:33:55.715Z",
-    "avgImbalance": 0.43,
+    "time": "2025-09-17T15:32:11.192Z",
+    "avgImbalance": 0.673,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:32:11.249Z",
+    "avgImbalance": 0.467,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:33:11.192Z",
+    "avgImbalance": 0.617,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:33:11.249Z",
+    "avgImbalance": 0.49,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:34:11.194Z",
+    "avgImbalance": 0.556,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:34:11.250Z",
+    "avgImbalance": 0.611,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:35:11.196Z",
+    "avgImbalance": 0.533,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:35:11.251Z",
+    "avgImbalance": 0.615,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:36:11.200Z",
+    "avgImbalance": 0.49,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:36:11.251Z",
+    "avgImbalance": 0.576,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:37:11.201Z",
+    "avgImbalance": 0.457,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:37:11.251Z",
+    "avgImbalance": 0.573,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:38:11.202Z",
+    "avgImbalance": 0.501,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:38:11.252Z",
+    "avgImbalance": 0.478,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:39:11.205Z",
+    "avgImbalance": 0.521,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:39:11.252Z",
+    "avgImbalance": 0.443,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:40:11.205Z",
+    "avgImbalance": 0.54,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:40:11.254Z",
+    "avgImbalance": 0.452,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:41:11.208Z",
+    "avgImbalance": 0.531,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:41:11.254Z",
+    "avgImbalance": 0.534,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:42:11.210Z",
+    "avgImbalance": 0.498,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:42:11.255Z",
+    "avgImbalance": 0.507,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:43:11.214Z",
+    "avgImbalance": 0.522,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:43:11.262Z",
+    "avgImbalance": 0.576,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:44:11.215Z",
+    "avgImbalance": 0.516,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:44:11.261Z",
+    "avgImbalance": 0.578,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:45:11.215Z",
+    "avgImbalance": 0.523,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:45:11.262Z",
+    "avgImbalance": 0.587,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:46:11.218Z",
+    "avgImbalance": 0.517,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:46:11.264Z",
+    "avgImbalance": 0.593,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:47:11.219Z",
+    "avgImbalance": 0.598,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:47:11.264Z",
+    "avgImbalance": 0.628,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:48:11.220Z",
+    "avgImbalance": 0.625,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:48:11.265Z",
+    "avgImbalance": 0.679,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:49:11.221Z",
+    "avgImbalance": 0.599,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:49:11.266Z",
+    "avgImbalance": 0.506,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:50:11.222Z",
+    "avgImbalance": 0.61,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:50:11.266Z",
+    "avgImbalance": 0.499,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:51:11.224Z",
+    "avgImbalance": 0.599,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:51:11.266Z",
+    "avgImbalance": 0.351,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:52:11.226Z",
+    "avgImbalance": 0.598,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:52:11.267Z",
+    "avgImbalance": 0.47,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:53:11.226Z",
+    "avgImbalance": 0.587,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:53:11.269Z",
+    "avgImbalance": 0.469,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:54:32.554Z",
+    "avgImbalance": 0.66,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:54:32.591Z",
+    "avgImbalance": 0.461,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:55:32.555Z",
+    "avgImbalance": 0.655,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:55:32.595Z",
+    "avgImbalance": 0.381,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:56:32.556Z",
+    "avgImbalance": 0.587,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:56:32.600Z",
+    "avgImbalance": 0.385,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:57:32.568Z",
+    "avgImbalance": 0.527,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:57:32.611Z",
+    "avgImbalance": 0.451,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:58:32.570Z",
+    "avgImbalance": 0.534,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:58:32.612Z",
+    "avgImbalance": 0.436,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T15:59:32.572Z",
+    "avgImbalance": 0.506,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T15:59:32.612Z",
+    "avgImbalance": 0.394,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:00:32.572Z",
+    "avgImbalance": 0.459,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:00:32.613Z",
+    "avgImbalance": 0.466,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:01:32.572Z",
+    "avgImbalance": 0.515,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:01:32.616Z",
+    "avgImbalance": 0.459,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:02:32.573Z",
+    "avgImbalance": 0.507,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:02:32.617Z",
+    "avgImbalance": 0.452,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:03:32.574Z",
+    "avgImbalance": 0.497,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:03:32.619Z",
+    "avgImbalance": 0.476,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:04:32.576Z",
+    "avgImbalance": 0.56,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:04:32.638Z",
+    "avgImbalance": 0.574,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:06:17.659Z",
+    "avgImbalance": 0.567,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:06:17.682Z",
+    "avgImbalance": 0.435,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:08:01.980Z",
+    "avgImbalance": 0.628,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:08:02.005Z",
+    "avgImbalance": 0.378,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:09:32.607Z",
+    "avgImbalance": 0.583,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:09:32.647Z",
+    "avgImbalance": 0.511,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:10:32.609Z",
+    "avgImbalance": 0.582,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:10:32.657Z",
+    "avgImbalance": 0.454,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:11:32.610Z",
+    "avgImbalance": 0.552,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:11:32.659Z",
+    "avgImbalance": 0.565,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:12:32.611Z",
+    "avgImbalance": 0.452,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:12:32.668Z",
+    "avgImbalance": 0.519,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:13:32.613Z",
+    "avgImbalance": 0.447,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:13:32.671Z",
+    "avgImbalance": 0.436,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:14:32.613Z",
+    "avgImbalance": 0.441,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:14:32.672Z",
+    "avgImbalance": 0.361,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:15:32.580Z",
+    "avgImbalance": 0.524,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:15:32.640Z",
+    "avgImbalance": 0.332,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:16:32.572Z",
+    "avgImbalance": 0.531,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:16:32.630Z",
+    "avgImbalance": 0.539,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:17:32.572Z",
+    "avgImbalance": 0.59,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:17:32.629Z",
+    "avgImbalance": 0.543,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:18:32.574Z",
+    "avgImbalance": 0.639,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:18:32.633Z",
+    "avgImbalance": 0.553,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:19:32.574Z",
+    "avgImbalance": 0.52,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:19:32.632Z",
+    "avgImbalance": 0.592,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:20:32.575Z",
+    "avgImbalance": 0.44,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:20:32.634Z",
+    "avgImbalance": 0.6,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:21:32.576Z",
+    "avgImbalance": 0.355,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:21:32.636Z",
+    "avgImbalance": 0.481,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:22:32.577Z",
+    "avgImbalance": 0.364,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:22:32.636Z",
+    "avgImbalance": 0.497,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:23:32.584Z",
+    "avgImbalance": 0.368,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:23:32.639Z",
+    "avgImbalance": 0.44,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:24:32.585Z",
+    "avgImbalance": 0.327,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:24:32.642Z",
+    "avgImbalance": 0.498,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:25:32.587Z",
+    "avgImbalance": 0.325,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:25:32.646Z",
+    "avgImbalance": 0.487,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:27:27.604Z",
+    "avgImbalance": 0.334,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:27:27.656Z",
+    "avgImbalance": 0.404,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:28:27.604Z",
+    "avgImbalance": 0.341,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:28:27.671Z",
+    "avgImbalance": 0.375,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:29:27.605Z",
+    "avgImbalance": 0.352,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:29:27.671Z",
+    "avgImbalance": 0.423,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:30:27.610Z",
+    "avgImbalance": 0.345,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:30:27.671Z",
+    "avgImbalance": 0.534,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:31:27.613Z",
+    "avgImbalance": 0.313,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:31:27.682Z",
+    "avgImbalance": 0.555,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:32:27.614Z",
+    "avgImbalance": 0.311,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:32:27.700Z",
+    "avgImbalance": 0.408,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:33:27.614Z",
+    "avgImbalance": 0.389,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:33:27.700Z",
+    "avgImbalance": 0.398,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:34:27.613Z",
+    "avgImbalance": 0.359,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:34:27.700Z",
+    "avgImbalance": 0.424,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:36:11.153Z",
+    "avgImbalance": 0.353,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:36:11.179Z",
+    "avgImbalance": 0.47,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:37:24.513Z",
+    "avgImbalance": 0.329,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:37:24.566Z",
+    "avgImbalance": 0.459,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:38:24.514Z",
+    "avgImbalance": 0.311,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:38:24.568Z",
+    "avgImbalance": 0.417,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:39:57.797Z",
+    "avgImbalance": 0.327,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:39:57.838Z",
+    "avgImbalance": 0.425,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:40:57.795Z",
+    "avgImbalance": 0.341,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:40:57.841Z",
+    "avgImbalance": 0.424,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-17T16:41:57.795Z",
+    "avgImbalance": 0.348,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "HIFIUSDT",
+    "time": "2025-09-17T16:41:57.840Z",
+    "avgImbalance": 0.514,
     "avgSpread": 0
   }
 ]
