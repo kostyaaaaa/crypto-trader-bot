@@ -1,2 +1,5 @@
 *node_modules
 *.logs
+dist
+*/tsconfig.app.tsbuildinfo
+*/tsconfig.node.tsbuildinfo
