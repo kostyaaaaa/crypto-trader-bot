@@ -43,9 +43,6 @@ jobs:
   # Test Crypto Trader Console (React/TypeScript)
   test-console:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./crypto-trader-console
 
     steps:
       - uses: actions/checkout@v4
@@ -55,27 +52,27 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: './crypto-trader-console/package-lock.json'
+          cache-dependency-path: './package-lock.json'
 
-      - name: Install dependencies
+      - name: Install all workspace dependencies
         run: npm ci
 
-      - name: Run TypeScript compilation
-        run: npx tsc -b --noEmit
+      - name: Run TypeScript compilation for console
+        run: npx tsc -b --noEmit --project ./crypto-trader-console/tsconfig.json
 
-      - name: Run ESLint
-        run: npm run lint
+      - name: Run ESLint for console
+        run: npm run lint --workspace=crypto-trader-console
 
-      - name: Build project
-        run: npm run build
+      - name: Build console project
+        run: npm run build --workspace=crypto-trader-console
 
       - name: Verify build output
         run: |
-          if [ -d "dist" ]; then
-            echo "✅ Build successful - dist folder created"
-            ls -la dist/
+          if [ -d "crypto-trader-console/dist" ]; then
+            echo "✅ Console build successful - dist folder created"
+            ls -la crypto-trader-console/dist/
           else
-            echo "❌ Build failed - dist folder not found"
+            echo "❌ Console build failed - dist folder not found"
             exit 1
           fi
 
@@ -115,9 +112,6 @@ jobs:
   # Test Trader Bot Project
   test-trader-bot:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./trader-bot
 
     steps:
       - uses: actions/checkout@v4
@@ -127,20 +121,20 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: './trader-bot/package-lock.json'
+          cache-dependency-path: './package-lock.json'
 
-      - name: Install dependencies
+      - name: Install all workspace dependencies
         run: npm ci
 
-      - name: Check JavaScript syntax
+      - name: Check JavaScript syntax for trader-bot
         run: |
-          echo "Checking syntax for all JavaScript files..."
-          find src -name "*.js" -exec node --check {} \;
+          echo "Checking syntax for all JavaScript files in trader-bot..."
+          find trader-bot/src -name "*.js" -exec node --check {} \;
 
       - name: Verify trader bot can start (dry run)
         run: |
           echo "Verifying trader bot entry point..."
-          node --check src/index.js
+          node --check trader-bot/src/index.js
           echo "✅ Trader bot syntax check passed"
 
   # Summary job that depends on all others
