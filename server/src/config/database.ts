@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 import logger from '../utils/Logger.js';
 
-const connectDB = async () => {
+const connectDB = async (): Promise<void> => {
   try {
-    const mongoUri =
+    const mongoUri: string =
       process.env.MONGODB_URI || 'mongodb://localhost:27017/crypto-trader-bot';
 
     await mongoose.connect(mongoUri);

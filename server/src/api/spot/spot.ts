@@ -1,9 +1,15 @@
 import axios from 'axios';
 import crypto from 'crypto';
+import { SpotAccountResponse } from './spot.type.js';
 
-export const getAccountSpotBalance = async () => {
+export const getAccountSpotBalance = async (): Promise<SpotAccountResponse> => {
   try {
+    // Environment variables are now properly typed
     const { BINANCE_API_KEY, BINANCE_ACCOUNT_SECRET_KEY } = process.env;
+
+    if (!BINANCE_API_KEY || !BINANCE_ACCOUNT_SECRET_KEY) {
+      throw new Error('Missing Binance API credentials');
+    }
 
     const timestamp = Date.now();
     const query = `timestamp=${timestamp}&recvWindow=5000`;
@@ -21,7 +27,8 @@ export const getAccountSpotBalance = async () => {
     });
 
     return res.data;
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error:', err.response?.data || err.message);
+    throw err;
   }
 };

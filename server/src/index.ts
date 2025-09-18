@@ -8,7 +8,8 @@ import connectDB from './config/database.js';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+// Environment variables are now properly typed
+const PORT = parseInt(process.env.PORT || '5000', 10);
 
 // Middleware
 app.use(cors());
@@ -18,7 +19,7 @@ app.use(express.json());
 app.use('/', globalRouter);
 
 // Initialize database connection and start server
-const startServer = async () => {
+const startServer = async (): Promise<void> => {
   try {
     // Connect to MongoDB
     await connectDB();
