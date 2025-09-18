@@ -10,9 +10,6 @@ jobs:
   # Test Server Project (TypeScript)
   test-server:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./server
 
     steps:
       - uses: actions/checkout@v4
@@ -22,22 +19,22 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: './server/package-lock.json'
+          cache-dependency-path: './package-lock.json'
 
-      - name: Install dependencies
+      - name: Install all workspace dependencies
         run: npm ci
 
-      - name: Run TypeScript compilation
-        run: npm run build
+      - name: Build server
+        run: npm run build --workspace=server
 
-      - name: Verify TypeScript types
-        run: npx tsc --noEmit
+      - name: Verify TypeScript types for server
+        run: npx tsc --noEmit --project ./server/tsconfig.json
 
       - name: Verify build output
         run: |
-          if [ -d "dist" ]; then
+          if [ -d "server/dist" ]; then
             echo "✅ Server build successful - dist folder created"
-            ls -la dist/
+            ls -la server/dist/
           else
             echo "❌ Server build failed - dist folder not found"
             exit 1
