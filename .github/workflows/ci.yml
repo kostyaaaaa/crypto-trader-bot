@@ -58,7 +58,7 @@ jobs:
         run: npm ci
 
       - name: Run TypeScript compilation for console
-        run: npx tsc -b --noEmit --project ./crypto-trader-console/tsconfig.json
+        run: npx tsc --noEmit --project ./crypto-trader-console/tsconfig.json
 
       - name: Run ESLint for console
         run: npm run lint --workspace=crypto-trader-console

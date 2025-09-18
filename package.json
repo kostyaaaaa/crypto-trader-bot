@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "prettier": "prettier --write .",
-    "prepare": "husky",
+    "prepare": "husky || exit 0",
     "build:packages": "npm run build --workspaces --if-present"
   },
   "author": "",
