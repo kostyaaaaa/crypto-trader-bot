@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import accountRouter from './account.js';
+import coinConfigRouter from './coinConfig.js';
 import logger from '../utils/Logger.js';
 import { ApiErrorResponse } from '../controllers/common.type.js';
 
@@ -60,5 +61,8 @@ router.get(
 
 // Mount account routes
 router.use('/account', accountRouter);
+
+// Mount coin config routes
+router.use('/coinconfig', coinConfigRouter);
 
 export default router;

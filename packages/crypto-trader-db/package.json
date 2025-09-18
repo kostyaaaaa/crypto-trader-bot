@@ -22,7 +22,9 @@
   "files": [
     "dist"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "mongoose": "^8.5.4"
+  },
   "devDependencies": {
     "@types/node": "^20.16.5",
     "typescript": "^5.5.4"
