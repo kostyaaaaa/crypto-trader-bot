@@ -75,7 +75,7 @@ const useDashboard = () => {
     if (!spotBalance || !allSpotPrices) return 0;
 
     const priceMap = new Map(
-      allSpotPrices.map((p: any) => [p.symbol, parseFloat(p.price)]),
+      allSpotPrices.map((p) => [p.symbol, parseFloat(p.price)]),
     );
 
     return spotBalance.reduce((sum, b) => {
@@ -96,7 +96,7 @@ const useDashboard = () => {
     if (!futuresAssets || !allSpotPrices) return 0;
 
     const priceMap = new Map(
-      allSpotPrices.map((p: any) => [p.symbol, parseFloat(p.price)]),
+      allSpotPrices.map((p) => [p.symbol, parseFloat(p.price)]),
     );
 
     return futuresAssets.reduce((sum, b) => {
@@ -119,6 +119,7 @@ const useDashboard = () => {
     spotUSDBalance,
     futuresUSDBalance,
     accountPnlData,
+    futuresPositions,
   };
 };
 
