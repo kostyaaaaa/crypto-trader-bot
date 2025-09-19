@@ -2,33 +2,32 @@ import { useQuery } from '@tanstack/react-query';
 import {
   QueryKeys,
   getAccountPnl,
-  getCoinPrice,
+  getAllCoinPrice,
   getFuturesBalance,
   getSpotBalance,
-  type IgetFuturesBalanceResponse,
-  type IgetSpotBalanceResponse,
+  type IGetFuturesBalanceResponse,
+  type IGetSpotBalanceResponse,
 } from '../../api';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 const useDashboard = () => {
   const [spotBalance, setSpotBalance] = useState<
-    IgetSpotBalanceResponse['balances'] | null
+    IGetSpotBalanceResponse['balances'] | null
   >(null);
 
-  const [futuresBalance, setFuturesBalance] = useState<
-    IgetFuturesBalanceResponse['positions'] | null
-  >(null);
+  const [futuresAssets, setFuturesAssets] =
+    useState<IGetFuturesBalanceResponse['assets']>();
+
+  const [futuresPositions, setFuturesPositions] =
+    useState<IGetFuturesBalanceResponse['positions']>();
 
   const { data: accountPnlData } = useQuery({
     queryKey: [QueryKeys.AccountPnl],
-    queryFn: async () => {
-      const data = await getAccountPnl();
-      return data;
-    },
+    queryFn: () => getAccountPnl(),
     refetchOnWindowFocus: false,
   });
 
-  useQuery<IgetSpotBalanceResponse, Error>({
+  useQuery<IGetSpotBalanceResponse, Error>({
     queryKey: [QueryKeys.SpotBalance],
     queryFn: async () => {
       const data = await getSpotBalance();
@@ -44,15 +43,20 @@ const useDashboard = () => {
     refetchOnWindowFocus: false,
   });
 
-  useQuery<IgetFuturesBalanceResponse, Error>({
+  useQuery<IGetFuturesBalanceResponse, Error>({
     queryKey: [QueryKeys.FuturesBalance],
     queryFn: async () => {
       const data = await getFuturesBalance();
-      setFuturesBalance(
-        data.positions.filter(
-          // @ts-expect-error TODO: fix this
-          (b) => parseFloat(b.free) > 0 || parseFloat(b.locked) > 0,
+      setFuturesAssets(
+        data.assets.filter(
+          (a) =>
+            parseFloat(a.walletBalance) > 0 ||
+            parseFloat(a.unrealizedProfit) !== 0,
         ),
+      );
+
+      setFuturesPositions(
+        data.positions.filter((p) => parseFloat(p.positionAmt) !== 0),
       );
 
       return data;
@@ -60,80 +64,58 @@ const useDashboard = () => {
     refetchOnWindowFocus: false,
   });
 
-  const { data: spotUSDBalance } = useQuery({
-    queryKey: [QueryKeys.BinanceSpotPrice, spotBalance?.map((b) => b.asset)],
-    queryFn: async () => {
-      if (spotBalance && spotBalance.length <= 10) {
-        const results = await Promise.allSettled(
-          spotBalance.map((b) => getCoinPrice(b.asset)),
-        );
-
-        const total = spotBalance.reduce((sum, b, i) => {
-          const amount = parseFloat(b.free) + parseFloat(b.locked);
-
-          if (['USDT', 'BUSD', 'USDC'].includes(b.asset)) {
-            return sum + amount;
-          }
-
-          const result = results[i];
-          if (result.status === 'fulfilled') {
-            const price = parseFloat(result.value.price);
-            return sum + amount * price;
-          }
-
-          return sum;
-        }, 0);
-
-        return total ?? 0;
-      } else {
-        // return getAllPrices(); // NOT NEED NOW
-      }
-    },
+  const { data: allSpotPrices } = useQuery({
+    queryKey: [QueryKeys.AllSpotPrices],
+    queryFn: getAllCoinPrice,
     refetchOnWindowFocus: false,
-    staleTime: 60_000, // 60 MIN TO REFRESH
-    enabled: !!(spotBalance && spotBalance?.length > 0),
+    staleTime: 60_000,
   });
 
-  const { data: futuresUSDBalance } = useQuery({
-    queryKey: [
-      QueryKeys.BinanceFuturesPrice,
-      futuresBalance?.map((b) => b.symbol),
-    ],
-    queryFn: async () => {
-      if (futuresBalance && futuresBalance.length <= 10) {
-        const results = await Promise.allSettled(
-          futuresBalance.map((b) => getCoinPrice(b.symbol)),
-        );
+  const spotUSDBalance = useMemo(() => {
+    if (!spotBalance || !allSpotPrices) return 0;
 
-        const total = futuresBalance.reduce((sum, b, i) => {
-          const amount = parseFloat(b.positionAmt);
+    const priceMap = new Map(
+      allSpotPrices.map((p: any) => [p.symbol, parseFloat(p.price)]),
+    );
 
-          if (['USDT', 'BUSD', 'USDC'].includes(b.symbol)) {
-            return sum + amount;
-          }
+    return spotBalance.reduce((sum, b) => {
+      const amount = parseFloat(b.free) + parseFloat(b.locked);
 
-          const result = results[i];
-          if (result.status === 'fulfilled') {
-            const price = parseFloat(result.value.price);
-            return sum + amount * price;
-          }
-
-          return sum;
-        }, 0);
-
-        return total ?? 0;
-      } else {
-        // return getAllPrices(); // NOT NEED NOW
+      if (['USDT', 'BUSD', 'USDC'].includes(b.asset)) {
+        return sum + amount;
       }
-    },
-    refetchOnWindowFocus: false,
-    staleTime: 60_000, // 60 MIN TO REFRESH
-    enabled: !!(spotBalance && spotBalance?.length > 0),
-  });
+
+      const symbol = `${b.asset}USDT`;
+      const price = priceMap.get(symbol);
+
+      return price ? sum + amount * price : sum;
+    }, 0);
+  }, [spotBalance, allSpotPrices]);
+
+  const futuresUSDBalance = useMemo(() => {
+    if (!futuresAssets || !allSpotPrices) return 0;
+
+    const priceMap = new Map(
+      allSpotPrices.map((p: any) => [p.symbol, parseFloat(p.price)]),
+    );
+
+    return futuresAssets.reduce((sum, b) => {
+      const amount = parseFloat(b.walletBalance);
+
+      if (['USDT', 'BUSD', 'USDC'].includes(b.asset)) {
+        return sum + amount;
+      }
+
+      const symbol = `${b.asset}USDT`;
+      const price = priceMap.get(symbol);
+
+      return price ? sum + amount * price : sum;
+    }, 0);
+  }, [futuresAssets, allSpotPrices]);
 
   return {
     spotBalance,
-    futuresBalance,
+    futuresAssets,
     spotUSDBalance,
     futuresUSDBalance,
     accountPnlData,

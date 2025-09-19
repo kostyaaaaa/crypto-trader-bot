@@ -39,7 +39,7 @@ const Dashboard: FC = () => {
         </CardWrapper>
       </div>
 
-      <CustomChart />
+      {/* <CustomChart />
 
       <div className="dashboard-list">
         {coinList.map((coin) => (
@@ -50,7 +50,7 @@ const Dashboard: FC = () => {
             handleChange={handleChangeCoinList(coin.id)}
           />
         ))}
-      </div>
+      </div> */}
     </div>
   );
 };
