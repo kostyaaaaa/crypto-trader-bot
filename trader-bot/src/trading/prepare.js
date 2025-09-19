@@ -16,7 +16,7 @@ export async function preparePosition(symbol, cfg, analysis, side) {
   if (exits.sl.type === 'hard') {
     const movePct = exits.sl.hardPct / 100;
     stopPrice =
-        side === 'LONG' ? entryPrice * (1 - movePct) : entryPrice * (1 + movePct);
+      side === 'LONG' ? entryPrice * (1 - movePct) : entryPrice * (1 + movePct);
   }
 
   // 3. Тейк-профіти
@@ -24,7 +24,9 @@ export async function preparePosition(symbol, cfg, analysis, side) {
   if (exits.tp.use) {
     exits.tp.tpGridPct.forEach((pct, i) => {
       const tpPrice =
-          side === 'LONG' ? entryPrice * (1 + pct / 100) : entryPrice * (1 - pct / 100);
+        side === 'LONG'
+          ? entryPrice * (1 + pct / 100)
+          : entryPrice * (1 - pct / 100);
 
       takeProfits.push({
         price: tpPrice,
@@ -50,6 +52,8 @@ export async function preparePosition(symbol, cfg, analysis, side) {
     initialTPs: takeProfits,
     riskUsd: riskPerTradeUsd,
     analysisRefs: [analysis.time],
-    updates: [{ time: new Date().toISOString(), action: 'OPEN', price: entryPrice }],
+    updates: [
+      { time: new Date().toISOString(), action: 'OPEN', price: entryPrice },
+    ],
   };
 }

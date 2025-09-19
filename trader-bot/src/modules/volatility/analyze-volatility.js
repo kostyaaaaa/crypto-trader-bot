@@ -4,10 +4,10 @@
 // Використовуємо пороги з конфігу volatilityFilter
 
 export async function analyzeVolatility(
-    symbol = 'ETHUSDT',
-    candles = [],
-    window = 14,
-    volatilityFilter = { deadBelow: 0.2, extremeAbove: 2.5 } // дефолт
+  symbol = 'ETHUSDT',
+  candles = [],
+  window = 14,
+  volatilityFilter = { deadBelow: 0.2, extremeAbove: 2.5 }, // дефолт
 ) {
   if (!candles || candles.length < window + 1) {
     console.log(`⚠️ Not enough candles for ${symbol}, need ${window + 1}`);

@@ -24,11 +24,11 @@ export async function tradingEngine(symbol, config) {
     const lastClosed = [...history].reverse().find((p) => p.symbol === symbol);
     if (lastClosed?.closedAt) {
       const minutesSince =
-          (Date.now() - new Date(lastClosed.closedAt).getTime()) / 60000;
+        (Date.now() - new Date(lastClosed.closedAt).getTime()) / 60000;
       const cooldown = config.strategy.entry.cooldownMin || 0;
       if (minutesSince < cooldown) {
         console.log(
-            `⏸️ ${symbol}: cooldown ${cooldown}m, залишилось ${(cooldown - minutesSince).toFixed(1)}m`,
+          `⏸️ ${symbol}: cooldown ${cooldown}m, залишилось ${(cooldown - minutesSince).toFixed(1)}m`,
         );
         return;
       }
@@ -46,12 +46,12 @@ export async function tradingEngine(symbol, config) {
 
   // --- 2. Визначаємо більшість ---
   const majority = decisions
-      .sort(
-          (a, b) =>
-              decisions.filter((v) => v === a).length -
-              decisions.filter((v) => v === b).length,
-      )
-      .pop();
+    .sort(
+      (a, b) =>
+        decisions.filter((v) => v === a).length -
+        decisions.filter((v) => v === b).length,
+    )
+    .pop();
 
   if (majority === 'NEUTRAL') {
     console.log(`⚠️ ${symbol}: skip, majority is NEUTRAL`);
@@ -63,7 +63,7 @@ export async function tradingEngine(symbol, config) {
 
   if (analysis.bias !== majority) {
     console.log(
-        `⚠️ ${symbol}: skip, last analysis bias ${analysis.bias} ≠ majority ${majority}`,
+      `⚠️ ${symbol}: skip, last analysis bias ${analysis.bias} ≠ majority ${majority}`,
     );
     return;
   }
@@ -74,14 +74,18 @@ export async function tradingEngine(symbol, config) {
   // --- 3a. Мінімальні скор / модулі ---
   const minScore = entry.minScore[majority];
   if (scores[majority] < minScore) {
-    console.log(`⚠️ ${symbol}: skip, score ${scores[majority]} < minScore ${minScore}`);
+    console.log(
+      `⚠️ ${symbol}: skip, score ${scores[majority]} < minScore ${minScore}`,
+    );
     return;
   }
 
   if (coverage) {
     const [filled, total] = coverage.split('/').map(Number);
     if (filled < entry.minModules) {
-      console.log(`⚠️ ${symbol}: skip, only ${filled} modules < min ${entry.minModules}`);
+      console.log(
+        `⚠️ ${symbol}: skip, only ${filled} modules < min ${entry.minModules}`,
+      );
       return;
     }
   }
@@ -99,7 +103,7 @@ export async function tradingEngine(symbol, config) {
   const diff = Math.abs(scores.LONG - scores.SHORT);
   if (diff < entry.sideBiasTolerance) {
     console.log(
-        `⚠️ ${symbol}: skip, bias difference ${diff} < tolerance ${entry.sideBiasTolerance}`,
+      `⚠️ ${symbol}: skip, bias difference ${diff} < tolerance ${entry.sideBiasTolerance}`,
     );
     return;
   }
@@ -115,9 +119,12 @@ export async function tradingEngine(symbol, config) {
   }
 
   // --- 3d. Перевірка spread ---
-  if (modules?.liquidity?.spreadPct && modules.liquidity.spreadPct > entry.maxSpreadPct) {
+  if (
+    modules?.liquidity?.spreadPct &&
+    modules.liquidity.spreadPct > entry.maxSpreadPct
+  ) {
     console.log(
-        `⚠️ ${symbol}: skip, spread ${modules.liquidity.spreadPct}% > max ${entry.maxSpreadPct}%`,
+      `⚠️ ${symbol}: skip, spread ${modules.liquidity.spreadPct}% > max ${entry.maxSpreadPct}%`,
     );
     return;
   }
@@ -150,7 +157,7 @@ export async function tradingEngine(symbol, config) {
 
     if (higherTrend.signal !== majority) {
       console.log(
-          `⚠️ ${symbol}: skip, higher TF ${higherTF} conflict (signal ${higherTrend.signal})`,
+        `⚠️ ${symbol}: skip, higher TF ${higherTF} conflict (signal ${higherTrend.signal})`,
       );
       return;
     }
@@ -170,11 +177,11 @@ export async function tradingEngine(symbol, config) {
 
   // --- 6. Готуємо повну позицію ---
   const position = await preparePosition(
-      symbol,
-      config,
-      analysis,
-      majority,
-      size,
+    symbol,
+    config,
+    analysis,
+    majority,
+    size,
   );
 
   await addPosition(position);

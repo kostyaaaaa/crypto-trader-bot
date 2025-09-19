@@ -3,16 +3,16 @@ export const ANALYSIS_CONFIG = {
     // --- Налаштування аналізу ---
     analysisConfig: {
       candleTimeframe: '5m',
-      oiWindow: 10,        // 10 * 5m = ~50 хв історії
-      liqWindow: 20,       // 20 хв ліквідності (можна залишити)
-      liqSentWindow: 5,    // 5 хв ліквідацій
-      fundingWindow: 80,   // ~1h20 усереднення funding
-      volWindow: 14,       // ATR(14) → ~70 хв історії
-      corrWindow: 5,       // 5 хв для кореляції з BTC
+      oiWindow: 10, // 10 * 5m = ~50 хв історії
+      liqWindow: 20, // 20 хв ліквідності (можна залишити)
+      liqSentWindow: 5, // 5 хв ліквідацій
+      fundingWindow: 80, // ~1h20 усереднення funding
+      volWindow: 14, // ATR(14) → ~70 хв історії
+      corrWindow: 5, // 5 хв для кореляції з BTC
 
       // --- Ваги модулів у підсумковому скорі ---
       weights: {
-        trend: 0.3,        // тренд на 5m сильніше
+        trend: 0.3, // тренд на 5m сильніше
         liquidity: 0.2,
         funding: 0.15,
         liquidations: 0.15,
@@ -45,8 +45,8 @@ export const ANALYSIS_CONFIG = {
         sideBiasTolerance: 5, // мін. різниця між LONG/SHORT скором
       },
       volatilityFilter: {
-        deadBelow: 0.2,    // ATR% < 0.2 → ринок "мертвий"
-        extremeAbove: 2.5  // ATR% > 2.5 → ринок "екстремальний"
+        deadBelow: 0.2, // ATR% < 0.2 → ринок "мертвий"
+        extremeAbove: 2.5, // ATR% > 2.5 → ринок "екстремальний"
       },
       capital: {
         account: 200, // розмір усього акаунту (USD)
@@ -93,17 +93,17 @@ export const ANALYSIS_CONFIG = {
     // --- Налаштування аналізу ---
     analysisConfig: {
       candleTimeframe: '1m',
-      oiWindow: 30,        // 30 хв історії OI (шумно менше)
-      liqWindow: 20,       // 20 хв ліквідності
-      liqSentWindow: 3,    // останні 3 хв ліквідацій (швидко реагує)
-      fundingWindow: 60,   // 1 година усереднення funding
-      volWindow: 21,       // ATR(21) → 21 хв історії
+      oiWindow: 30, // 30 хв історії OI (шумно менше)
+      liqWindow: 20, // 20 хв ліквідності
+      liqSentWindow: 3, // останні 3 хв ліквідацій (швидко реагує)
+      fundingWindow: 60, // 1 година усереднення funding
+      volWindow: 21, // ATR(21) → 21 хв історії
       corrWindow: 3,
 
       // --- Ваги модулів у підсумковому скорі ---
       weights: {
         trend: 0.2,
-        liquidity: 0.25,   // ліквідність важливіша на хвилинках
+        liquidity: 0.25, // ліквідність важливіша на хвилинках
         funding: 0.1,
         liquidations: 0.2,
         openInterest: 0.15,
@@ -112,7 +112,7 @@ export const ANALYSIS_CONFIG = {
 
       // --- Мінімальна сила сигналів від кожного модуля (0–100) ---
       moduleThresholds: {
-        trend: 30,         // швидкі свічки дають менший поріг
+        trend: 30, // швидкі свічки дають менший поріг
         liquidity: 25,
         funding: 15,
         liquidations: 30,
@@ -137,8 +137,8 @@ export const ANALYSIS_CONFIG = {
         sideBiasTolerance: 5, // мін. різниця між LONG/SHORT скором
       },
       volatilityFilter: {
-        deadBelow: 0.2,    // ATR% < 0.2 → ринок "мертвий"
-        extremeAbove: 2.5  // ATR% > 2.5 → ринок "екстремальний"
+        deadBelow: 0.2, // ATR% < 0.2 → ринок "мертвий"
+        extremeAbove: 2.5, // ATR% > 2.5 → ринок "екстремальний"
       },
       capital: {
         account: 200, // розмір усього акаунту (USD)

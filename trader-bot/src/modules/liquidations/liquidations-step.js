@@ -4,7 +4,7 @@
 
 import WebSocket from 'ws';
 import { saveDoc } from '../../storage/storage.js';
-import {logStream} from "../../utils/logger.js";
+import { logStream } from '../../utils/logger.js';
 
 export function LiquidationsStepWS(
   symbol = 'ETHUSDT',

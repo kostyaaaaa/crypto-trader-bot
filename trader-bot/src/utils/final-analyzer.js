@@ -10,10 +10,10 @@ import { saveDoc, loadDocs } from '../storage/storage.js';
 import { aggregateCandles } from './candles.js';
 
 export async function finalAnalyzer({
-                                      symbol = 'ETHUSDT',
-                                      analysisConfig = {},
-                                      save = true, // ⚡️ новий прапорець — чи зберігати результат
-                                    } = {}) {
+  symbol = 'ETHUSDT',
+  analysisConfig = {},
+  save = true, // ⚡️ новий прапорець — чи зберігати результат
+} = {}) {
   const {
     candleTimeframe = '1m',
     oiWindow = 10,
@@ -62,14 +62,14 @@ export async function finalAnalyzer({
   else if (scoreSHORT > 50) decision = 'WEAK SHORT';
 
   const bias =
-      scoreLONG > scoreSHORT
-          ? 'LONG'
-          : scoreSHORT > scoreLONG
-              ? 'SHORT'
-              : 'NEUTRAL';
+    scoreLONG > scoreSHORT
+      ? 'LONG'
+      : scoreSHORT > scoreLONG
+        ? 'SHORT'
+        : 'NEUTRAL';
 
   const filledModules = Object.values(modules).filter(
-      (m) => (m?.LONG || 0) + (m?.SHORT || 0) > 0,
+    (m) => (m?.LONG || 0) + (m?.SHORT || 0) > 0,
   ).length;
 
   const result = {

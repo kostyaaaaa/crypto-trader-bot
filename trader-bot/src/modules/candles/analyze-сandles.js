@@ -8,7 +8,7 @@ import { EMA, RSI } from '../../utils/getEMAAndRSI.js';
 export async function analyzeCandles(symbol = 'ETHUSDT', candles = []) {
   if (!candles || candles.length < 21) {
     console.log(
-        `⏳ Only ${candles?.length || 0} candles for ${symbol}, need ≥21...`,
+      `⏳ Only ${candles?.length || 0} candles for ${symbol}, need ≥21...`,
     );
     return null;
   }

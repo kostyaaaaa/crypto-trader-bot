@@ -16,7 +16,8 @@ export function aggregateCandles(candles, timeframe = '1m') {
 
   for (const c of candles) {
     const ts = new Date(c.time).getTime();
-    const bucketStart = Math.floor(ts / (factor * 60 * 1000)) * (factor * 60 * 1000);
+    const bucketStart =
+      Math.floor(ts / (factor * 60 * 1000)) * (factor * 60 * 1000);
 
     if (!bucket || bucket.time !== bucketStart) {
       if (bucket) grouped.push(bucket);

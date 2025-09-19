@@ -5,7 +5,10 @@ const DATA_DIR = './';
 
 async function loadFile(collection) {
   try {
-    const raw = await fs.readFile(path.join(DATA_DIR, `${collection}.json`), 'utf-8');
+    const raw = await fs.readFile(
+      path.join(DATA_DIR, `${collection}.json`),
+      'utf-8',
+    );
     const arr = JSON.parse(raw);
     return Array.isArray(arr) ? arr : [];
   } catch {
@@ -15,8 +18,8 @@ async function loadFile(collection) {
 
 async function saveFile(collection, data) {
   await fs.writeFile(
-      path.join(DATA_DIR, `${collection}.json`),
-      JSON.stringify(data, null, 2),
+    path.join(DATA_DIR, `${collection}.json`),
+    JSON.stringify(data, null, 2),
   );
 }
 
@@ -25,7 +28,7 @@ async function saveFile(collection, data) {
 export async function getActivePositions(symbol = null) {
   const all = await loadFile('positions');
   return all.filter(
-      (p) => p.status === 'OPEN' && (!symbol || p.symbol === symbol),
+    (p) => p.status === 'OPEN' && (!symbol || p.symbol === symbol),
   );
 }
 
@@ -137,8 +140,8 @@ export async function flipPosition(id, newSide, price) {
 
 export async function applyAddToPosition(pos, price, sizing, exits) {
   const addSize = Math.min(
-      sizing.baseSizeUsd * (sizing.addMultiplier || 1),
-      (sizing.maxPositionUsd ?? Infinity) - pos.size,
+    sizing.baseSizeUsd * (sizing.addMultiplier || 1),
+    (sizing.maxPositionUsd ?? Infinity) - pos.size,
   );
   if (addSize <= 0) return pos;
 
@@ -150,11 +153,15 @@ export async function applyAddToPosition(pos, price, sizing, exits) {
   if (exits?.sl?.type === 'hard') {
     const movePct = (exits.sl.hardPct || 0) / 100;
     const updatedStop =
-        pos.side === 'LONG' ? newEntry * (1 - movePct) : newEntry * (1 + movePct);
+      pos.side === 'LONG' ? newEntry * (1 - movePct) : newEntry * (1 + movePct);
 
     if (newStop !== updatedStop) {
       newStop = updatedStop;
-      pos.updates.push({ time: new Date().toISOString(), action: 'STOP MOVE', price: newStop });
+      pos.updates.push({
+        time: new Date().toISOString(),
+        action: 'STOP MOVE',
+        price: newStop,
+      });
     }
   }
 
@@ -162,9 +169,9 @@ export async function applyAddToPosition(pos, price, sizing, exits) {
   if (exits?.tp?.use && exits.tp.tpGridPct?.length) {
     newTps = exits.tp.tpGridPct.map((pct, i) => {
       const tpPrice =
-          pos.side === 'LONG'
-              ? newEntry * (1 + pct / 100)
-              : newEntry * (1 - pct / 100);
+        pos.side === 'LONG'
+          ? newEntry * (1 + pct / 100)
+          : newEntry * (1 - pct / 100);
       return { price: tpPrice, sizePct: exits.tp.tpGridSizePct[i] || 0 };
     });
     pos.updates.push({ time: new Date().toISOString(), action: 'TP MOVE' });
@@ -191,7 +198,7 @@ export async function applyAddToPosition(pos, price, sizing, exits) {
   await saveFile('positions', all);
 
   console.log(
-      `➕ Added ${addSize}$ to ${pos.symbol} @ ${price}. New entry=${newEntry}, size=${newSize}`,
+    `➕ Added ${addSize}$ to ${pos.symbol} @ ${price}. New entry=${newEntry}, size=${newSize}`,
   );
 
   return next;

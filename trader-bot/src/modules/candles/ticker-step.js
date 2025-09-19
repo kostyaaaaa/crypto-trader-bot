@@ -4,7 +4,7 @@
 
 import WebSocket from 'ws';
 import { saveDoc } from '../../storage/storage.js';
-import {logStream} from "../../utils/logger.js";
+import { logStream } from '../../utils/logger.js';
 
 export function TickerStepWS(symbol = 'ETHUSDT') {
   const lower = symbol.toLowerCase();
@@ -61,7 +61,7 @@ export function TickerStepWS(symbol = 'ETHUSDT') {
     }
   });
 
-  wsKline.on('open', () =>  logStream(symbol, 'kline_1m') );
+  wsKline.on('open', () => logStream(symbol, 'kline_1m'));
   wsBook.on('open', () => logStream(symbol, 'bookTicker'));
 
   wsKline.on('error', (err) =>

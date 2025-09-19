@@ -5,7 +5,7 @@
 
 import WebSocket from 'ws';
 import { saveDoc } from '../../storage/storage.js';
-import {logStream} from "../../utils/logger.js";
+import { logStream } from '../../utils/logger.js';
 
 export function BtcStepWS(symbol = 'BTCUSDT') {
   const lower = symbol.toLowerCase();
