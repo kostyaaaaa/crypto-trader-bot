@@ -1,15 +1,11 @@
-// trading/positions.js
 import fs from 'fs/promises';
 import path from 'path';
 
-const DATA_DIR = './'; // якщо файли лежать у корені
+const DATA_DIR = './';
 
 async function loadFile(collection) {
   try {
-    const raw = await fs.readFile(
-      path.join(DATA_DIR, `${collection}.json`),
-      'utf-8',
-    );
+    const raw = await fs.readFile(path.join(DATA_DIR, `${collection}.json`), 'utf-8');
     const arr = JSON.parse(raw);
     return Array.isArray(arr) ? arr : [];
   } catch {
@@ -19,26 +15,25 @@ async function loadFile(collection) {
 
 async function saveFile(collection, data) {
   await fs.writeFile(
-    path.join(DATA_DIR, `${collection}.json`),
-    JSON.stringify(data, null, 2),
+      path.join(DATA_DIR, `${collection}.json`),
+      JSON.stringify(data, null, 2),
   );
 }
 
-/** Отримати всі відкриті позиції */
+// --- Positions API ---
+
 export async function getActivePositions(symbol = null) {
   const all = await loadFile('positions');
   return all.filter(
-    (p) => p.status === 'OPEN' && (!symbol || p.symbol === symbol),
+      (p) => p.status === 'OPEN' && (!symbol || p.symbol === symbol),
   );
 }
 
-/** Отримати позицію за id */
 export async function getPositionById(id) {
   const all = await loadFile('positions');
   return all.find((p) => p.id === id) || null;
 }
 
-/** Додати нову позицію */
 export async function addPosition(position) {
   const all = await loadFile('positions');
   all.push(position);
@@ -46,7 +41,6 @@ export async function addPosition(position) {
   return position;
 }
 
-/** Оновити існуючу позицію (перезапис у файлі) */
 export async function updatePosition(id, updates) {
   const all = await loadFile('positions');
   const idx = all.findIndex((p) => p.id === id);
@@ -60,7 +54,6 @@ export async function updatePosition(id, updates) {
   return next;
 }
 
-/** Закрити позицію */
 export async function closePosition(id, reason, price) {
   const curr = await getPositionById(id);
   if (!curr) return null;
@@ -82,7 +75,6 @@ export async function closePosition(id, reason, price) {
     await saveFile('positions', all);
   }
 
-  // історію можна апендити окремо
   const hist = await loadFile('history');
   hist.push(next);
   await saveFile('history', hist);
@@ -90,7 +82,6 @@ export async function closePosition(id, reason, price) {
   return next;
 }
 
-/** Часткова фіксація */
 export async function partialClose(id, sizePct, reason, price) {
   const curr = await getPositionById(id);
   if (!curr) return null;
@@ -140,16 +131,14 @@ export async function partialClose(id, sizePct, reason, price) {
   return next;
 }
 
-/** Flip */
 export async function flipPosition(id, newSide, price) {
   return await closePosition(id, 'FLIP', price);
 }
 
-/** Долив (DCA) */
 export async function applyAddToPosition(pos, price, sizing, exits) {
   const addSize = Math.min(
-    sizing.baseSizeUsd * (sizing.addMultiplier || 1),
-    (sizing.maxPositionUsd ?? Infinity) - pos.size,
+      sizing.baseSizeUsd * (sizing.addMultiplier || 1),
+      (sizing.maxPositionUsd ?? Infinity) - pos.size,
   );
   if (addSize <= 0) return pos;
 
@@ -160,19 +149,25 @@ export async function applyAddToPosition(pos, price, sizing, exits) {
   let newStop = pos.stopPrice ?? null;
   if (exits?.sl?.type === 'hard') {
     const movePct = (exits.sl.hardPct || 0) / 100;
-    newStop =
-      pos.side === 'LONG' ? newEntry * (1 - movePct) : newEntry * (1 + movePct);
+    const updatedStop =
+        pos.side === 'LONG' ? newEntry * (1 - movePct) : newEntry * (1 + movePct);
+
+    if (newStop !== updatedStop) {
+      newStop = updatedStop;
+      pos.updates.push({ time: new Date().toISOString(), action: 'STOP MOVE', price: newStop });
+    }
   }
 
   let newTps = pos.takeProfits || [];
   if (exits?.tp?.use && exits.tp.tpGridPct?.length) {
     newTps = exits.tp.tpGridPct.map((pct, i) => {
       const tpPrice =
-        pos.side === 'LONG'
-          ? newEntry * (1 + pct / 100)
-          : newEntry * (1 - pct / 100);
+          pos.side === 'LONG'
+              ? newEntry * (1 + pct / 100)
+              : newEntry * (1 - pct / 100);
       return { price: tpPrice, sizePct: exits.tp.tpGridSizePct[i] || 0 };
     });
+    pos.updates.push({ time: new Date().toISOString(), action: 'TP MOVE' });
   }
 
   const now = new Date().toISOString();
@@ -196,7 +191,7 @@ export async function applyAddToPosition(pos, price, sizing, exits) {
   await saveFile('positions', all);
 
   console.log(
-    `➕ Added ${addSize}$ to ${pos.symbol} @ ${price}. New entry=${newEntry}, size=${newSize}`,
+      `➕ Added ${addSize}$ to ${pos.symbol} @ ${price}. New entry=${newEntry}, size=${newSize}`,
   );
 
   return next;

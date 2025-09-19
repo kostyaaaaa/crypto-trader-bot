@@ -2,22 +2,22 @@ export const ANALYSIS_CONFIG = {
   ENAUSDT: {
     // --- Налаштування аналізу ---
     analysisConfig: {
-      candleTimeframe: '1m',
-      oiWindow: 10, // кількість 5m-свічок для Open Interest (~50 хв)
-      liqWindow: 20, // кількість хвилин для аналізу ліквідності
-      liqSentWindow: 5, // хвилин для ліквідацій
-      fundingWindow: 80, // хвилин усереднення funding rate
-      volWindow: 14, // період ATR (волатильність)
-      corrWindow: 5, // хвилин для перевірки кореляції з BTC
+      candleTimeframe: '5m',
+      oiWindow: 10,        // 10 * 5m = ~50 хв історії
+      liqWindow: 20,       // 20 хв ліквідності (можна залишити)
+      liqSentWindow: 5,    // 5 хв ліквідацій
+      fundingWindow: 80,   // ~1h20 усереднення funding
+      volWindow: 14,       // ATR(14) → ~70 хв історії
+      corrWindow: 5,       // 5 хв для кореляції з BTC
 
       // --- Ваги модулів у підсумковому скорі ---
       weights: {
-        trend: 0.25, // тренд найбільш ваажливий
+        trend: 0.3,        // тренд на 5m сильніше
         liquidity: 0.2,
         funding: 0.15,
         liquidations: 0.15,
         openInterest: 0.15,
-        correlation: 0.1,
+        correlation: 0.05, // менш важлива на довших ТФ
       },
       moduleThresholds: {
         trend: 40,
@@ -34,7 +34,7 @@ export const ANALYSIS_CONFIG = {
       entry: {
         minScore: { LONG: 44, SHORT: 44 }, // мінімальний сумарний скор для входу
         minModules: 3, // скільки модулів мають співпасти
-        requiredModules: ['trend'], // обов'язкові модулі (наприклад тренд)
+        requiredModules: ['trend'], // обов'fязкові модулі (наприклад тренд)
         maxSpreadPct: 0.05, // фільтр: не входимо якщо спред >0.05%
         cooldownMin: 3, // антиспам: мінімальний час між входами
         avoidWhen: {
@@ -44,7 +44,10 @@ export const ANALYSIS_CONFIG = {
         },
         sideBiasTolerance: 5, // мін. різниця між LONG/SHORT скором
       },
-
+      volatilityFilter: {
+        deadBelow: 0.2,    // ATR% < 0.2 → ринок "мертвий"
+        extremeAbove: 2.5  // ATR% > 2.5 → ринок "екстремальний"
+      },
       capital: {
         account: 200, // розмір усього акаунту (USD)
         riskPerTradePct: 0.5, // % ризику на одну угоду
@@ -63,8 +66,8 @@ export const ANALYSIS_CONFIG = {
       exits: {
         tp: {
           use: true, // чи використовуємо тейки
-          tpGridPct: [0.4, 0.8, 1.2], // рівні тейків (% від входу)
-          tpGridSizePct: [40, 30, 30], // частки позиції для фіксації
+          tpGridPct: [3, 5], // рівні тейків (% від входу)
+          tpGridSizePct: [60, 40], // частки позиції для фіксації
         },
         sl: {
           type: 'hard', // "signal" або "hard"
@@ -89,30 +92,31 @@ export const ANALYSIS_CONFIG = {
   HIFIUSDT: {
     // --- Налаштування аналізу ---
     analysisConfig: {
-      oiWindow: 10, // кількість 5m-свічок для Open Interest (~50 хв)
-      liqWindow: 20, // кількість хвилин для аналізу ліквідності
-      liqSentWindow: 5, // хвилин для ліквідацій
-      fundingWindow: 80, // хвилин усереднення funding rate
-      volWindow: 14, // період ATR (волатильність)
-      corrWindow: 5, // хвилин для перевірки кореляції з BTC
+      candleTimeframe: '1m',
+      oiWindow: 30,        // 30 хв історії OI (шумно менше)
+      liqWindow: 20,       // 20 хв ліквідності
+      liqSentWindow: 3,    // останні 3 хв ліквідацій (швидко реагує)
+      fundingWindow: 60,   // 1 година усереднення funding
+      volWindow: 21,       // ATR(21) → 21 хв історії
+      corrWindow: 3,
 
       // --- Ваги модулів у підсумковому скорі ---
       weights: {
-        trend: 0.25, // тренд найбільш важливий
-        liquidity: 0.2,
-        funding: 0.15,
-        liquidations: 0.15,
+        trend: 0.2,
+        liquidity: 0.25,   // ліквідність важливіша на хвилинках
+        funding: 0.1,
+        liquidations: 0.2,
         openInterest: 0.15,
         correlation: 0.1,
       },
 
       // --- Мінімальна сила сигналів від кожного модуля (0–100) ---
       moduleThresholds: {
-        trend: 40,
-        liquidity: 30,
-        funding: 20,
-        liquidations: 40,
-        openInterest: 20,
+        trend: 30,         // швидкі свічки дають менший поріг
+        liquidity: 25,
+        funding: 15,
+        liquidations: 30,
+        openInterest: 15,
         correlation: 10,
       },
     },
@@ -132,7 +136,10 @@ export const ANALYSIS_CONFIG = {
         },
         sideBiasTolerance: 5, // мін. різниця між LONG/SHORT скором
       },
-
+      volatilityFilter: {
+        deadBelow: 0.2,    // ATR% < 0.2 → ринок "мертвий"
+        extremeAbove: 2.5  // ATR% > 2.5 → ринок "екстремальний"
+      },
       capital: {
         account: 200, // розмір усього акаунту (USD)
         riskPerTradePct: 0.5, // % ризику на одну угоду
@@ -151,7 +158,7 @@ export const ANALYSIS_CONFIG = {
       exits: {
         tp: {
           use: true, // чи використовуємо тейки
-          tpGridPct: [0.8, 1.5, 2], // рівні тейків (% від входу)
+          tpGridPct: [0.8, 1.5], // рівні тейків (% від входу)
           tpGridSizePct: [60, 40], // частки позиції для фіксації
         },
         sl: {

@@ -8,6 +8,7 @@
 
 import WebSocket from 'ws';
 import { saveDoc } from '../../storage/storage.js';
+import {logStream} from "../../utils/logger.js";
 
 export function OrderBookStepWS(symbol = 'BTCUSDT') {
   const ws = new WebSocket(
@@ -17,9 +18,7 @@ export function OrderBookStepWS(symbol = 'BTCUSDT') {
   let imbalances = [];
   let spreads = [];
 
-  ws.on('open', () => {
-    console.log(`✅ Connected to Binance OrderBook WS (${symbol})`);
-  });
+  ws.on('open', () => logStream(symbol, 'OrderBook'));
 
   ws.on('message', (msg) => {
     const data = JSON.parse(msg.toString());

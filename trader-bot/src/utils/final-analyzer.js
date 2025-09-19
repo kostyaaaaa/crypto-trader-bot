@@ -1,4 +1,4 @@
-// final-analyzer.js
+// utils/final-analyzer.js
 import { analyzeCandles } from '../modules/candles/analyze-сandles.js';
 import { analyzeLiquidity } from '../modules/orderbook/analyze-liquidity.js';
 import { analyzeLiquidations } from '../modules/liquidations/analyze-liquidations.js';
@@ -7,61 +7,47 @@ import { analyzeVolatility } from '../modules/volatility/analyze-volatility.js';
 import { analyzeFunding } from '../modules/funding/analyze-funding.js';
 import { analyzeCorrelation } from '../modules/correlation/analyze-correlation.js';
 import { saveDoc, loadDocs } from '../storage/storage.js';
-import { aggregateCandles } from '../utils/candles.js';
+import { aggregateCandles } from './candles.js';
 
 export async function finalAnalyzer({
-  symbol = 'ETHUSDT',
-  analysisConfig = {},
-} = {}) {
+                                      symbol = 'ETHUSDT',
+                                      analysisConfig = {},
+                                      save = true, // ⚡️ новий прапорець — чи зберігати результат
+                                    } = {}) {
   const {
-    candleTimeframe = '1m', // нове поле: 1m або 5m
+    candleTimeframe = '1m',
     oiWindow = 10,
     liqWindow = 20,
     liqSentWindow = 5,
     fundingWindow = 60,
     volWindow = 14,
     corrWindow = 5,
-    weights = {}, // беремо з analysisConfig
-    moduleThresholds = {}, // теж з analysisConfig
+    weights = {},
+    moduleThresholds = {},
   } = analysisConfig;
 
-  // --- завантажуємо сирі 1m свічки ---
+  // --- завантажуємо і агрегуємо 1m свічки ---
   const rawCandles = await loadDocs('candles', symbol, 500);
-  // --- агрегуємо якщо треба ---
   const candles = aggregateCandles(rawCandles, candleTimeframe);
-
   const modules = {};
 
-  // --- Trend (EMA/RSI) ---
+  // всі модулі тепер отримують готові свічки!
   modules.trend = await analyzeCandles(symbol, candles);
+  modules.volatility = await analyzeVolatility(symbol, candles, volWindow);
 
-  // --- Liquidity ---
   modules.liquidity = await analyzeLiquidity(symbol, liqWindow);
-
-  // --- Funding ---
   modules.funding = await analyzeFunding(symbol, fundingWindow);
-
-  // --- Liquidations ---
   modules.liquidations = await analyzeLiquidations(symbol, liqSentWindow);
-
-  // --- Open Interest ---
   modules.openInterest = await analyzeOpenInterest(symbol, oiWindow);
-
-  // --- Volatility ---
-  modules.volatility = await analyzeVolatility(symbol, volWindow);
-
-  // --- Correlation ---
   modules.correlation = await analyzeCorrelation(symbol, corrWindow);
 
-  // --- Weighted scoring ---
+  // --- скорінг ---
   function weightedScore(side) {
     return Object.entries(modules).reduce((acc, [k, v]) => {
       if (!v) return acc;
       const strength = v[side] || 0;
       const threshold = moduleThresholds[k] || 0;
-
-      if (strength < threshold) return acc; // відкидаємо слабкі сигнали
-
+      if (strength < threshold) return acc;
       return acc + strength * (weights[k] || 0);
     }, 0);
   }
@@ -76,20 +62,20 @@ export async function finalAnalyzer({
   else if (scoreSHORT > 50) decision = 'WEAK SHORT';
 
   const bias =
-    scoreLONG > scoreSHORT
-      ? 'LONG'
-      : scoreSHORT > scoreLONG
-        ? 'SHORT'
-        : 'NEUTRAL';
+      scoreLONG > scoreSHORT
+          ? 'LONG'
+          : scoreSHORT > scoreLONG
+              ? 'SHORT'
+              : 'NEUTRAL';
 
   const filledModules = Object.values(modules).filter(
-    (m) => (m?.LONG || 0) + (m?.SHORT || 0) > 0,
+      (m) => (m?.LONG || 0) + (m?.SHORT || 0) > 0,
   ).length;
 
   const result = {
     time: new Date().toISOString(),
     symbol,
-    timeframe: candleTimeframe, // записуємо у результат
+    timeframe: candleTimeframe,
     modules,
     scores: {
       LONG: Number(scoreLONG.toFixed(1)),
@@ -100,6 +86,9 @@ export async function finalAnalyzer({
     decision,
   };
 
-  await saveDoc('analysis', result);
+  if (save) {
+    await saveDoc('analysis', result);
+  }
+
   return result;
 }
