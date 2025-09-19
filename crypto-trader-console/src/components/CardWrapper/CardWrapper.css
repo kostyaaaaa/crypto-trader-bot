@@ -1,5 +1,5 @@
 .component-card {
-  padding: 12px 8px;
+  padding: 8px;
   border-radius: 12px;
   border: 1px solid black;
   display: flex;
@@ -7,5 +7,6 @@
   align-items: center;
   justify-content: center;
   min-width: 300px;
+  min-height: 82px;
   width: max-content;
 }
