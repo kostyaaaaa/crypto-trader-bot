@@ -9,7 +9,7 @@ export interface IAnalysisConfig {
   fundingWindow: number;
   volWindow: number;
   corrWindow: number;
-  longShortWindow: number
+  longShortWindow: number;
   weights: {
     trend: number;
     trendRegime: number;
@@ -29,7 +29,6 @@ export interface IAnalysisConfig {
     openInterest: number;
     correlation: number;
     longShort: number;
-
   };
 }
 
@@ -105,8 +104,8 @@ export interface ITrailingConfig {
   trailStepPct: number;
 }
 export interface IVolatilityFilterConfig {
-    deadBelow: number;
-    extremeAbove: number;
+  deadBelow: number;
+  extremeAbove: number;
 }
 
 export interface IExitsConfig {
@@ -121,7 +120,7 @@ export interface IStrategyConfig {
   capital: ICapitalConfig;
   sizing: ISizingConfig;
   exits: IExitsConfig;
-  volatilityFilter: IVolatilityFilterConfig
+  volatilityFilter: IVolatilityFilterConfig;
 }
 
 // Main coin configuration interface
@@ -308,11 +307,11 @@ const exitsConfigSchema = new Schema(
   { _id: false },
 );
 const volatilityFilterSchema = new Schema(
-    {
-        deadBelow: { type: Number, required: true },
-        extremeAbove: { type: Number, required: true },
-    },
-    { _id: false },
+  {
+    deadBelow: { type: Number, required: true },
+    extremeAbove: { type: Number, required: true },
+  },
+  { _id: false },
 );
 const strategyConfigSchema = new Schema(
   {

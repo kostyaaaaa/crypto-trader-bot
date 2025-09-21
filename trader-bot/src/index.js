@@ -15,34 +15,34 @@ import { monitorPositions } from './trading/monitor.js';
 
 // === 1. Запускаємо BTC WebSocket для кореляції ===
 // BtcStepWS('BTCUSDT');
-
-// === 2. Для кожної монети з конфіга запускаємо процеси ===
+//
+// // === 2. Для кожної монети з конфіга запускаємо процеси ===
 // Object.entries(ANALYSIS_CONFIG).forEach(([symbol, cfg]) => {
-// 	const { analysisConfig, strategy } = cfg;
+//   const { analysisConfig, strategy } = cfg;
+//   // WS модулі
+//   OrderBookStepWS(symbol);
+//   TickerStepWS(symbol);
+//   LiquidationsStepWS(symbol);
 //
-// 	// WS модулі
-// 	OrderBookStepWS(symbol);
-// 	TickerStepWS(symbol);
-// 	LiquidationsStepWS(symbol);
+//   // API дані раз на хвилину
+//   setInterval(() => {
+//     LongShortRatioStep(symbol);
+//     OpenInterestStep(symbol);
+//     FundingStep(symbol);
+//   }, 60 * 1000);
 //
-// 	// API дані раз на хвилину
-// 	setInterval(() => {
-// 		LongShortRatioStep(symbol);
-// 		OpenInterestStep(symbol);
-// 		FundingStep(symbol);
-// 	}, 60 * 1000);
+//   // Фінальний аналіз + запуск двигуна раз на хвилину
+//   setInterval(async () => {
+//     await finalAnalyzer({ symbol, analysisConfig });
+//     await tradingEngine(symbol, cfg);
+//   }, 60 * 1000);
 //
-// 	// Фінальний аналіз + запуск двигуна раз на хвилину
-// 	setInterval(async () => {
-// 		await finalAnalyzer({ symbol, analysisConfig });
-// 		await tradingEngine(symbol, cfg);
-// 	}, 60 * 1000);
-//
-// 	// Моніторинг відкритих позицій раз на 15 секунд
-// 	setInterval(async () => {
-// 		await monitorPositions({ symbol, strategy });
-// 	}, 15 * 1000);
+//   // Моніторинг відкритих позицій раз на 15 секунд
+//   setInterval(async () => {
+//     await monitorPositions({ symbol, strategy });
+//   }, 15 * 1000);
 // });
+//
 //
 // // Initialize database connection
 // const startTraderBot = async () => {
@@ -58,35 +58,3 @@ import { monitorPositions } from './trading/monitor.js';
 // };
 //
 // startTraderBot();
-// import { ANALYSIS_CONFIG } from './constants/mock.js';
-//
-// === 1. Запускаємо BTC WebSocket для кореляції ===
-BtcStepWS('BTCUSDT');
-
-//
-// === 2. Для кожної монети з конфіга запускаємо процеси ===
-Object.entries(ANALYSIS_CONFIG).forEach(([symbol, cfg]) => {
-  const { analysisConfig, strategy } = cfg;
-  // WS модулі
-  OrderBookStepWS(symbol);
-  TickerStepWS(symbol);
-  LiquidationsStepWS(symbol);
-
-  // API дані раз на хвилину
-  setInterval(() => {
-    LongShortRatioStep(symbol);
-    OpenInterestStep(symbol);
-    FundingStep(symbol);
-  }, 60 * 1000);
-
-  // Фінальний аналіз + запуск двигуна раз на хвилину
-  setInterval(async () => {
-    await finalAnalyzer({ symbol, analysisConfig });
-    await tradingEngine(symbol, cfg);
-  }, 60 * 1000);
-
-  // Моніторинг відкритих позицій раз на 15 секунд
-  setInterval(async () => {
-    await monitorPositions({ symbol, strategy });
-  }, 15 * 1000);
-});
