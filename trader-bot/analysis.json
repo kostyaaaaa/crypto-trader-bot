@@ -1,0 +1,47 @@
+[
+  {
+    "time": "2025-09-21T09:43:31.702Z",
+    "symbol": "ENAUSDT",
+    "timeframe": "5m",
+    "modules": {
+      "trend": null,
+      "volatility": null,
+      "trendRegime": null,
+      "liquidity": {
+        "module": "liquidity",
+        "symbol": "ENAUSDT",
+        "signal": "SHORT",
+        "strength": 30,
+        "meta": {
+          "window": 20,
+          "avgImbalance": 0.385,
+          "avgSpreadAbs": 0,
+          "spreadPct": 0,
+          "LONG": 20,
+          "SHORT": 80
+        },
+        "spreadPct": 0
+      },
+      "funding": null,
+      "liquidations": null,
+      "openInterest": null,
+      "correlation": {
+        "module": "correlation",
+        "symbol": "ENAUSDT",
+        "signal": "NEUTRAL",
+        "strength": 0,
+        "meta": {
+          "group": "none"
+        }
+      },
+      "longShort": null
+    },
+    "scores": {
+      "LONG": 0,
+      "SHORT": 16
+    },
+    "coverage": "1/9",
+    "bias": "SHORT",
+    "decision": "NO TRADE"
+  }
+]
