@@ -10,13 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mantine/core": "^8.3.1",
+    "@mantine/hooks": "^8.3.1",
     "@tanstack/react-query": "^5.89.0",
     "@tanstack/react-query-devtools": "^5.89.0",
     "@vercel/node": "^5.3.22",
     "axios": "^1.12.2",
     "react": "^19.1.1",
     "react-apexcharts": "^1.7.0",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.9.1",
+    "sass": "^1.92.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",

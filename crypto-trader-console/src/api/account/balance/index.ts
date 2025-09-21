@@ -1,4 +1,4 @@
 export * from './getSpotBalance';
 export * from './getFutureBalance';
-export * from './getCoinPrice';
+export * from './getAllCoinPrice';
 export * from './getAccountPnl';

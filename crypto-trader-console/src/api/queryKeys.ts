@@ -2,6 +2,6 @@ export const QueryKeys = {
   SpotBalance: 'spotBalance',
   AccountPnl: 'AccountPnl',
   FuturesBalance: 'futuresBalance',
-  BinanceSpotPrice: 'BinanceSpotPrice',
-  BinanceFuturesPrice: 'BinanceFuturesPrice',
+  AllSpotPrices: 'AllSpotPrices',
+  AllCoinConfigs: 'AllCoinConfigs',
 } as const;
