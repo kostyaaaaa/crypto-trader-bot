@@ -6,7 +6,8 @@
   "scripts": {
     "prettier": "prettier --write .",
     "prepare": "husky || exit 0",
-    "build:packages": "npm run build --workspaces --if-present"
+    "build:packages": "npm run build --workspace=crypto-trader-db",
+    "build": "npm run build:packages && npm run build --workspace=server && npm run build --workspace=crypto-trader-console"
   },
   "author": "",
   "license": "ISC",

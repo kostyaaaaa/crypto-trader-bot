@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  # Build all packages first
+  # Step 1: Build packages first (no dependencies)
   build-packages:
     runs-on: ubuntu-latest
 
@@ -24,10 +24,13 @@ jobs:
       - name: Install all workspace dependencies
         run: npm ci
 
-      - name: Build all packages
-        run: npm run build:packages
+      - name: Build crypto-trader-db package
+        run: npm run build --workspace=crypto-trader-db
 
-      - name: Verify crypto-trader-db build output
+      - name: Verify TypeScript types for crypto-trader-db
+        run: npx tsc --noEmit --project ./packages/crypto-trader-db/tsconfig.json
+
+      - name: Verify build output
         run: |
           if [ -d "packages/crypto-trader-db/dist" ]; then
             echo "✅ Crypto Trader DB build successful - dist folder created"
@@ -37,68 +40,145 @@ jobs:
             exit 1
           fi
 
-  # Test Server Project (TypeScript)
+      # Cache the built packages for dependent jobs
+      - name: Cache built packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            packages/crypto-trader-db/dist
+            node_modules
+          key: packages-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
+
+  # Step 2: Build projects that depend on packages
   test-server:
     runs-on: ubuntu-latest
     needs: build-packages
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
           cache-dependency-path: './package-lock.json'
 
-      - run: npm ci
-      - run: npm run build --workspace=server
-      - run: npx tsc --noEmit --project ./server/tsconfig.json
+      # Restore cached packages and node_modules
+      - name: Restore built packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            packages/crypto-trader-db/dist
+            node_modules
+          key: packages-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
 
-  # Test Console (React/TS)
+      - name: Install dependencies (if cache miss)
+        run: npm ci --if-present
+
+      - name: Build server
+        run: npm run build --workspace=server
+
+      - name: Verify TypeScript types for server
+        run: npx tsc --noEmit --project ./server/tsconfig.json
+
+      - name: Verify build output
+        run: |
+          if [ -d "server/dist" ]; then
+            echo "✅ Server build successful - dist folder created"
+            ls -la server/dist/
+          else
+            echo "❌ Server build failed - dist folder not found"
+            exit 1
+          fi
+
+  # Step 3: Build independent projects (can run in parallel with server)
   test-console:
     runs-on: ubuntu-latest
-    needs: build-packages
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
           cache-dependency-path: './package-lock.json'
 
-      - run: npm ci
-      - run: npx tsc --noEmit --project ./crypto-trader-console/tsconfig.json
-      - run: npm run lint --workspace=crypto-trader-console
-      - run: npm run build --workspace=crypto-trader-console
+      - name: Install all workspace dependencies
+        run: npm ci
 
-  # Test Trader Bot
+      - name: Run TypeScript compilation for console
+        run: npx tsc --noEmit --project ./crypto-trader-console/tsconfig.json
+
+      - name: Run ESLint for console
+        run: npm run lint --workspace=crypto-trader-console
+
+      - name: Build console project
+        run: npm run build --workspace=crypto-trader-console
+
+      - name: Verify build output
+        run: |
+          if [ -d "crypto-trader-console/dist" ]; then
+            echo "✅ Console build successful - dist folder created"
+            ls -la crypto-trader-console/dist/
+          else
+            echo "❌ Console build failed - dist folder not found"
+            exit 1
+          fi
+
+  # Step 4: Test trader bot (will depend on packages when updated)
   test-trader-bot:
     runs-on: ubuntu-latest
     needs: build-packages
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
           cache-dependency-path: './package-lock.json'
 
-      - run: npm ci
-      - run: |
+      # Restore cached packages and node_modules
+      - name: Restore built packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            packages/crypto-trader-db/dist
+            node_modules
+          key: packages-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
+
+      - name: Install dependencies (if cache miss)
+        run: npm ci --if-present
+
+      - name: Check JavaScript syntax for trader-bot
+        run: |
           echo "Checking syntax for all JavaScript files in trader-bot..."
           find trader-bot/src -name "*.js" -exec node --check {} \;
-      - run: |
+
+      - name: Verify trader bot can start (dry run)
+        run: |
           echo "Verifying trader bot entry point..."
           node --check trader-bot/src/index.js
           echo "✅ Trader bot syntax check passed"
 
-  # Summary
+  # Summary job that depends on all others
   ci-complete:
     runs-on: ubuntu-latest
     needs: [build-packages, test-server, test-console, test-trader-bot]
 
     steps:
-      - run: |
+      - name: All checks passed
+        run: |
           echo "🎉 All projects passed compilation and build checks!"
+          echo "✅ Packages: Built successfully (crypto-trader-db)"
+          echo "✅ Server: TypeScript compiled and built successfully"
+          echo "✅ Console: TypeScript compiled, linted, and built successfully"  
+          echo "✅ Trader Bot: JavaScript syntax validated"
+          echo ""
+          echo "Build order: Packages → Server & Trader Bot (depend on packages) → Console (independent)"
+          echo "Ready for merge! 🚀"
