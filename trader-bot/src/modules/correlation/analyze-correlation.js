@@ -21,7 +21,7 @@ export async function analyzeCorrelation(symbol, window = 5) {
     return {
       module: 'correlation',
       symbol,
-      signal: 'NEUTRAL',                // уніфіковано (було "NONE")
+      signal: 'NEUTRAL', // уніфіковано (було "NONE")
       strength: 0,
       meta: { group: 'none' },
     };
@@ -66,7 +66,7 @@ export async function analyzeCorrelation(symbol, window = 5) {
   return {
     module: 'correlation',
     symbol,
-    signal,                                       // LONG | SHORT | NEUTRAL
+    signal, // LONG | SHORT | NEUTRAL
     strength: Math.max(weightedLong, weightedShort),
     meta: {
       LONG: weightedLong,

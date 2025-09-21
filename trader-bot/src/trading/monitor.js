@@ -25,8 +25,8 @@ export async function monitorPositions({ symbol, strategy }) {
     if (pos.takeProfits?.length) {
       for (const tp of [...pos.takeProfits]) {
         const hit =
-            (side === 'LONG' && price >= tp.price) ||
-            (side === 'SHORT' && price <= tp.price);
+          (side === 'LONG' && price >= tp.price) ||
+          (side === 'SHORT' && price <= tp.price);
         if (hit) {
           await partialClose(pos.id, tp.sizePct, 'TAKE PROFIT', price);
         }
@@ -47,9 +47,9 @@ export async function monitorPositions({ symbol, strategy }) {
 
       if (!trailing.active && movePct >= trailing.startAfterPct) {
         const newStop =
-            side === 'LONG'
-                ? price * (1 - trailing.trailStepPct / 100)
-                : price * (1 + trailing.trailStepPct / 100);
+          side === 'LONG'
+            ? price * (1 - trailing.trailStepPct / 100)
+            : price * (1 + trailing.trailStepPct / 100);
 
         await updatePosition(pos.id, {
           trailing: { ...trailing, active: true, anchor: price },
@@ -57,14 +57,14 @@ export async function monitorPositions({ symbol, strategy }) {
         });
       } else if (trailing.active && trailing.anchor) {
         const isNewAnchor =
-            (side === 'LONG' && price > trailing.anchor) ||
-            (side === 'SHORT' && price < trailing.anchor);
+          (side === 'LONG' && price > trailing.anchor) ||
+          (side === 'SHORT' && price < trailing.anchor);
 
         if (isNewAnchor) {
           const newStop =
-              side === 'LONG'
-                  ? price * (1 - trailing.trailStepPct / 100)
-                  : price * (1 + trailing.trailStepPct / 100);
+            side === 'LONG'
+              ? price * (1 - trailing.trailStepPct / 100)
+              : price * (1 + trailing.trailStepPct / 100);
 
           await updatePosition(pos.id, {
             trailing: { ...trailing, anchor: price },
@@ -77,8 +77,8 @@ export async function monitorPositions({ symbol, strategy }) {
     /* ===== 3) HARD SL ===== */
     if (pos.stopPrice != null) {
       const hitSL =
-          (side === 'LONG' && price <= pos.stopPrice) ||
-          (side === 'SHORT' && price >= pos.stopPrice);
+        (side === 'LONG' && price <= pos.stopPrice) ||
+        (side === 'SHORT' && price >= pos.stopPrice);
 
       if (hitSL) {
         await closePosition(pos.id, 'STOP LOSS', price);
@@ -95,9 +95,9 @@ export async function monitorPositions({ symbol, strategy }) {
       const oppSide = side === 'LONG' ? 'SHORT' : 'LONG';
 
       if (
-          bias === oppSide &&
-          (scores?.[bias] ?? 0) >= flipRules.minOppScore &&
-          (scores?.[bias] ?? 0) - (scores?.[side] ?? 0) >= flipRules.scoreGap
+        bias === oppSide &&
+        (scores?.[bias] ?? 0) >= flipRules.minOppScore &&
+        (scores?.[bias] ?? 0) - (scores?.[side] ?? 0) >= flipRules.scoreGap
       ) {
         await flipPosition(pos.id, bias, price);
         continue;
@@ -111,13 +111,11 @@ export async function monitorPositions({ symbol, strategy }) {
       const baseEntry = pos.avgEntry ?? pos.entryPrice;
 
       const adversePrice =
-          side === 'LONG'
-              ? baseEntry * (1 - movePct)
-              : baseEntry * (1 + movePct);
+        side === 'LONG' ? baseEntry * (1 - movePct) : baseEntry * (1 + movePct);
 
       const condition =
-          (side === 'LONG' && price <= adversePrice) ||
-          (side === 'SHORT' && price >= adversePrice);
+        (side === 'LONG' && price <= adversePrice) ||
+        (side === 'SHORT' && price >= adversePrice);
 
       if (condition) {
         await applyAddToPosition(pos, price, sizing, strategy.exits);

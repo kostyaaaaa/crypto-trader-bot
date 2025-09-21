@@ -33,7 +33,7 @@ export async function preparePosition(symbol, cfg, analysis, side) {
   if (exits?.sl?.type === 'hard' && Number.isFinite(exits.sl.hardPct)) {
     const movePct = exits.sl.hardPct / 100;
     stopPrice =
-        side === 'LONG' ? entryPrice * (1 - movePct) : entryPrice * (1 + movePct);
+      side === 'LONG' ? entryPrice * (1 - movePct) : entryPrice * (1 + movePct);
     stopModel = 'hardPct';
   }
 
@@ -41,8 +41,7 @@ export async function preparePosition(symbol, cfg, analysis, side) {
     const atrMult = exits.sl.atrMult ?? 1.0;
     if (Number.isFinite(atr) && atr > 0) {
       const moveAbs = atr * atrMult;
-      stopPrice =
-          side === 'LONG' ? entryPrice - moveAbs : entryPrice + moveAbs;
+      stopPrice = side === 'LONG' ? entryPrice - moveAbs : entryPrice + moveAbs;
       stopModel = `atr×${atrMult}`;
     }
   }
@@ -68,17 +67,17 @@ export async function preparePosition(symbol, cfg, analysis, side) {
   if (exits?.tp?.use && Array.isArray(exits.tp.tpGridPct)) {
     const grid = exits.tp.tpGridPct;
     const sizes = Array.isArray(exits.tp.tpGridSizePct)
-        ? exits.tp.tpGridSizePct
-        : [];
+      ? exits.tp.tpGridSizePct
+      : [];
 
     for (let i = 0; i < grid.length; i++) {
       const pct = Number(grid[i]);
       if (!Number.isFinite(pct)) continue;
 
       const tpPrice =
-          side === 'LONG'
-              ? entryPrice * (1 + pct / 100)
-              : entryPrice * (1 - pct / 100);
+        side === 'LONG'
+          ? entryPrice * (1 + pct / 100)
+          : entryPrice * (1 - pct / 100);
 
       const sizePct = Number(sizes[i] ?? 0);
       takeProfits.push({
@@ -92,20 +91,20 @@ export async function preparePosition(symbol, cfg, analysis, side) {
   let expiresAt = null;
   if (exits?.time?.maxHoldMin > 0) {
     expiresAt = new Date(
-        Date.now() + exits.time.maxHoldMin * 60_000,
+      Date.now() + exits.time.maxHoldMin * 60_000,
     ).toISOString();
   }
 
   // 7) Trailing stop (новий формат + зворотна сумісність)
   const trailingEnabled = !!exits?.trailing?.use;
   const trailing = trailingEnabled
-      ? {
+    ? {
         active: false,
         startAfterPct: exits.trailing.startAfterPct,
         trailStepPct: exits.trailing.trailStepPct,
         anchor: null,
       }
-      : null;
+    : null;
 
   // 8) RRR (до першого TP), якщо є SL і хоч один TP
   let rrrToFirstTp = null;

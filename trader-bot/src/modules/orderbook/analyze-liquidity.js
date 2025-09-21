@@ -14,14 +14,14 @@ export async function analyzeLiquidity(symbol = 'ETHUSDT', window = 20) {
 
   // Середні значення по вікну
   const avgImbalance =
-      liq.reduce((s, d) => s + (Number(d.avgImbalance) || 0), 0) / liq.length; // ~0..1
+    liq.reduce((s, d) => s + (Number(d.avgImbalance) || 0), 0) / liq.length; // ~0..1
   const avgSpreadAbs =
-      liq.reduce((s, d) => s + (Number(d.avgSpread) || 0), 0) / liq.length; // у цінах
+    liq.reduce((s, d) => s + (Number(d.avgSpread) || 0), 0) / liq.length; // у цінах
 
   // Спред у % від поточної ціни
   const lastPrice = await getLastPrice(symbol);
   const spreadPct =
-      lastPrice && lastPrice > 0 ? (avgSpreadAbs / lastPrice) * 100 : null;
+    lastPrice && lastPrice > 0 ? (avgSpreadAbs / lastPrice) * 100 : null;
 
   // imbalanceBias: (-1..+1), 0 — баланс, >0 — перевага bids (лонгово)
   const bias = (avgImbalance - 0.5) * 2; // -1..+1
@@ -32,7 +32,7 @@ export async function analyzeLiquidity(symbol = 'ETHUSDT', window = 20) {
   else if (bias < -0.05) signal = 'SHORT';
 
   let LONG = 50,
-      SHORT = 50;
+    SHORT = 50;
   if (signal === 'LONG') {
     LONG += strength;
     SHORT -= strength;
@@ -44,8 +44,8 @@ export async function analyzeLiquidity(symbol = 'ETHUSDT', window = 20) {
   return {
     module: 'liquidity',
     symbol,
-    signal,               // LONG / SHORT / NEUTRAL
-    strength,             // 0..30
+    signal, // LONG / SHORT / NEUTRAL
+    strength, // 0..30
     meta: {
       window,
       avgImbalance: Number(avgImbalance.toFixed(3)),

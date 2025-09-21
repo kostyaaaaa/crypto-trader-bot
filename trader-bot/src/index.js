@@ -11,7 +11,7 @@ import { finalAnalyzer } from './utils/final-analyzer.js';
 
 import { ANALYSIS_CONFIG } from './constants/mock.js';
 import { tradingEngine } from './trading/engine.js';
-import {monitorPositions} from "./trading/monitor.js";
+import { monitorPositions } from './trading/monitor.js';
 
 // === 1. Запускаємо BTC WebSocket для кореляції ===
 // BtcStepWS('BTCUSDT');

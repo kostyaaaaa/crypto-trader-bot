@@ -12,10 +12,10 @@ import { saveDoc, loadDocs } from '../storage/storage.js';
 import { aggregateCandles } from './candles.js';
 
 export async function finalAnalyzer({
-                                      symbol = 'ETHUSDT',
-                                      analysisConfig = {},
-                                      save = true,
-                                    } = {}) {
+  symbol = 'ETHUSDT',
+  analysisConfig = {},
+  save = true,
+} = {}) {
   const {
     candleTimeframe = '1m',
     oiWindow = 10,
@@ -35,16 +35,16 @@ export async function finalAnalyzer({
 
   // --- модулі ---
   const modules = {};
-  modules.trend       = await analyzeCandles(symbol, candles);
-  modules.volatility  = await analyzeVolatility(symbol, candles, volWindow);
+  modules.trend = await analyzeCandles(symbol, candles);
+  modules.volatility = await analyzeVolatility(symbol, candles, volWindow);
   modules.trendRegime = await analyzeTrendRegime(symbol, candles, 14);
 
-  modules.liquidity    = await analyzeLiquidity(symbol, liqWindow);
-  modules.funding      = await analyzeFunding(symbol, fundingWindow);
+  modules.liquidity = await analyzeLiquidity(symbol, liqWindow);
+  modules.funding = await analyzeFunding(symbol, fundingWindow);
   modules.liquidations = await analyzeLiquidations(symbol, liqSentWindow);
   modules.openInterest = await analyzeOpenInterest(symbol, oiWindow);
-  modules.correlation  = await analyzeCorrelation(symbol, corrWindow);
-  modules.longShort    = await analyzeLongShort(symbol, longShortWindow);
+  modules.correlation = await analyzeCorrelation(symbol, corrWindow);
+  modules.longShort = await analyzeLongShort(symbol, longShortWindow);
 
   // --- скоринг ---
   function weightedScore(side) {
@@ -67,14 +67,14 @@ export async function finalAnalyzer({
   else if (scoreSHORT > 50) decision = 'WEAK SHORT';
 
   const bias =
-      scoreLONG > scoreSHORT
-          ? 'LONG'
-          : scoreSHORT > scoreLONG
-              ? 'SHORT'
-              : 'NEUTRAL';
+    scoreLONG > scoreSHORT
+      ? 'LONG'
+      : scoreSHORT > scoreLONG
+        ? 'SHORT'
+        : 'NEUTRAL';
 
   const filledModules = Object.values(modules).filter(
-      (m) => m && ((m.meta?.LONG ?? 0) + (m.meta?.SHORT ?? 0) > 0),
+    (m) => m && (m.meta?.LONG ?? 0) + (m.meta?.SHORT ?? 0) > 0,
   ).length;
 
   // --- дебаг таблиця ---
@@ -87,9 +87,9 @@ export async function finalAnalyzer({
     weight: weights[k] || 0,
     threshold: moduleThresholds[k] || 0,
     passed: v
-        ? ((v.meta?.LONG ?? 0) >= (moduleThresholds[k] || 0)) ||
-        ((v.meta?.SHORT ?? 0) >= (moduleThresholds[k] || 0))
-        : false,
+      ? (v.meta?.LONG ?? 0) >= (moduleThresholds[k] || 0) ||
+        (v.meta?.SHORT ?? 0) >= (moduleThresholds[k] || 0)
+      : false,
   }));
   console.table(debugRows);
 

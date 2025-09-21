@@ -15,7 +15,7 @@ export async function analyzeFunding(symbol = 'ETHUSDT', window = 60) {
 
   // середній funding rate за період
   const avgFunding =
-      candles.reduce((s, c) => s + (c.fundingRate || 0), 0) / candles.length;
+    candles.reduce((s, c) => s + (c.fundingRate || 0), 0) / candles.length;
 
   let signal = 'NEUTRAL';
   let longScore = 50;
@@ -40,7 +40,7 @@ export async function analyzeFunding(symbol = 'ETHUSDT', window = 60) {
   return {
     module: 'funding',
     symbol,
-    signal,                                      // LONG | SHORT | NEUTRAL
+    signal, // LONG | SHORT | NEUTRAL
     strength: Math.max(roundedLong, roundedShort),
     meta: {
       LONG: roundedLong,

@@ -21,16 +21,19 @@ export async function analyzeOpenInterest(symbol = 'ETHUSDT', window = 5) {
 
   // захист від ділення на 0
   const safePct = (end, start) =>
-      start && isFinite(start) ? ((end - start) / start) * 100 : 0;
+    start && isFinite(start) ? ((end - start) / start) * 100 : 0;
 
   const oiChangePct = safePct(last.openInterest, first.openInterest);
-  const oiValueChangePct = safePct(last.openInterestValue, first.openInterestValue);
+  const oiValueChangePct = safePct(
+    last.openInterestValue,
+    first.openInterestValue,
+  );
   const priceChangePct = safePct(last.price, first.price);
 
   // Напрямок: +1 → LONG, -1 → SHORT
   const sameDirection =
-      (oiChangePct >= 0 && priceChangePct >= 0) ||
-      (oiChangePct < 0 && priceChangePct < 0);
+    (oiChangePct >= 0 && priceChangePct >= 0) ||
+    (oiChangePct < 0 && priceChangePct < 0);
   const sign = sameDirection ? +1 : -1;
 
   // Комбінована сила

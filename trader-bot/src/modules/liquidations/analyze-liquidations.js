@@ -9,16 +9,18 @@ export async function analyzeLiquidations(symbol = 'ETHUSDT', window = 5) {
   const liquidations = await loadDocs('liquidations', symbol, window);
 
   if (!liquidations || liquidations.length < window) {
-    console.log(`⚠️ Not enough liquidations data for ${symbol}, need ${window}`);
+    console.log(
+      `⚠️ Not enough liquidations data for ${symbol}, need ${window}`,
+    );
     return null;
   }
 
   const avgBuy =
-      liquidations.reduce((s, c) => s + parseFloat(c.buysValue || 0), 0) /
-      liquidations.length;
+    liquidations.reduce((s, c) => s + parseFloat(c.buysValue || 0), 0) /
+    liquidations.length;
   const avgSell =
-      liquidations.reduce((s, c) => s + parseFloat(c.sellsValue || 0), 0) /
-      liquidations.length;
+    liquidations.reduce((s, c) => s + parseFloat(c.sellsValue || 0), 0) /
+    liquidations.length;
 
   const total = avgBuy + avgSell;
 
@@ -40,7 +42,7 @@ export async function analyzeLiquidations(symbol = 'ETHUSDT', window = 5) {
     };
   }
 
-  const buyPct = (avgBuy / total) * 100;  // сила на LONG
+  const buyPct = (avgBuy / total) * 100; // сила на LONG
   const sellPct = (avgSell / total) * 100; // сила на SHORT
 
   let signal = 'NEUTRAL';
@@ -53,7 +55,7 @@ export async function analyzeLiquidations(symbol = 'ETHUSDT', window = 5) {
   return {
     module: 'liquidations',
     symbol,
-    signal,                                 // LONG | SHORT | NEUTRAL
+    signal, // LONG | SHORT | NEUTRAL
     strength: Math.max(longScore, shortScore),
     meta: {
       LONG: longScore,

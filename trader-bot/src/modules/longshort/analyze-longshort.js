@@ -8,13 +8,16 @@ export async function analyzeLongShort(symbol = 'ETHUSDT', window = 5) {
   const data = await loadDocs('longshort', symbol, window);
 
   if (!data || data.length < window) {
-    console.log(`⚠️ Not enough long/short ratio data for ${symbol}, need ${window}`);
+    console.log(
+      `⚠️ Not enough long/short ratio data for ${symbol}, need ${window}`,
+    );
     return null;
   }
 
   // середні значення
   const avgLong = data.reduce((s, c) => s + (c.longPct || 0), 0) / data.length;
-  const avgShort = data.reduce((s, c) => s + (c.shortPct || 0), 0) / data.length;
+  const avgShort =
+    data.reduce((s, c) => s + (c.shortPct || 0), 0) / data.length;
 
   // нормалізація
   const total = avgLong + avgShort;
@@ -31,8 +34,8 @@ export async function analyzeLongShort(symbol = 'ETHUSDT', window = 5) {
   return {
     module: 'longShort',
     symbol,
-    signal,     // LONG | SHORT | NEUTRAL
-    strength,   // наскільки великий перекос (0..100)
+    signal, // LONG | SHORT | NEUTRAL
+    strength, // наскільки великий перекос (0..100)
     meta: {
       LONG: Number(longPct.toFixed(2)),
       SHORT: Number(shortPct.toFixed(2)),
