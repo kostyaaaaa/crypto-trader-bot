@@ -11,9 +11,10 @@ import { finalAnalyzer } from './utils/final-analyzer.js';
 
 import { ANALYSIS_CONFIG } from './constants/mock.js';
 import { tradingEngine } from './trading/engine.js';
+import {monitorPositions} from "./trading/monitor.js";
 
 // === 1. Запускаємо BTC WebSocket для кореляції ===
-BtcStepWS('BTCUSDT');
+// BtcStepWS('BTCUSDT');
 
 // === 2. Для кожної монети з конфіга запускаємо процеси ===
 // Object.entries(ANALYSIS_CONFIG).forEach(([symbol, cfg]) => {
@@ -61,11 +62,11 @@ BtcStepWS('BTCUSDT');
 //
 // === 1. Запускаємо BTC WebSocket для кореляції ===
 BtcStepWS('BTCUSDT');
+
 //
 // === 2. Для кожної монети з конфіга запускаємо процеси ===
 Object.entries(ANALYSIS_CONFIG).forEach(([symbol, cfg]) => {
   const { analysisConfig, strategy } = cfg;
-
   // WS модулі
   OrderBookStepWS(symbol);
   TickerStepWS(symbol);

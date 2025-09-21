@@ -1,6 +1,5 @@
 // modules/orderbook/analyze-liquidity.js
-// Читає хвилинні "ліквідність-свічки" з collection 'liquidity'
-// (які пише OrderBookStepWS) і рахує LONG/SHORT силу + spreadPct.
+// --- Аналіз ліквідності з ордербуку (через агреговані "ліквідність-свічки")
 
 import { loadDocs } from '../../storage/storage.js';
 import { getLastPrice } from '../../utils/getLastPrice.js';
@@ -13,43 +12,48 @@ export async function analyzeLiquidity(symbol = 'ETHUSDT', window = 20) {
     return null;
   }
 
-  // Середні по вікну
+  // Середні значення по вікну
   const avgImbalance =
-    liq.reduce((s, d) => s + (Number(d.avgImbalance) || 0), 0) / liq.length; // ~0..1
+      liq.reduce((s, d) => s + (Number(d.avgImbalance) || 0), 0) / liq.length; // ~0..1
   const avgSpreadAbs =
-    liq.reduce((s, d) => s + (Number(d.avgSpread) || 0), 0) / liq.length; // у цінах
+      liq.reduce((s, d) => s + (Number(d.avgSpread) || 0), 0) / liq.length; // у цінах
 
-  // Переводимо спред у % від поточної ціни (mid ≈ lastPrice)
+  // Спред у % від поточної ціни
   const lastPrice = await getLastPrice(symbol);
   const spreadPct =
-    lastPrice && lastPrice > 0 ? (avgSpreadAbs / lastPrice) * 100 : null;
+      lastPrice && lastPrice > 0 ? (avgSpreadAbs / lastPrice) * 100 : null;
 
-  // Силові бали на основі дисбалансу об’ємів у стакані
   // imbalanceBias: (-1..+1), 0 — баланс, >0 — перевага bids (лонгово)
   const bias = (avgImbalance - 0.5) * 2; // -1..+1
-  const strength = Math.min(30, Math.abs(bias) * 40 * 10); // 0..30 (0.05 → ~20, 0.1 → 30)
+  const strength = Math.min(30, Math.abs(bias) * 400); // нормалізуємо у 0..30
+
+  let signal = 'NEUTRAL';
+  if (bias > 0.05) signal = 'LONG';
+  else if (bias < -0.05) signal = 'SHORT';
 
   let LONG = 50,
-    SHORT = 50;
-  if (bias > 0) {
+      SHORT = 50;
+  if (signal === 'LONG') {
     LONG += strength;
     SHORT -= strength;
-  } else if (bias < 0) {
+  } else if (signal === 'SHORT') {
     SHORT += strength;
     LONG -= strength;
   }
 
   return {
+    module: 'liquidity',
     symbol,
-    LONG,
-    SHORT,
-    data: {
+    signal,               // LONG / SHORT / NEUTRAL
+    strength,             // 0..30
+    meta: {
       window,
       avgImbalance: Number(avgImbalance.toFixed(3)),
       avgSpreadAbs: Number(avgSpreadAbs.toFixed(6)),
       spreadPct: spreadPct != null ? Number(spreadPct.toFixed(3)) : null,
+      LONG,
+      SHORT,
     },
-    // для зручності доступу в engine
-    spreadPct: spreadPct != null ? Number(spreadPct.toFixed(3)) : null,
+    spreadPct: spreadPct != null ? Number(spreadPct.toFixed(3)) : null, // залишаємо для engine
   };
 }

@@ -1,4 +1,4 @@
-// analyze-funding.js
+// modules/funding/analyze-funding.js
 // --- Аналізує середній Funding Rate за останні N свічок ---
 // Якщо funding високий → забагато лонгерів → SHORT-сигнал
 // Якщо funding низький → забагато шортерів → LONG-сигнал
@@ -15,33 +15,38 @@ export async function analyzeFunding(symbol = 'ETHUSDT', window = 60) {
 
   // середній funding rate за період
   const avgFunding =
-    candles.reduce((s, c) => s + (c.fundingRate || 0), 0) / candles.length;
+      candles.reduce((s, c) => s + (c.fundingRate || 0), 0) / candles.length;
 
-  let signal = 'NONE';
-  let LONG = 50;
-  let SHORT = 50;
+  let signal = 'NEUTRAL';
+  let longScore = 50;
+  let shortScore = 50;
 
-  // funding > 0 → перевага LONGів → SHORT
+  // funding > 0 → перевага LONGів → SHORT-сигнал
   if (avgFunding > 0) {
     signal = 'SHORT';
-    SHORT = Math.min(100, 50 + avgFunding * 1000); // масштабуємо
-    LONG = 100 - SHORT;
+    shortScore = Math.min(100, 50 + avgFunding * 1000); // масштабуємо
+    longScore = 100 - shortScore;
   }
-  // funding < 0 → перевага SHORTів → LONG
+  // funding < 0 → перевага SHORTів → LONG-сигнал
   else if (avgFunding < 0) {
     signal = 'LONG';
-    LONG = Math.min(100, 50 + Math.abs(avgFunding) * 1000);
-    SHORT = 100 - LONG;
+    longScore = Math.min(100, 50 + Math.abs(avgFunding) * 1000);
+    shortScore = 100 - longScore;
   }
 
+  const roundedLong = Math.round(longScore);
+  const roundedShort = Math.round(shortScore);
+
   return {
+    module: 'funding',
     symbol,
-    signal,
-    LONG: Math.round(LONG),
-    SHORT: Math.round(SHORT),
-    data: {
+    signal,                                      // LONG | SHORT | NEUTRAL
+    strength: Math.max(roundedLong, roundedShort),
+    meta: {
+      LONG: roundedLong,
+      SHORT: roundedShort,
       candlesUsed: candles.length,
-      avgFunding: avgFunding.toFixed(5),
+      avgFunding: parseFloat(avgFunding.toFixed(5)),
     },
   };
 }

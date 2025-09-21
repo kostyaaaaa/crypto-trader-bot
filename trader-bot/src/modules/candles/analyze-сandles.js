@@ -1,4 +1,4 @@
-// analyze-trend.js
+// modules/candles/analyze-candles.js
 // --- Трендовий аналіз через EMA та RSI ---
 // EMA(9) vs EMA(21) → напрямок тренду
 // RSI(14) → перепроданість/перекупленість
@@ -8,10 +8,11 @@ import { EMA, RSI } from '../../utils/getEMAAndRSI.js';
 export async function analyzeCandles(symbol = 'ETHUSDT', candles = []) {
   if (!candles || candles.length < 21) {
     console.log(
-      `⏳ Only ${candles?.length || 0} candles for ${symbol}, need ≥21...`,
+        `⏳ Only ${candles?.length || 0} candles for ${symbol}, need ≥21...`,
     );
     return null;
   }
+
   const closes = candles.map((c) => c.close);
 
   // EMA fast (9) і slow (21)
@@ -50,15 +51,17 @@ export async function analyzeCandles(symbol = 'ETHUSDT', candles = []) {
   else if (shortScore > longScore) signal = 'SHORT';
 
   return {
-    symbol,
-    signal,
-    LONG: longScore,
-    SHORT: shortScore,
-    data: {
-      emaFast: emaFast.toFixed(2),
-      emaSlow: emaSlow.toFixed(2),
-      emaGapPct: emaGapPct.toFixed(2),
-      rsi: rsi.toFixed(2),
+    module: 'trend',                                // ← унікальний ідентифікатор
+    symbol,                                         // ← завжди повертаємо символ
+    signal,                                         // LONG | SHORT | NEUTRAL
+    strength: Math.max(longScore, shortScore),      // сила сигналу
+    meta: {                                         // вся додаткова інфа
+      LONG: longScore,
+      SHORT: shortScore,
+      emaFast: parseFloat(emaFast.toFixed(2)),
+      emaSlow: parseFloat(emaSlow.toFixed(2)),
+      emaGapPct: parseFloat(emaGapPct.toFixed(2)),
+      rsi: parseFloat(rsi.toFixed(2)),
     },
   };
 }

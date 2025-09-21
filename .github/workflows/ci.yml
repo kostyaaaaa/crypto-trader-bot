@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  # Test Server Project (TypeScript)
-  test-server:
+  # Build all packages first
+  build-packages:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,82 +24,10 @@ jobs:
       - name: Install all workspace dependencies
         run: npm ci
 
-      - name: Build server
-        run: npm run build --workspace=server
+      - name: Build all packages
+        run: npm run build:packages
 
-      - name: Verify TypeScript types for server
-        run: npx tsc --noEmit --project ./server/tsconfig.json
-
-      - name: Verify build output
-        run: |
-          if [ -d "server/dist" ]; then
-            echo "✅ Server build successful - dist folder created"
-            ls -la server/dist/
-          else
-            echo "❌ Server build failed - dist folder not found"
-            exit 1
-          fi
-
-  # Test Crypto Trader Console (React/TypeScript)
-  test-console:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: './package-lock.json'
-
-      - name: Install all workspace dependencies
-        run: npm ci
-
-      - name: Run TypeScript compilation for console
-        run: npx tsc --noEmit --project ./crypto-trader-console/tsconfig.json
-
-      - name: Run ESLint for console
-        run: npm run lint --workspace=crypto-trader-console
-
-      - name: Build console project
-        run: npm run build --workspace=crypto-trader-console
-
-      - name: Verify build output
-        run: |
-          if [ -d "crypto-trader-console/dist" ]; then
-            echo "✅ Console build successful - dist folder created"
-            ls -la crypto-trader-console/dist/
-          else
-            echo "❌ Console build failed - dist folder not found"
-            exit 1
-          fi
-
-  # Test Crypto Trader DB Package (TypeScript)
-  test-crypto-trader-db:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: './package-lock.json'
-
-      - name: Install all workspace dependencies
-        run: npm ci
-
-      - name: Build crypto-trader-db package
-        run: npm run build --workspace=crypto-trader-db
-
-      - name: Verify TypeScript types for crypto-trader-db
-        run: npx tsc --noEmit --project ./packages/crypto-trader-db/tsconfig.json
-
-      - name: Verify build output
+      - name: Verify crypto-trader-db build output
         run: |
           if [ -d "packages/crypto-trader-db/dist" ]; then
             echo "✅ Crypto Trader DB build successful - dist folder created"
@@ -109,46 +37,68 @@ jobs:
             exit 1
           fi
 
-  # Test Trader Bot Project
-  test-trader-bot:
+  # Test Server Project (TypeScript)
+  test-server:
     runs-on: ubuntu-latest
+    needs: build-packages
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
           cache-dependency-path: './package-lock.json'
 
-      - name: Install all workspace dependencies
-        run: npm ci
+      - run: npm ci
+      - run: npm run build --workspace=server
+      - run: npx tsc --noEmit --project ./server/tsconfig.json
 
-      - name: Check JavaScript syntax for trader-bot
-        run: |
+  # Test Console (React/TS)
+  test-console:
+    runs-on: ubuntu-latest
+    needs: build-packages
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './package-lock.json'
+
+      - run: npm ci
+      - run: npx tsc --noEmit --project ./crypto-trader-console/tsconfig.json
+      - run: npm run lint --workspace=crypto-trader-console
+      - run: npm run build --workspace=crypto-trader-console
+
+  # Test Trader Bot
+  test-trader-bot:
+    runs-on: ubuntu-latest
+    needs: build-packages
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './package-lock.json'
+
+      - run: npm ci
+      - run: |
           echo "Checking syntax for all JavaScript files in trader-bot..."
           find trader-bot/src -name "*.js" -exec node --check {} \;
-
-      - name: Verify trader bot can start (dry run)
-        run: |
+      - run: |
           echo "Verifying trader bot entry point..."
           node --check trader-bot/src/index.js
           echo "✅ Trader bot syntax check passed"
 
-  # Summary job that depends on all others
+  # Summary
   ci-complete:
     runs-on: ubuntu-latest
-    needs: [test-server, test-console, test-crypto-trader-db, test-trader-bot]
+    needs: [build-packages, test-server, test-console, test-trader-bot]
 
     steps:
-      - name: All checks passed
-        run: |
+      - run: |
           echo "🎉 All projects passed compilation and build checks!"
-          echo "✅ Server: TypeScript compiled and built successfully"
-          echo "✅ Console: TypeScript compiled, linted, and built successfully"  
-          echo "✅ Crypto Trader DB: TypeScript compiled and built successfully"
-          echo "✅ Trader Bot: JavaScript syntax validated"
-          echo ""
-          echo "Ready for merge! 🚀"

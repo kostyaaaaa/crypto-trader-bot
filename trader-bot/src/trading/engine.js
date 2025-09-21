@@ -4,8 +4,9 @@ import { calculatePositionSize } from './risk.js';
 import { addPosition, getActivePositions } from './positions.js';
 import { preparePosition } from './prepare.js';
 import { getHigherTF } from '../utils/timeframes.js';
-import { analyzeVolatility } from '../modules/volatility/analyze-volatility.js';
 import { aggregateCandles } from '../utils/candles.js';
+import { analyzeVolatility } from '../modules/volatility/analyze-volatility.js';
+import { analyzeTrendRegime } from '../modules/trendRegime/analyze-trend-regime.js';
 import { analyzeCandles } from '../modules/candles/analyze-сandles.js';
 
 export async function tradingEngine(symbol, config) {
@@ -24,11 +25,11 @@ export async function tradingEngine(symbol, config) {
     const lastClosed = [...history].reverse().find((p) => p.symbol === symbol);
     if (lastClosed?.closedAt) {
       const minutesSince =
-        (Date.now() - new Date(lastClosed.closedAt).getTime()) / 60000;
+          (Date.now() - new Date(lastClosed.closedAt).getTime()) / 60000;
       const cooldown = config.strategy.entry.cooldownMin || 0;
       if (minutesSince < cooldown) {
         console.log(
-          `⏸️ ${symbol}: cooldown ${cooldown}m, залишилось ${(cooldown - minutesSince).toFixed(1)}m`,
+            `⏸️ ${symbol}: cooldown ${cooldown}m, залишилось ${(cooldown - minutesSince).toFixed(1)}m`,
         );
         return;
       }
@@ -46,12 +47,12 @@ export async function tradingEngine(symbol, config) {
 
   // --- 2. Визначаємо більшість ---
   const majority = decisions
-    .sort(
-      (a, b) =>
-        decisions.filter((v) => v === a).length -
-        decisions.filter((v) => v === b).length,
-    )
-    .pop();
+      .sort(
+          (a, b) =>
+              decisions.filter((v) => v === a).length -
+              decisions.filter((v) => v === b).length,
+      )
+      .pop();
 
   if (majority === 'NEUTRAL') {
     console.log(`⚠️ ${symbol}: skip, majority is NEUTRAL`);
@@ -63,7 +64,7 @@ export async function tradingEngine(symbol, config) {
 
   if (analysis.bias !== majority) {
     console.log(
-      `⚠️ ${symbol}: skip, last analysis bias ${analysis.bias} ≠ majority ${majority}`,
+        `⚠️ ${symbol}: skip, last analysis bias ${analysis.bias} ≠ majority ${majority}`,
     );
     return;
   }
@@ -71,25 +72,27 @@ export async function tradingEngine(symbol, config) {
   const { entry, capital } = config.strategy;
   const { scores, modules, coverage } = analysis;
 
-  // --- 3a. Мінімальні скор / модулі ---
+  // --- 3a. Мінімальний скор ---
   const minScore = entry.minScore[majority];
   if (scores[majority] < minScore) {
     console.log(
-      `⚠️ ${symbol}: skip, score ${scores[majority]} < minScore ${minScore}`,
+        `⚠️ ${symbol}: skip, score ${scores[majority]} < minScore ${minScore}`,
     );
     return;
   }
 
+  // --- 3b. Мінімальні модулі ---
   if (coverage) {
     const [filled, total] = coverage.split('/').map(Number);
     if (filled < entry.minModules) {
       console.log(
-        `⚠️ ${symbol}: skip, only ${filled} modules < min ${entry.minModules}`,
+          `⚠️ ${symbol}: skip, only ${filled} modules < min ${entry.minModules}`,
       );
       return;
     }
   }
 
+  // --- 3c. Обов’язкові модулі ---
   if (entry.requiredModules?.length) {
     for (const req of entry.requiredModules) {
       if (!modules[req] || (modules[req].signal ?? 'NEUTRAL') === 'NEUTRAL') {
@@ -99,39 +102,43 @@ export async function tradingEngine(symbol, config) {
     }
   }
 
-  // --- 3b. Side bias tolerance ---
+  // --- 3d. Side bias tolerance ---
   const diff = Math.abs(scores.LONG - scores.SHORT);
   if (diff < entry.sideBiasTolerance) {
     console.log(
-      `⚠️ ${symbol}: skip, bias difference ${diff} < tolerance ${entry.sideBiasTolerance}`,
+        `⚠️ ${symbol}: skip, bias difference ${diff} < tolerance ${entry.sideBiasTolerance}`,
     );
     return;
   }
 
-  // --- 3c. Фільтр волатильності ---
-  if (modules?.volatility?.status === 'DEAD') {
-    console.log(`⚠️ ${symbol}: skip, market DEAD (low volatility)`);
-    return;
-  }
-  if (modules?.volatility?.status === 'EXTREME') {
-    console.log(`⚠️ ${symbol}: EXTREME volatility, reducing risk`);
-    capital.riskPerTradePct = capital.riskPerTradePct / 2;
+  // --- 3e. Фільтр волатильності ---
+  if (modules?.volatility) {
+    const { signal, meta } = modules.volatility;
+
+    if (signal === 'NONE' && meta?.regime === 'DEAD') {
+      console.log(`⚠️ ${symbol}: skip, market DEAD volatility`);
+      return;
+    }
+    if (signal === 'NONE' && meta?.regime === 'EXTREME') {
+      console.log(`⚠️ ${symbol}: EXTREME volatility, reducing risk`);
+      capital.riskPerTradePct = capital.riskPerTradePct / 2;
+    }
   }
 
-  // --- 3d. Перевірка spread ---
+  // --- 3f. Фільтр spread ---
   if (
-    modules?.liquidity?.spreadPct &&
-    modules.liquidity.spreadPct > entry.maxSpreadPct
+      modules?.liquidity?.meta?.spreadPct &&
+      modules.liquidity.meta.spreadPct > entry.maxSpreadPct
   ) {
     console.log(
-      `⚠️ ${symbol}: skip, spread ${modules.liquidity.spreadPct}% > max ${entry.maxSpreadPct}%`,
+        `⚠️ ${symbol}: skip, spread ${modules.liquidity.meta.spreadPct}% > max ${entry.maxSpreadPct}%`,
     );
     return;
   }
 
-  // --- 3e. Перевірка funding ---
-  if (modules?.funding?.fundingRate) {
-    const fr = modules.funding.fundingRate;
+  // --- 3g. Фільтр funding ---
+  if (modules?.funding?.meta?.avgFunding) {
+    const fr = modules.funding.meta.avgFunding;
     const absOver = entry.avoidWhen?.fundingExtreme?.absOver || null;
     if (absOver && Math.abs(fr) > absOver) {
       console.log(`⚠️ ${symbol}: skip, funding extreme ${fr}`);
@@ -139,7 +146,12 @@ export async function tradingEngine(symbol, config) {
     }
   }
 
-  // --- 4. Перевірка по старшому ТФ (легка версія) ---
+  // --- 3h. TrendRegime (ADX) → advisory, не блокує ---
+  if (!modules?.trendRegime || modules.trendRegime.signal === 'NEUTRAL') {
+    console.log(`ℹ️ ${symbol}: ADX regime NEUTRAL (no trend) → не блокуємо, просто без бонуса`);
+  }
+
+  // --- 4. Перевірка по старшому ТФ ---
   const mainTF = config.analysisConfig.candleTimeframe || '1m';
   const higherTF = getHigherTF(mainTF);
 
@@ -157,13 +169,13 @@ export async function tradingEngine(symbol, config) {
 
     if (higherTrend.signal !== majority) {
       console.log(
-        `⚠️ ${symbol}: skip, higher TF ${higherTF} conflict (signal ${higherTrend.signal})`,
+          `ℹ️ ${symbol}: higher TF ${higherTF} conflict (trend=${higherTrend.signal}) → не блокуємо, але можна зменшити ризик`,
       );
-      return;
+      capital.riskPerTradePct = capital.riskPerTradePct / 2;
     }
 
-    if (higherVol.status === 'DEAD') {
-      console.log(`⚠️ ${symbol}: skip, higher TF ${higherTF} DEAD`);
+    if (higherVol.signal === 'NONE' && higherVol.meta?.regime === 'DEAD') {
+      console.log(`⚠️ ${symbol}: skip, higher TF ${higherTF} DEAD volatility`);
       return;
     }
   }
@@ -177,11 +189,11 @@ export async function tradingEngine(symbol, config) {
 
   // --- 6. Готуємо повну позицію ---
   const position = await preparePosition(
-    symbol,
-    config,
-    analysis,
-    majority,
-    size,
+      symbol,
+      config,
+      analysis,
+      majority,
+      size,
   );
 
   await addPosition(position);

@@ -1,13 +1,13 @@
-// analyze-volatility.js
+// modules/volatility/analyze-volatility.js
 // --- Аналіз волатильності через ATR (Average True Range) ---
 // DEAD / NORMAL / EXTREME на основі ATR%
 // Використовуємо пороги з конфігу volatilityFilter
 
 export async function analyzeVolatility(
-  symbol = 'ETHUSDT',
-  candles = [],
-  window = 14,
-  volatilityFilter = { deadBelow: 0.2, extremeAbove: 2.5 }, // дефолт
+    symbol = 'ETHUSDT',
+    candles = [],
+    window = 14,
+    volatilityFilter = { deadBelow: 0.2, extremeAbove: 2.5 }, // дефолт
 ) {
   if (!candles || candles.length < window + 1) {
     console.log(`⚠️ Not enough candles for ${symbol}, need ${window + 1}`);
@@ -34,31 +34,38 @@ export async function analyzeVolatility(
   const lastClose = recent[recent.length - 1].close;
   const atrPct = (atr / lastClose) * 100;
 
-  let LONG = 0;
-  let SHORT = 0;
-  let status = 'NORMAL';
+  let signal = 'NEUTRAL';
+  let strength = 0;
+  let regime = 'NORMAL';
 
   if (atrPct < volatilityFilter.deadBelow) {
-    status = 'DEAD';
+    regime = 'DEAD';
+    signal = 'NONE';
+    strength = 0;
   } else if (atrPct > volatilityFilter.extremeAbove) {
-    status = 'EXTREME';
-    LONG = SHORT = 100; // ринок активний, але надто дикий
+    regime = 'EXTREME';
+    signal = 'NONE';
+    strength = 100; // дуже висока активність, але не торгуємо
   } else {
-    // нормальний ринок → сила від ATR
-    const strength = Math.min(100, atrPct * 50);
-    LONG = strength;
-    SHORT = strength;
+    regime = 'NORMAL';
+    signal = 'ACTIVE';
+    strength = Math.min(100, atrPct * 50); // масштабуємо ATR%
   }
 
   return {
+    module: 'volatility',
     symbol,
-    LONG,
-    SHORT,
-    status, // нове поле
-    data: {
+    signal,     // 'NONE' | 'ACTIVE'
+    strength,   // 0..100
+    meta: {
+      LONG: strength,
+      SHORT: strength,
+      regime,           // DEAD / NORMAL / EXTREME
       candlesUsed: trs.length,
-      atr: atr.toFixed(5),
-      atrPct: atrPct.toFixed(2),
+      atrAbs: Number(atr.toFixed(5)),   // абсолютне значення ATR
+      atrPct: Number(atrPct.toFixed(2)),
+      window,
+      thresholds: volatilityFilter,
     },
   };
 }
