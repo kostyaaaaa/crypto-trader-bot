@@ -1,5 +1,5 @@
 import { model, Model } from 'mongoose';
-import { CoinConfigSchema, ICoinConfig } from '../schemas/CoinConfig.schema.js';
+import { CoinConfigSchema, ICoinConfig } from '../schemas';
 
 // Define the model interface with static methods
 export interface ICoinConfigModel extends Model<ICoinConfig> {
