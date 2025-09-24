@@ -1,13 +1,14 @@
-// analyze-volatility.js
+// modules/volatility/analyze-volatility.js
 // --- Аналіз волатильності через ATR (Average True Range) ---
-// Якщо ATR < 0.2% від ціни → ринок "мертвий" (нема руху)
-// Якщо ATR > 0.2% → ринок "живий", віддаємо силу обом сторонам (LONG/SHORT)
+// DEAD / NORMAL / EXTREME на основі ATR%
+// Використовуємо пороги з конфігу volatilityFilter
 
-import { loadDocs } from '../../storage/storage.js';
-
-export async function analyzeVolatility(symbol = 'ETHUSDT', window = 14) {
-  const candles = await loadDocs('candles', symbol, window + 1);
-
+export async function analyzeVolatility(
+  symbol = 'ETHUSDT',
+  candles = [],
+  window = 14,
+  volatilityFilter = { deadBelow: 0.2, extremeAbove: 2.5 }, // дефолт
+) {
   if (!candles || candles.length < window + 1) {
     console.log(`⚠️ Not enough candles for ${symbol}, need ${window + 1}`);
     return null;
@@ -29,32 +30,42 @@ export async function analyzeVolatility(symbol = 'ETHUSDT', window = 14) {
     trs.push(Math.max(hl, hc, lc));
   }
 
-  // середній TR = ATR
   const atr = trs.reduce((s, v) => s + v, 0) / trs.length;
-
-  // ATR у відсотках від останнього close
   const lastClose = recent[recent.length - 1].close;
   const atrPct = (atr / lastClose) * 100;
 
-  let LONG = 0;
-  let SHORT = 0;
+  let signal = 'NEUTRAL';
+  let strength = 0;
+  let regime = 'NORMAL';
 
-  // Якщо ринок мертвий → обидва = 0
-  if (atrPct >= 0.2) {
-    // нормалізуємо силу: ATR% = 0.2 → сила 10, ATR% = 1 → сила 50, ATR% > 2 → макс 100
-    const strength = Math.min(100, atrPct * 50);
-    LONG = strength;
-    SHORT = strength;
+  if (atrPct < volatilityFilter.deadBelow) {
+    regime = 'DEAD';
+    signal = 'NONE';
+    strength = 0;
+  } else if (atrPct > volatilityFilter.extremeAbove) {
+    regime = 'EXTREME';
+    signal = 'NONE';
+    strength = 100; // дуже висока активність, але не торгуємо
+  } else {
+    regime = 'NORMAL';
+    signal = 'ACTIVE';
+    strength = Math.min(100, atrPct * 50); // масштабуємо ATR%
   }
 
   return {
+    module: 'volatility',
     symbol,
-    LONG,
-    SHORT,
-    data: {
+    signal, // 'NONE' | 'ACTIVE'
+    strength, // 0..100
+    meta: {
+      LONG: strength,
+      SHORT: strength,
+      regime, // DEAD / NORMAL / EXTREME
       candlesUsed: trs.length,
-      atr: atr.toFixed(2),
-      atrPct: atrPct.toFixed(2),
+      atrAbs: Number(atr.toFixed(5)), // абсолютне значення ATR
+      atrPct: Number(atrPct.toFixed(2)),
+      window,
+      thresholds: volatilityFilter,
     },
   };
 }

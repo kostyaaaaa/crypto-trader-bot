@@ -1,8 +1,7 @@
-// trading/positions.js
 import fs from 'fs/promises';
 import path from 'path';
 
-const DATA_DIR = './'; // якщо файли лежать у корені
+const DATA_DIR = './';
 
 async function loadFile(collection) {
   try {
@@ -24,7 +23,8 @@ async function saveFile(collection, data) {
   );
 }
 
-/** Отримати всі відкриті позиції */
+// --- Positions API ---
+
 export async function getActivePositions(symbol = null) {
   const all = await loadFile('positions');
   return all.filter(
@@ -32,13 +32,11 @@ export async function getActivePositions(symbol = null) {
   );
 }
 
-/** Отримати позицію за id */
 export async function getPositionById(id) {
   const all = await loadFile('positions');
   return all.find((p) => p.id === id) || null;
 }
 
-/** Додати нову позицію */
 export async function addPosition(position) {
   const all = await loadFile('positions');
   all.push(position);
@@ -46,7 +44,6 @@ export async function addPosition(position) {
   return position;
 }
 
-/** Оновити існуючу позицію (перезапис у файлі) */
 export async function updatePosition(id, updates) {
   const all = await loadFile('positions');
   const idx = all.findIndex((p) => p.id === id);
@@ -60,7 +57,6 @@ export async function updatePosition(id, updates) {
   return next;
 }
 
-/** Закрити позицію */
 export async function closePosition(id, reason, price) {
   const curr = await getPositionById(id);
   if (!curr) return null;
@@ -82,7 +78,6 @@ export async function closePosition(id, reason, price) {
     await saveFile('positions', all);
   }
 
-  // історію можна апендити окремо
   const hist = await loadFile('history');
   hist.push(next);
   await saveFile('history', hist);
@@ -90,7 +85,6 @@ export async function closePosition(id, reason, price) {
   return next;
 }
 
-/** Часткова фіксація */
 export async function partialClose(id, sizePct, reason, price) {
   const curr = await getPositionById(id);
   if (!curr) return null;
@@ -140,12 +134,10 @@ export async function partialClose(id, sizePct, reason, price) {
   return next;
 }
 
-/** Flip */
 export async function flipPosition(id, newSide, price) {
   return await closePosition(id, 'FLIP', price);
 }
 
-/** Долив (DCA) */
 export async function applyAddToPosition(pos, price, sizing, exits) {
   const addSize = Math.min(
     sizing.baseSizeUsd * (sizing.addMultiplier || 1),
@@ -158,10 +150,43 @@ export async function applyAddToPosition(pos, price, sizing, exits) {
   const newEntry = totalCost / newSize;
 
   let newStop = pos.stopPrice ?? null;
-  if (exits?.sl?.type === 'hard') {
-    const movePct = (exits.sl.hardPct || 0) / 100;
-    newStop =
-      pos.side === 'LONG' ? newEntry * (1 - movePct) : newEntry * (1 + movePct);
+  if (exits?.sl) {
+    // --- Hard SL ---
+    if (exits.sl.type === 'hard') {
+      const movePct = (exits.sl.hardPct || 0) / 100;
+      const updatedStop =
+        pos.side === 'LONG'
+          ? newEntry * (1 - movePct)
+          : newEntry * (1 + movePct);
+
+      if (newStop !== updatedStop) {
+        newStop = updatedStop;
+        pos.updates.push({
+          time: new Date().toISOString(),
+          action: 'STOP MOVE',
+          price: newStop,
+        });
+      }
+    }
+
+    // --- ATR SL ---
+    if (exits.sl.type === 'atr' && pos.context?.atr) {
+      const atrMult = exits.sl.atrMult || 1.5;
+      const atr = pos.context.atr;
+      const updatedStop =
+        pos.side === 'LONG'
+          ? newEntry - atrMult * atr
+          : newEntry + atrMult * atr;
+
+      if (newStop !== updatedStop) {
+        newStop = updatedStop;
+        pos.updates.push({
+          time: new Date().toISOString(),
+          action: 'STOP MOVE (ATR)',
+          price: newStop,
+        });
+      }
+    }
   }
 
   let newTps = pos.takeProfits || [];
@@ -173,6 +198,7 @@ export async function applyAddToPosition(pos, price, sizing, exits) {
           : newEntry * (1 - pct / 100);
       return { price: tpPrice, sizePct: exits.tp.tpGridSizePct[i] || 0 };
     });
+    pos.updates.push({ time: new Date().toISOString(), action: 'TP MOVE' });
   }
 
   const now = new Date().toISOString();
@@ -196,7 +222,7 @@ export async function applyAddToPosition(pos, price, sizing, exits) {
   await saveFile('positions', all);
 
   console.log(
-    `➕ Added ${addSize}$ to ${pos.symbol} @ ${price}. New entry=${newEntry}, size=${newSize}`,
+    `➕ Added ${addSize}$ to ${pos.symbol} @ ${price}. New entry=${newEntry}, size=${newSize}, stop=${newStop}`,
   );
 
   return next;

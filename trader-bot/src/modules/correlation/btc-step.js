@@ -5,12 +5,13 @@
 
 import WebSocket from 'ws';
 import { saveDoc } from '../../storage/storage.js';
+import { logStream } from '../../utils/logger.js';
 
 export function BtcStepWS(symbol = 'BTCUSDT') {
   const lower = symbol.toLowerCase();
   const ws = new WebSocket(`wss://fstream.binance.com/ws/${lower}@kline_1m`);
 
-  ws.on('open', () => console.log(`✅ Connected to ${symbol} kline_1m`));
+  ws.on('open', () => logStream(symbol, 'kline_1m'));
   ws.on('error', (err) => console.error('❌ BTC WS error:', err.message));
 
   ws.on('message', async (msg) => {

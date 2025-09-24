@@ -9,21 +9,26 @@ export interface IAnalysisConfig {
   fundingWindow: number;
   volWindow: number;
   corrWindow: number;
+  longShortWindow: number;
   weights: {
     trend: number;
+    trendRegime: number;
     liquidity: number;
     funding: number;
     liquidations: number;
     openInterest: number;
     correlation: number;
+    longShort: number;
   };
   moduleThresholds: {
     trend: number;
+    trendRegime: number;
     liquidity: number;
     funding: number;
     liquidations: number;
     openInterest: number;
     correlation: number;
+    longShort: number;
   };
 }
 
@@ -82,8 +87,9 @@ export interface ISignalRules {
 }
 
 export interface ISlConfig {
-  type: 'hard' | 'signal';
+  type: 'hard' | 'atr';
   hardPct?: number;
+  atrMult?: number;
   signalRules?: ISignalRules;
 }
 
@@ -96,6 +102,10 @@ export interface ITrailingConfig {
   use: boolean;
   startAfterPct: number;
   trailStepPct: number;
+}
+export interface IVolatilityFilterConfig {
+  deadBelow: number;
+  extremeAbove: number;
 }
 
 export interface IExitsConfig {
@@ -110,6 +120,7 @@ export interface IStrategyConfig {
   capital: ICapitalConfig;
   sizing: ISizingConfig;
   exits: IExitsConfig;
+  volatilityFilter: IVolatilityFilterConfig;
 }
 
 // Main coin configuration interface
@@ -125,11 +136,13 @@ export interface ICoinConfig {
 const weightsSchema = new Schema(
   {
     trend: { type: Number, required: true },
+    trendRegime: { type: Number, required: true },
     liquidity: { type: Number, required: true },
     funding: { type: Number, required: true },
     liquidations: { type: Number, required: true },
     openInterest: { type: Number, required: true },
     correlation: { type: Number, required: true },
+    longShort: { type: Number, required: true },
   },
   { _id: false },
 );
@@ -137,11 +150,13 @@ const weightsSchema = new Schema(
 const moduleThresholdsSchema = new Schema(
   {
     trend: { type: Number, required: true },
+    trendRegime: { type: Number, required: true },
     liquidity: { type: Number, required: true },
     funding: { type: Number, required: true },
     liquidations: { type: Number, required: true },
     openInterest: { type: Number, required: true },
     correlation: { type: Number, required: true },
+    longShort: { type: Number, required: true },
   },
   { _id: false },
 );
@@ -155,6 +170,7 @@ const analysisConfigSchema = new Schema(
     fundingWindow: { type: Number, required: true },
     volWindow: { type: Number, required: true },
     corrWindow: { type: Number, required: true },
+    longShortWindow: { type: Number, required: true },
     weights: { type: weightsSchema, required: true },
     moduleThresholds: { type: moduleThresholdsSchema, required: true },
   },
@@ -252,8 +268,9 @@ const signalRulesSchema = new Schema(
 
 const slConfigSchema = new Schema(
   {
-    type: { type: String, enum: ['hard', 'signal'], required: true },
+    type: { type: String, enum: ['atr', 'hard'], required: true },
     hardPct: { type: Number },
+    atrMult: { type: Number },
     signalRules: { type: signalRulesSchema },
   },
   { _id: false },
@@ -289,10 +306,17 @@ const exitsConfigSchema = new Schema(
   },
   { _id: false },
 );
-
+const volatilityFilterSchema = new Schema(
+  {
+    deadBelow: { type: Number, required: true },
+    extremeAbove: { type: Number, required: true },
+  },
+  { _id: false },
+);
 const strategyConfigSchema = new Schema(
   {
     entry: { type: entryConfigSchema, required: true },
+    volatilityFilter: { type: volatilityFilterSchema, required: true },
     capital: { type: capitalConfigSchema, required: true },
     sizing: { type: sizingConfigSchema, required: true },
     exits: { type: exitsConfigSchema, required: true },
