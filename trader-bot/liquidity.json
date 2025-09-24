@@ -1,24 +1,6 @@
 [
   {
     "symbol": "ETHUSDT",
-    "time": "2025-09-24T11:45:15.743Z",
-    "avgImbalance": 0.637,
-    "avgSpread": 0.01
-  },
-  {
-    "symbol": "ENAUSDT",
-    "time": "2025-09-24T11:46:15.589Z",
-    "avgImbalance": 0.532,
-    "avgSpread": 0
-  },
-  {
-    "symbol": "SOLUSDT",
-    "time": "2025-09-24T11:46:15.706Z",
-    "avgImbalance": 0.571,
-    "avgSpread": 0.01
-  },
-  {
-    "symbol": "ETHUSDT",
     "time": "2025-09-24T11:46:15.743Z",
     "avgImbalance": 0.49,
     "avgSpread": 0.01
@@ -5997,6 +5979,24 @@
     "symbol": "ETHUSDT",
     "time": "2025-09-24T18:06:58.914Z",
     "avgImbalance": 0.408,
+    "avgSpread": 0.01
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-24T18:10:04.440Z",
+    "avgImbalance": 0.486,
+    "avgSpread": 0
+  },
+  {
+    "symbol": "SOLUSDT",
+    "time": "2025-09-24T18:10:04.452Z",
+    "avgImbalance": 0.486,
+    "avgSpread": 0.01
+  },
+  {
+    "symbol": "ETHUSDT",
+    "time": "2025-09-24T18:10:04.458Z",
+    "avgImbalance": 0.513,
     "avgSpread": 0.01
   }
 ]
