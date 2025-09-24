@@ -10,7 +10,6 @@ export const client = Binance({
   futures: true,
 });
 
-
 /* ========= Helpers ========= */
 
 function normalizeOrderSide(side) {
@@ -41,14 +40,14 @@ export async function getSymbolInfo(symbol) {
 
 export function adjustQuantity(symbolFilters, qty) {
   const lotFilter =
-      symbolFilters.find((f) => f.filterType === 'MARKET_LOT_SIZE') ||
-      symbolFilters.find((f) => f.filterType === 'LOT_SIZE');
+    symbolFilters.find((f) => f.filterType === 'MARKET_LOT_SIZE') ||
+    symbolFilters.find((f) => f.filterType === 'LOT_SIZE');
   if (!lotFilter) return String(qty);
 
   const stepSize = parseFloat(lotFilter.stepSize);
   const minQty = parseFloat(lotFilter.minQty ?? '0');
   const precision =
-      stepSize === 1 ? 0 : (stepSize.toString().split('.')[1] || '').length;
+    stepSize === 1 ? 0 : (stepSize.toString().split('.')[1] || '').length;
 
   let q = Math.floor(Number(qty) / stepSize) * stepSize;
   if (!isFinite(q) || q <= 0) q = 0;
@@ -58,12 +57,14 @@ export function adjustQuantity(symbolFilters, qty) {
 }
 
 export function adjustPrice(symbolFilters, price) {
-  const priceFilter = symbolFilters.find((f) => f.filterType === 'PRICE_FILTER');
+  const priceFilter = symbolFilters.find(
+    (f) => f.filterType === 'PRICE_FILTER',
+  );
   if (!priceFilter) return String(price);
 
   const tickSize = parseFloat(priceFilter.tickSize);
   const precision =
-      tickSize === 1 ? 0 : (tickSize.toString().split('.')[1] || '').length;
+    tickSize === 1 ? 0 : (tickSize.toString().split('.')[1] || '').length;
 
   let p = Math.floor(Number(price) / tickSize) * tickSize;
   if (!isFinite(p) || p <= 0) p = 0;
@@ -115,8 +116,10 @@ export async function placeStopLoss(symbol, positionSide, stopPrice, quantity) {
   const qty = adjustQuantity(filters, quantity);
   const price = adjustPrice(filters, stopPrice);
 
-  if (!qty || Number(qty) <= 0) throw new Error(`SL qty too small for ${symbol}`);
-  if (!price || Number(price) <= 0) throw new Error(`SL price invalid for ${symbol}`);
+  if (!qty || Number(qty) <= 0)
+    throw new Error(`SL qty too small for ${symbol}`);
+  if (!price || Number(price) <= 0)
+    throw new Error(`SL price invalid for ${symbol}`);
 
   return await client.futuresOrder({
     symbol,
@@ -135,8 +138,10 @@ export async function placeTakeProfit(symbol, positionSide, tpPrice, quantity) {
   const qty = adjustQuantity(filters, quantity);
   const price = adjustPrice(filters, tpPrice);
 
-  if (!qty || Number(qty) <= 0) throw new Error(`TP qty too small for ${symbol}`);
-  if (!price || Number(price) <= 0) throw new Error(`TP price invalid for ${symbol}`);
+  if (!qty || Number(qty) <= 0)
+    throw new Error(`TP qty too small for ${symbol}`);
+  if (!price || Number(price) <= 0)
+    throw new Error(`TP price invalid for ${symbol}`);
 
   return await client.futuresOrder({
     symbol,
@@ -203,33 +208,33 @@ export async function getLiveState(symbol) {
   // 2. Ордери
   const openOrders = await client.futuresOpenOrders({ symbol });
   const orders = openOrders
-      .map((o) => {
-        const qty = parseFloat(o.origQty);
-        const stopPrice = parseFloat(o.stopPrice);
-        const type =
-            o.type.includes('STOP') ? 'SL' :
-                o.type.includes('TAKE_PROFIT') ? 'TP' :
-                    'OTHER';
+    .map((o) => {
+      const qty = parseFloat(o.origQty);
+      const stopPrice = parseFloat(o.stopPrice);
+      const type = o.type.includes('STOP')
+        ? 'SL'
+        : o.type.includes('TAKE_PROFIT')
+          ? 'TP'
+          : 'OTHER';
 
-        return {
-          type,
-          price: stopPrice || parseFloat(o.price) || null,
-          qty,
-          side: o.side,
-          reduceOnly: o.reduceOnly,
-        };
-      })
-      .filter((o) => o.type !== 'OTHER');
-
+      return {
+        type,
+        price: stopPrice || parseFloat(o.price) || null,
+        qty,
+        side: o.side,
+        reduceOnly: o.reduceOnly,
+      };
+    })
+    .filter((o) => o.type !== 'OTHER');
 
   return { position, orders };
 }
 function signParams(params) {
   const query = new URLSearchParams(params).toString();
   const signature = crypto
-      .createHmac('sha256', process.env.BINANCE_ACCOUNT_SECRET_KEY)
-      .update(query)
-      .digest('hex');
+    .createHmac('sha256', process.env.BINANCE_ACCOUNT_SECRET_KEY)
+    .update(query)
+    .digest('hex');
   return `${query}&signature=${signature}`;
 }
 
@@ -245,7 +250,6 @@ export async function setLeverage(symbol, leverage) {
     leverage,
     timestamp: ts,
     recvWindow: 5000,
-
   };
 
   const query = signParams(params);
@@ -272,7 +276,7 @@ export async function getUserTrades(symbol, options = {}) {
     });
 
     // Нормалізація під твій стиль
-    return res.map(t => ({
+    return res.map((t) => ({
       id: t.id,
       orderId: t.orderId,
       symbol: t.symbol,
@@ -284,7 +288,10 @@ export async function getUserTrades(symbol, options = {}) {
       time: t.time,
     }));
   } catch (err) {
-    console.error(`❌ getUserTrades failed for ${symbol}:`, err?.message || err);
+    console.error(
+      `❌ getUserTrades failed for ${symbol}:`,
+      err?.message || err,
+    );
     return [];
   }
 }
@@ -293,15 +300,20 @@ export async function cancelStopOrders(symbol) {
     const res = await client.futuresOpenOrders({ symbol });
     if (!Array.isArray(res)) return;
 
-    const stopOrders = res.filter(o =>
-        o.type.includes('STOP') || o.type.includes('TRAILING_STOP_MARKET')
+    const stopOrders = res.filter(
+      (o) => o.type.includes('STOP') || o.type.includes('TRAILING_STOP_MARKET'),
     );
 
     for (let o of stopOrders) {
       await client.futuresCancelOrder({ symbol, orderId: o.orderId });
-      console.log(`❌ Canceled stop order ${o.type} @ ${symbol} (${o.orderId})`);
+      console.log(
+        `❌ Canceled stop order ${o.type} @ ${symbol} (${o.orderId})`,
+      );
     }
   } catch (err) {
-    console.error(`❌ Failed to cancel stop orders for ${symbol}:`, err.message);
+    console.error(
+      `❌ Failed to cancel stop orders for ${symbol}:`,
+      err.message,
+    );
   }
 }

@@ -137,8 +137,7 @@
 - `addOnAdverseMovePct` → доливати при русі проти на X%.
 - `addMultiplier` → коефіцієнт розміру наступного доливу.
 
-**Рекомендації**:
----
+## **Рекомендації**:
 
 ### `exits`
 
@@ -224,7 +223,7 @@
     "sizing": {
       "maxAdds": 2,
       "addOnAdverseMovePct": 0.4,
-      "addMultiplier": 1.1,
+      "addMultiplier": 1.1
     },
     "exits": {
       "tp": { "use": true, "tpGridPct": [0.5, 1], "tpGridSizePct": [50, 50] },

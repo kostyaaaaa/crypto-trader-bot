@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from 'axios';
 import { analyzeCandles } from '../modules/candles/analyze-сandles.js';
 import { analyzeLiquidity } from '../modules/orderbook/analyze-liquidity.js';
 import { analyzeLiquidations } from '../modules/liquidations/analyze-liquidations.js';
@@ -11,10 +11,10 @@ import { analyzeLongShort } from '../modules/longshort/analyze-longshort.js';
 import { saveDoc } from '../storage/storage.js';
 
 export async function finalAnalyzer({
-                                      symbol = 'ETHUSDT',
-                                      analysisConfig = {},
-                                      save = true,
-                                    } = {}) {
+  symbol = 'ETHUSDT',
+  analysisConfig = {},
+  save = true,
+} = {}) {
   const {
     candleTimeframe = '1m',
     oiWindow = 10,
@@ -27,12 +27,20 @@ export async function finalAnalyzer({
     weights = {},
     moduleThresholds = {},
   } = analysisConfig;
-  const needed = Math.max(21, volWindow, corrWindow, oiWindow, fundingWindow, longShortWindow) + 5;
+  const needed =
+    Math.max(
+      21,
+      volWindow,
+      corrWindow,
+      oiWindow,
+      fundingWindow,
+      longShortWindow,
+    ) + 5;
   // --- свічки напряму з Binance ---
-  const klineRes = await axios.get("https://fapi.binance.com/fapi/v1/klines", {
+  const klineRes = await axios.get('https://fapi.binance.com/fapi/v1/klines', {
     params: { symbol, interval: candleTimeframe, limit: needed },
   });
-  const candles = klineRes.data.map(k => ({
+  const candles = klineRes.data.map((k) => ({
     time: new Date(k[0]).toISOString(),
     open: parseFloat(k[1]),
     high: parseFloat(k[2]),
@@ -76,12 +84,14 @@ export async function finalAnalyzer({
   else if (scoreSHORT > 50) decision = 'WEAK SHORT';
 
   const bias =
-      scoreLONG > scoreSHORT ? 'LONG' :
-          scoreSHORT > scoreLONG ? 'SHORT' :
-              'NEUTRAL';
+    scoreLONG > scoreSHORT
+      ? 'LONG'
+      : scoreSHORT > scoreLONG
+        ? 'SHORT'
+        : 'NEUTRAL';
 
   const filledModules = Object.values(modules).filter(
-      (m) => m && (m.meta?.LONG ?? 0) + (m.meta?.SHORT ?? 0) > 0,
+    (m) => m && (m.meta?.LONG ?? 0) + (m.meta?.SHORT ?? 0) > 0,
   ).length;
 
   const result = {

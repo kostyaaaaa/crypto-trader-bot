@@ -6,14 +6,14 @@
 //  • OI↓ + Price↑ → SHORT (fake move)
 //  • OI↓ + Price↓ → LONG (short covering)
 
-import axios from "axios";
+import axios from 'axios';
 
-export async function analyzeOpenInterest(symbol = "ETHUSDT", window = 5) {
+export async function analyzeOpenInterest(symbol = 'ETHUSDT', window = 5) {
   try {
     // 1) Історія OI з Binance (5m)
     const oiRes = await axios.get(
-        "https://fapi.binance.com/futures/data/openInterestHist",
-        { params: { symbol, period: "5m", limit: window } }
+      'https://fapi.binance.com/futures/data/openInterestHist',
+      { params: { symbol, period: '5m', limit: window } },
     );
     if (!oiRes.data || oiRes.data.length < window) {
       console.log(`⚠️ Not enough OI data for ${symbol}, need ${window}`);
@@ -22,8 +22,8 @@ export async function analyzeOpenInterest(symbol = "ETHUSDT", window = 5) {
 
     // 2) Історія свічок (5m) з Binance
     const klineRes = await axios.get(
-        "https://fapi.binance.com/fapi/v1/klines",
-        { params: { symbol, interval: "5m", limit: window } }
+      'https://fapi.binance.com/fapi/v1/klines',
+      { params: { symbol, interval: '5m', limit: window } },
     );
     if (!klineRes.data || klineRes.data.length < window) {
       console.log(`⚠️ Not enough price data for ${symbol}, need ${window}`);
@@ -45,16 +45,19 @@ export async function analyzeOpenInterest(symbol = "ETHUSDT", window = 5) {
 
     // захист від ділення на 0
     const safePct = (end, start) =>
-        start && isFinite(start) ? ((end - start) / start) * 100 : 0;
+      start && isFinite(start) ? ((end - start) / start) * 100 : 0;
 
     const oiChangePct = safePct(last.openInterest, first.openInterest);
-    const oiValueChangePct = safePct(last.openInterestValue, first.openInterestValue);
+    const oiValueChangePct = safePct(
+      last.openInterestValue,
+      first.openInterestValue,
+    );
     const priceChangePct = safePct(last.price, first.price);
 
     // Напрямок: +1 → LONG, -1 → SHORT
     const sameDirection =
-        (oiChangePct >= 0 && priceChangePct >= 0) ||
-        (oiChangePct < 0 && priceChangePct < 0);
+      (oiChangePct >= 0 && priceChangePct >= 0) ||
+      (oiChangePct < 0 && priceChangePct < 0);
     const sign = sameDirection ? +1 : -1;
 
     // Комбінована сила
@@ -63,15 +66,15 @@ export async function analyzeOpenInterest(symbol = "ETHUSDT", window = 5) {
     // Дуже малий рух → нейтральний
     if (mag < 0.05) {
       return {
-        module: "openInterest",
+        module: 'openInterest',
         symbol,
-        signal: "NEUTRAL",
+        signal: 'NEUTRAL',
         strength: 0,
         meta: {
           LONG: 50,
           SHORT: 50,
           candlesUsed: recent.length,
-          periodCovered: `${window * 5}m (~${(window * 5 / 60).toFixed(1)}h)`, // 🆕
+          periodCovered: `${window * 5}m (~${((window * 5) / 60).toFixed(1)}h)`, // 🆕
           oiChangePct: to2(oiChangePct),
           oiValueChangePct: to2(oiValueChangePct),
           priceChangePct: to2(priceChangePct),
@@ -85,12 +88,12 @@ export async function analyzeOpenInterest(symbol = "ETHUSDT", window = 5) {
     const longScore = Math.round(pLong * 100);
     const shortScore = 100 - longScore;
 
-    let signal = "LONG";
-    if (shortScore > longScore) signal = "SHORT";
-    if (Math.abs(longScore - shortScore) < 5) signal = "NEUTRAL";
+    let signal = 'LONG';
+    if (shortScore > longScore) signal = 'SHORT';
+    if (Math.abs(longScore - shortScore) < 5) signal = 'NEUTRAL';
 
     return {
-      module: "openInterest",
+      module: 'openInterest',
       symbol,
       signal,
       strength: Math.max(longScore, shortScore),
@@ -98,14 +101,14 @@ export async function analyzeOpenInterest(symbol = "ETHUSDT", window = 5) {
         LONG: longScore,
         SHORT: shortScore,
         candlesUsed: recent.length,
-        periodCovered: `${window * 5}m (~${(window * 5 / 60).toFixed(1)}h)`, // 🆕
+        periodCovered: `${window * 5}m (~${((window * 5) / 60).toFixed(1)}h)`, // 🆕
         oiChangePct: to2(oiChangePct),
         oiValueChangePct: to2(oiValueChangePct),
         priceChangePct: to2(priceChangePct),
       },
     };
   } catch (err) {
-    console.error("❌ analyzeOpenInterest error:", err.message);
+    console.error('❌ analyzeOpenInterest error:', err.message);
     return null;
   }
 }

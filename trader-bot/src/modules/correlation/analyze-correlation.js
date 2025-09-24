@@ -3,15 +3,15 @@
 // Якщо торгуємо alt (ETH, SOL, ADA…), а BTC сильно рухається → враховуємо цей сигнал
 // Дані беремо напряму з Binance API (історичні kline)
 
-import axios from "axios";
-import { correlationGroups } from "../../constants/correlation-config.js";
+import axios from 'axios';
+import { correlationGroups } from '../../constants/correlation-config.js';
 
 // Визначаємо групу (наскільки сильно символ корелює з BTC)
 function getGroup(symbol) {
   symbol = symbol.toUpperCase();
-  if (correlationGroups.strong.includes(symbol)) return "strong";
-  if (correlationGroups.medium.includes(symbol)) return "medium";
-  if (correlationGroups.weak.includes(symbol)) return "weak";
+  if (correlationGroups.strong.includes(symbol)) return 'strong';
+  if (correlationGroups.medium.includes(symbol)) return 'medium';
+  if (correlationGroups.weak.includes(symbol)) return 'weak';
   return null;
 }
 
@@ -19,21 +19,21 @@ export async function analyzeCorrelation(symbol, window = 5) {
   const group = getGroup(symbol);
   if (!group) {
     return {
-      module: "correlation",
+      module: 'correlation',
       symbol,
-      signal: "NEUTRAL",
+      signal: 'NEUTRAL',
       strength: 0,
-      meta: { group: "none" },
+      meta: { group: 'none' },
     };
   }
 
   try {
     // беремо історію 5-хвилинних свічок BTCUSDT
-    const url = "https://fapi.binance.com/fapi/v1/klines";
+    const url = 'https://fapi.binance.com/fapi/v1/klines';
     const res = await axios.get(url, {
       params: {
-        symbol: "BTCUSDT",
-        interval: "5m",
+        symbol: 'BTCUSDT',
+        interval: '5m',
         limit: window,
       },
     });
@@ -43,7 +43,7 @@ export async function analyzeCorrelation(symbol, window = 5) {
       return null;
     }
 
-    const closes = res.data.map(k => parseFloat(k[4])); // close price
+    const closes = res.data.map((k) => parseFloat(k[4])); // close price
     const first = closes[0];
     const last = closes[closes.length - 1];
 
@@ -51,16 +51,16 @@ export async function analyzeCorrelation(symbol, window = 5) {
     const btcChangePct = ((last - first) / first) * 100;
 
     // базовий сигнал
-    let signal = "NEUTRAL";
+    let signal = 'NEUTRAL';
     let longScore = 50;
     let shortScore = 50;
 
     if (btcChangePct > 0.5) {
-      signal = "LONG";
+      signal = 'LONG';
       longScore = 50 + Math.min(Math.abs(btcChangePct) * 5, 50);
       shortScore = 100 - longScore;
     } else if (btcChangePct < -0.5) {
-      signal = "SHORT";
+      signal = 'SHORT';
       shortScore = 50 + Math.min(Math.abs(btcChangePct) * 5, 50);
       longScore = 100 - shortScore;
     }
@@ -73,7 +73,7 @@ export async function analyzeCorrelation(symbol, window = 5) {
     const weightedShort = Math.round(shortScore * weight);
 
     return {
-      module: "correlation",
+      module: 'correlation',
       symbol,
       signal,
       strength: Math.max(weightedLong, weightedShort),
@@ -88,7 +88,7 @@ export async function analyzeCorrelation(symbol, window = 5) {
       },
     };
   } catch (e) {
-    console.error("❌ Correlation fetch error:", e.message);
+    console.error('❌ Correlation fetch error:', e.message);
     return null;
   }
 }

@@ -185,28 +185,28 @@ export const ANALYSIS_CONFIG = {
   ETHUSDT: {
     // --- Налаштування аналізу ---
     analysisConfig: {
-      candleTimeframe: '15m',   // працюємо на 15 хвилинних свічках
-      oiWindow: 20,             // більше даних OI (~5 годин)
-      liqWindow: 30,            // ліквідність ширша
+      candleTimeframe: '15m', // працюємо на 15 хвилинних свічках
+      oiWindow: 20, // більше даних OI (~5 годин)
+      liqWindow: 30, // ліквідність ширша
       liqSentWindow: 5,
-      fundingWindow: 96,        // майже доба funding
-      volWindow: 14,            // стандартний ATR(14)
-      corrWindow: 10,           // враховуємо BTC кореляцію
-      longShortWindow: 10,      // L/S ratio більш стабільний
+      fundingWindow: 96, // майже доба funding
+      volWindow: 14, // стандартний ATR(14)
+      corrWindow: 10, // враховуємо BTC кореляцію
+      longShortWindow: 10, // L/S ratio більш стабільний
 
       weights: {
-        trend: 0.3,             // тренд — ключовий для ETH
+        trend: 0.3, // тренд — ключовий для ETH
         trendRegime: 0.15,
-        liquidity: 0.2,         // стакан важливий, але не головний
+        liquidity: 0.2, // стакан важливий, але не головний
         funding: 0.1,
         liquidations: 0.05,
         openInterest: 0.15,
-        correlation: 0.03,      // кореляція з BTC, але невелика
+        correlation: 0.03, // кореляція з BTC, але невелика
         longShort: 0.02,
       },
 
       moduleThresholds: {
-        trend: 50,              // тренд беремо сильніший
+        trend: 50, // тренд беремо сильніший
         trendRegime: 7,
         liquidity: 40,
         funding: 20,
@@ -220,57 +220,57 @@ export const ANALYSIS_CONFIG = {
     // --- Налаштування торгової стратегії ---
     strategy: {
       entry: {
-        minScore: { LONG: 55, SHORT: 55 },   // більш строгий поріг
+        minScore: { LONG: 55, SHORT: 55 }, // більш строгий поріг
         minModules: 3,
         requiredModules: ['trend', 'trendRegime'], // для надійності
         maxSpreadPct: 0.05,
-        cooldownMin: 5,                      // рідше заходимо
+        cooldownMin: 5, // рідше заходимо
         avoidWhen: {
           volatility: 'DEAD',
-          fundingExtreme: { absOver: 0.1 },  // funding до ±0.1 ок
+          fundingExtreme: { absOver: 0.1 }, // funding до ±0.1 ок
         },
         sideBiasTolerance: 5,
       },
       volatilityFilter: {
-        deadBelow: 0.25,   // для ETH мертва волатильність нижча
+        deadBelow: 0.25, // для ETH мертва волатильність нижча
         extremeAbove: 2.5,
       },
       capital: {
         account: 100,
-        riskPerTradePct: 10,  // ризик 10% від акаунту
-        leverage: 3,          // помірне плече для ETH
+        riskPerTradePct: 10, // ризик 10% від акаунту
+        leverage: 3, // помірне плече для ETH
         maxConcurrentPositions: 2,
       },
       sizing: {
-        maxAdds: 1,              // максимум один долив
-        addOnAdverseMovePct: 1,  // додаємо тільки якщо пішло проти на 1%
+        maxAdds: 1, // максимум один долив
+        addOnAdverseMovePct: 1, // додаємо тільки якщо пішло проти на 1%
         addMultiplier: 1.0,
       },
       exits: {
         tp: {
           use: true,
-          tpGridPct: [5, 10],      // робимо сітку: перший TP на 5%, другий на 10%
+          tpGridPct: [5, 10], // робимо сітку: перший TP на 5%, другий на 10%
           tpGridSizePct: [50, 50], // половину фіксуємо на TP1, половину на TP2
         },
         sl: {
-          type: 'atr',     // краще SL по ATR на ефірі
-          hardPct: 5,      // fallback — 5% від угоди
-          atrMult: 1.8,    // ATR ×1.8 дає простір
+          type: 'atr', // краще SL по ATR на ефірі
+          hardPct: 5, // fallback — 5% від угоди
+          atrMult: 1.8, // ATR ×1.8 дає простір
           signalRules: {
             flipIf: { scoreGap: 12, minOppScore: 60 },
             moduleFail: { required: ['trend'] },
           },
         },
         time: {
-          maxHoldMin: 240,   // максимум 4 години на угоду
+          maxHoldMin: 240, // максимум 4 години на угоду
           noPnLFallback: 'close',
         },
         trailing: {
           use: true,
-          startAfterPct: 1.5,   // після +1.5% починаємо трейлити
-          trailStepPct: 0.7,    // підтягуємо на 0.7%
+          startAfterPct: 1.5, // після +1.5% починаємо трейлити
+          trailStepPct: 0.7, // підтягуємо на 0.7%
         },
       },
     },
-  }
+  },
 };

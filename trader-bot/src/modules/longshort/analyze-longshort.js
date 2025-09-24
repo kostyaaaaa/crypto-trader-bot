@@ -2,21 +2,24 @@
 // --- Глобальне співвідношення Long vs Short акаунтів ---
 // API: /futures/data/globalLongShortAccountRatio
 
-import axios from "axios";
+import axios from 'axios';
 
-export async function analyzeLongShort(symbol = "ETHUSDT", window = 5) {
+export async function analyzeLongShort(symbol = 'ETHUSDT', window = 5) {
   try {
-    const url = "https://fapi.binance.com/futures/data/globalLongShortAccountRatio";
+    const url =
+      'https://fapi.binance.com/futures/data/globalLongShortAccountRatio';
     const res = await axios.get(url, {
       params: {
         symbol,
-        period: "5m", // 5-хвилинні дані
+        period: '5m', // 5-хвилинні дані
         limit: window,
       },
     });
 
     if (!res.data || res.data.length < window) {
-      console.log(`⚠️ Not enough long/short ratio data for ${symbol}, need ${window}`);
+      console.log(
+        `⚠️ Not enough long/short ratio data for ${symbol}, need ${window}`,
+      );
       return null;
     }
 
@@ -36,9 +39,9 @@ export async function analyzeLongShort(symbol = "ETHUSDT", window = 5) {
     const longPct = total > 0 ? (avgLong / total) * 100 : 50;
     const shortPct = total > 0 ? (avgShort / total) * 100 : 50;
 
-    let signal = "NEUTRAL";
-    if (longPct > shortPct + 5) signal = "LONG";
-    else if (shortPct > longPct + 5) signal = "SHORT";
+    let signal = 'NEUTRAL';
+    if (longPct > shortPct + 5) signal = 'LONG';
+    else if (shortPct > longPct + 5) signal = 'SHORT';
 
     const strength = Math.min(100, Math.abs(longPct - shortPct));
 
@@ -47,7 +50,7 @@ export async function analyzeLongShort(symbol = "ETHUSDT", window = 5) {
     const hoursCovered = (minutesCovered / 60).toFixed(1);
 
     return {
-      module: "longShort",
+      module: 'longShort',
       symbol,
       signal,
       strength,
@@ -61,7 +64,7 @@ export async function analyzeLongShort(symbol = "ETHUSDT", window = 5) {
       },
     };
   } catch (e) {
-    console.error("❌ Error fetching long/short ratio:", e.message);
+    console.error('❌ Error fetching long/short ratio:', e.message);
     return null;
   }
 }

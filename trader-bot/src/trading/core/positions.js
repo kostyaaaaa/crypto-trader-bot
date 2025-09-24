@@ -24,7 +24,7 @@ export async function getActivePositions(symbol = null) {
     return position?.side ? [{ ...position, orders }] : [];
   } else {
     const positions = await getOpenPositions();
-    return positions.filter(p => Number(p.positionAmt) !== 0);
+    return positions.filter((p) => Number(p.positionAmt) !== 0);
   }
 }
 
@@ -68,7 +68,7 @@ export async function applyAddToPosition(symbol, side, addUsd, price, exits) {
 
   // 3. Порахувати новий розмір всієї позиції
   const { position } = await getLiveState(symbol);
-  const totalQty = position?.size || (Number(qty) || 0);
+  const totalQty = position?.size || Number(qty) || 0;
 
   // 4. Виставити нові SL/TP
   if (exits?.sl?.price) {

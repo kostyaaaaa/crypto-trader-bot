@@ -7,7 +7,7 @@ import { finalAnalyzer } from './utils/final-analyzer.js';
 import { ANALYSIS_CONFIG } from './constants/mock.js';
 import { tradingEngine } from './trading/core/engine.js';
 import { monitorPositions } from './trading/core/monitor.js';
-import {startUserStream} from "./trading/binance/ws-listener.js";
+import { startUserStream } from './trading/binance/ws-listener.js';
 // import {CoinConfigModel} from "crypto-trader-db";
 
 // === 2. Для кожної монети з конфіга запускаємо процеси ===

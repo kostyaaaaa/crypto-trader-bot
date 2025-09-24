@@ -28,7 +28,9 @@ export async function tradingEngine(symbol, config) {
     try {
       const trades = await getUserTrades(symbol, { limit: 50 });
       if (Array.isArray(trades) && trades.length) {
-        const lastClosed = [...trades].reverse().find(t => Number(t.realizedPnl) !== 0);
+        const lastClosed = [...trades]
+          .reverse()
+          .find((t) => Number(t.realizedPnl) !== 0);
         if (lastClosed) {
           const closedAt = new Date(lastClosed.time);
           const minutesSince = (Date.now() - closedAt.getTime()) / 60000;
@@ -36,14 +38,17 @@ export async function tradingEngine(symbol, config) {
 
           if (minutesSince < cooldown) {
             console.log(
-                `⏸️ ${symbol}: cooldown ${cooldown}m, залишилось ${(cooldown - minutesSince).toFixed(1)}m`
+              `⏸️ ${symbol}: cooldown ${cooldown}m, залишилось ${(cooldown - minutesSince).toFixed(1)}m`,
             );
             return;
           }
         }
       }
     } catch (err) {
-      console.error(`⚠️ ${symbol}: failed to check cooldown via trades`, err?.message || err);
+      console.error(
+        `⚠️ ${symbol}: failed to check cooldown via trades`,
+        err?.message || err,
+      );
     }
   }
 
@@ -59,11 +64,12 @@ export async function tradingEngine(symbol, config) {
 
   // 2. більшість
   const majority = decisions
-      .sort((a, b) =>
-          decisions.filter((v) => v === a).length -
-          decisions.filter((v) => v === b).length
-      )
-      .pop();
+    .sort(
+      (a, b) =>
+        decisions.filter((v) => v === a).length -
+        decisions.filter((v) => v === b).length,
+    )
+    .pop();
 
   if (majority === 'NEUTRAL') {
     console.log(`⚠️ ${symbol}: skip, majority is NEUTRAL`);
@@ -72,7 +78,9 @@ export async function tradingEngine(symbol, config) {
 
   // 3. перевірка останнього аналізу
   if (analysis.bias !== majority) {
-    console.log(`⚠️ ${symbol}: skip, last analysis bias ${analysis.bias} ≠ majority ${majority}`);
+    console.log(
+      `⚠️ ${symbol}: skip, last analysis bias ${analysis.bias} ≠ majority ${majority}`,
+    );
     return;
   }
 
@@ -82,7 +90,9 @@ export async function tradingEngine(symbol, config) {
   // 3a. min score
   const minScore = entry.minScore[majority];
   if (scores[majority] < minScore) {
-    console.log(`⚠️ ${symbol}: skip, score ${scores[majority]} < minScore ${minScore}`);
+    console.log(
+      `⚠️ ${symbol}: skip, score ${scores[majority]} < minScore ${minScore}`,
+    );
     return;
   }
 
@@ -90,7 +100,9 @@ export async function tradingEngine(symbol, config) {
   if (coverage) {
     const [filled] = coverage.split('/').map(Number);
     if (filled < entry.minModules) {
-      console.log(`⚠️ ${symbol}: skip, only ${filled} modules < min ${entry.minModules}`);
+      console.log(
+        `⚠️ ${symbol}: skip, only ${filled} modules < min ${entry.minModules}`,
+      );
       return;
     }
   }
@@ -108,7 +120,9 @@ export async function tradingEngine(symbol, config) {
   // 3d. side bias tolerance
   const diff = Math.abs(scores.LONG - scores.SHORT);
   if (diff < entry.sideBiasTolerance) {
-    console.log(`⚠️ ${symbol}: skip, bias difference ${diff} < tolerance ${entry.sideBiasTolerance}`);
+    console.log(
+      `⚠️ ${symbol}: skip, bias difference ${diff} < tolerance ${entry.sideBiasTolerance}`,
+    );
     return;
   }
 
@@ -127,7 +141,9 @@ export async function tradingEngine(symbol, config) {
 
   // 3f. spread filter
   if (modules?.liquidity?.meta?.spreadPct > entry.maxSpreadPct) {
-    console.log(`⚠️ ${symbol}: skip, spread ${modules.liquidity.meta.spreadPct}% > max ${entry.maxSpreadPct}%`);
+    console.log(
+      `⚠️ ${symbol}: skip, spread ${modules.liquidity.meta.spreadPct}% > max ${entry.maxSpreadPct}%`,
+    );
     return;
   }
 
@@ -150,10 +166,13 @@ export async function tradingEngine(symbol, config) {
   if (higherTF) {
     // беремо невелику кількість свічок для старшого ТФ
     const limit = 100;
-    const klineRes = await axios.get("https://fapi.binance.com/fapi/v1/klines", {
-      params: { symbol, interval: higherTF, limit },
-    });
-    const candles = klineRes.data.map(k => ({
+    const klineRes = await axios.get(
+      'https://fapi.binance.com/fapi/v1/klines',
+      {
+        params: { symbol, interval: higherTF, limit },
+      },
+    );
+    const candles = klineRes.data.map((k) => ({
       time: new Date(k[0]).toISOString(),
       open: parseFloat(k[1]),
       high: parseFloat(k[2]),
@@ -171,7 +190,9 @@ export async function tradingEngine(symbol, config) {
     }
 
     if (higherTrend.signal !== majority) {
-      console.log(`ℹ️ ${symbol}: higher TF ${higherTF} conflict (trend=${higherTrend.signal})`);
+      console.log(
+        `ℹ️ ${symbol}: higher TF ${higherTF} conflict (trend=${higherTrend.signal})`,
+      );
       capital.riskPerTradePct = capital.riskPerTradePct / 2;
     }
 
@@ -182,21 +203,36 @@ export async function tradingEngine(symbol, config) {
   }
 
   // --- 5. отримуємо останню ціну для входу ---
-  const lastPriceRes = await axios.get("https://fapi.binance.com/fapi/v1/ticker/price", {
-    params: { symbol },
-  });
+  const lastPriceRes = await axios.get(
+    'https://fapi.binance.com/fapi/v1/ticker/price',
+    {
+      params: { symbol },
+    },
+  );
   const entryPrice = parseFloat(lastPriceRes.data.price);
 
   // 6. відкриття угоди
   if (TRADE_MODE === 'live') {
-    const position = await executeTrade(symbol, config, analysis, majority, entryPrice);
+    const position = await executeTrade(
+      symbol,
+      config,
+      analysis,
+      majority,
+      entryPrice,
+    );
     if (position) {
       console.log(`🟢 [LIVE] New Binance position opened:`, position);
-      notifyTrade(position, "OPENED");
+      notifyTrade(position, 'OPENED');
     }
   } else {
-    const position = await preparePosition(symbol, config, analysis, majority, entryPrice);
+    const position = await preparePosition(
+      symbol,
+      config,
+      analysis,
+      majority,
+      entryPrice,
+    );
     console.log(`🟢 [PAPER] New simulated position opened:`, position);
-    notifyTrade(position, "OPENED");
+    notifyTrade(position, 'OPENED');
   }
 }

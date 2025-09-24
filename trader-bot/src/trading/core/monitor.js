@@ -1,8 +1,8 @@
 // trading/core/monitor.js
-import axios from "axios";
+import axios from 'axios';
 import {
   openMarketOrder,
-  cancelStopOrders,   // 👈 тільки стопи, TP залишаємо
+  cancelStopOrders, // 👈 тільки стопи, TP залишаємо
   placeStopLoss,
 } from '../binance/binance.js';
 
@@ -13,9 +13,12 @@ const TRADE_MODE = process.env.TRADE_MODE || 'paper';
 // Отримати останню mark price з Binance
 async function getMarkPrice(symbol) {
   try {
-    const res = await axios.get("https://fapi.binance.com/fapi/v1/premiumIndex", {
-      params: { symbol },
-    });
+    const res = await axios.get(
+      'https://fapi.binance.com/fapi/v1/premiumIndex',
+      {
+        params: { symbol },
+      },
+    );
     return parseFloat(res.data.markPrice);
   } catch (e) {
     console.error(`❌ Failed to fetch markPrice for ${symbol}:`, e.message);
@@ -59,23 +62,23 @@ export async function monitorPositions({ symbol, strategy }) {
         }
 
         const newStop =
-            side === 'LONG'
-                ? pos.trailing.anchor * (1 - trailingCfg.trailStepPct / 100)
-                : pos.trailing.anchor * (1 + trailingCfg.trailStepPct / 100);
+          side === 'LONG'
+            ? pos.trailing.anchor * (1 - trailingCfg.trailStepPct / 100)
+            : pos.trailing.anchor * (1 + trailingCfg.trailStepPct / 100);
 
         if (
-            (side === 'LONG' && (!pos.stopPrice || newStop > pos.stopPrice)) ||
-            (side === 'SHORT' && (!pos.stopPrice || newStop < pos.stopPrice))
+          (side === 'LONG' && (!pos.stopPrice || newStop > pos.stopPrice)) ||
+          (side === 'SHORT' && (!pos.stopPrice || newStop < pos.stopPrice))
         ) {
           if (TRADE_MODE === 'live') {
             await cancelStopOrders(symbol); // ❗ лишаємо TP, видаляємо тільки SL
             await placeStopLoss(symbol, side, newStop, size / price);
             console.log(
-                `🛑 [LIVE] Trailing SL updated @ ${newStop} (anchor=${pos.trailing.anchor})`
+              `🛑 [LIVE] Trailing SL updated @ ${newStop} (anchor=${pos.trailing.anchor})`,
             );
           } else {
             console.log(
-                `🛑 [PAPER] Trailing SL simulated @ ${newStop} (anchor=${pos.trailing.anchor})`
+              `🛑 [PAPER] Trailing SL simulated @ ${newStop} (anchor=${pos.trailing.anchor})`,
             );
           }
         }
@@ -87,22 +90,22 @@ export async function monitorPositions({ symbol, strategy }) {
     if (sizing && (pos.adds || 0) < sizing.maxAdds) {
       const movePct = (sizing.addOnAdverseMovePct || 0) / 100;
       const adversePrice =
-          side === 'LONG'
-              ? entryPrice * (1 - movePct)
-              : entryPrice * (1 + movePct);
+        side === 'LONG'
+          ? entryPrice * (1 - movePct)
+          : entryPrice * (1 + movePct);
 
       const condition =
-          (side === 'LONG' && price <= adversePrice) ||
-          (side === 'SHORT' && price >= adversePrice);
+        (side === 'LONG' && price <= adversePrice) ||
+        (side === 'SHORT' && price >= adversePrice);
 
       if (condition) {
         const addSize =
-            (pos.initialSizeUsd * (sizing.addMultiplier || 1)) / price;
+          (pos.initialSizeUsd * (sizing.addMultiplier || 1)) / price;
         if (TRADE_MODE === 'live') {
           try {
             await openMarketOrder(symbol, binanceSide, addSize.toFixed(3));
             console.log(
-                `➕ [LIVE] Added ${addSize.toFixed(3)} ${symbol} @ ${price}`
+              `➕ [LIVE] Added ${addSize.toFixed(3)} ${symbol} @ ${price}`,
             );
           } catch (err) {
             console.error('❌ Add order failed:', err?.message || err);

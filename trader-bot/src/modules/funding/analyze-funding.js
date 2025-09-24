@@ -27,7 +27,7 @@ export async function analyzeFunding(symbol = 'ETHUSDT', window = 60) {
     const daysCovered = (hoursCovered / 24).toFixed(1);
 
     // беремо останні N
-    const candles = res.data.map(fr => ({
+    const candles = res.data.map((fr) => ({
       symbol,
       time: new Date(fr.fundingTime).toISOString(),
       fundingRate: parseFloat(fr.fundingRate),
@@ -40,7 +40,7 @@ export async function analyzeFunding(symbol = 'ETHUSDT', window = 60) {
 
     // середній funding rate за період
     const avgFunding =
-        candles.reduce((s, c) => s + (c.fundingRate || 0), 0) / candles.length;
+      candles.reduce((s, c) => s + (c.fundingRate || 0), 0) / candles.length;
 
     let signal = 'NEUTRAL';
     let longScore = 50;
