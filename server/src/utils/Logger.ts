@@ -1,98 +1,121 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import winston from 'winston';
+import 'winston-mongodb';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-type LogLevel = 'info' | 'error' | 'warn' | 'debug' | 'success';
 type LogData = any;
 
 class Logger {
   private static instance: Logger;
-  private logsDir: string = '';
+  private winstonLogger!: winston.Logger;
 
   constructor() {
     if (Logger.instance) {
       return Logger.instance;
     }
 
-    this.logsDir = path.join(__dirname, '../logs');
-    this.ensureLogsDirectory();
-
+    this.initializeWinston();
     Logger.instance = this;
     return this;
   }
 
-  private ensureLogsDirectory(): void {
-    if (!fs.existsSync(this.logsDir)) {
-      fs.mkdirSync(this.logsDir, { recursive: true });
-    }
-  }
+  private initializeWinston(): void {
+    // Get MongoDB URI from environment or use default
+    const mongoUri =
+      process.env.MONGODB_URI || 'mongodb://localhost:27017/crypto-trader-bot';
 
-  // Get current timestamp
-  private getTimestamp(): string {
-    return new Date().toISOString();
-  }
+    // Define custom format for console output
+    const consoleFormat = winston.format.combine(
+      winston.format.colorize(),
+      winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+      winston.format.printf(({ timestamp, level, message, ...meta }) => {
+        let logMessage = `[${timestamp}] ${level}: ${message}`;
+        if (Object.keys(meta).length > 0) {
+          logMessage += `\n${JSON.stringify(meta, null, 2)}`;
+        }
+        return logMessage;
+      }),
+    );
 
-  // Get log file path for today
-  private getLogFilePath(level: LogLevel): string {
-    const today = new Date().toISOString().split('T')[0];
-    return path.join(this.logsDir, `${today}-${level}.logs`);
-  }
+    // Define format for MongoDB storage
+    const mongoFormat = winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.json(),
+      winston.format.metadata({
+        fillExcept: ['message', 'level', 'timestamp'],
+      }),
+    );
 
-  // Write log to file
-  private writeToFile(
-    level: LogLevel,
-    message: string,
-    data: LogData = null,
-  ): void {
-    const timestamp = this.getTimestamp();
-    const logFilePath = this.getLogFilePath(level);
-
-    let logEntry = `[${timestamp}] [${level.toUpperCase()}] ${message}`;
-
-    if (data) {
-      if (typeof data === 'object') {
-        logEntry += `\nData: ${JSON.stringify(data, null, 2)}`;
-      } else {
-        logEntry += `\nData: ${data}`;
-      }
-    }
-
-    logEntry += '\n---\n';
-
-    fs.appendFileSync(logFilePath, logEntry);
+    this.winstonLogger = winston.createLogger({
+      level: 'debug',
+      format: mongoFormat,
+      transports: [
+        // Console transport
+        new winston.transports.Console({
+          format: consoleFormat,
+        }),
+        // MongoDB transport
+        new winston.transports.MongoDB({
+          db: mongoUri,
+          collection: 'logs',
+          level: 'debug',
+          storeHost: true,
+          capped: true,
+          cappedSize: 100000000, // 100MB
+          cappedMax: 10000, // Max 10k documents
+          format: winston.format.combine(
+            winston.format.timestamp(),
+            winston.format.json(),
+          ),
+        }),
+      ],
+      // Handle exceptions and rejections
+      exceptionHandlers: [
+        new winston.transports.Console(),
+        new winston.transports.MongoDB({
+          db: mongoUri,
+          collection: 'exceptions',
+        }),
+      ],
+      rejectionHandlers: [
+        new winston.transports.Console(),
+        new winston.transports.MongoDB({
+          db: mongoUri,
+          collection: 'rejections',
+        }),
+      ],
+    });
   }
 
   // Info level logging
   info(message: string, data: LogData = null): void {
-    console.log(`[INFO] ${message}`, data || '');
-    this.writeToFile('info', message, data);
+    this.winstonLogger.info(message, data ? { data } : {});
   }
 
   // Error level logging
   error(message: string, data: LogData = null): void {
-    console.error(`[ERROR] ${message}`, data || '');
-    this.writeToFile('error', message, data);
+    this.winstonLogger.error(message, data ? { data } : {});
   }
 
   // Warning level logging
   warn(message: string, data: LogData = null): void {
-    console.warn(`[WARN] ${message}`, data || '');
-    this.writeToFile('warn', message, data);
+    this.winstonLogger.warn(message, data ? { data } : {});
   }
 
   // Debug level logging
   debug(message: string, data: LogData = null): void {
-    console.log(`[DEBUG] ${message}`, data || '');
-    this.writeToFile('debug', message, data);
+    this.winstonLogger.debug(message, data ? { data } : {});
   }
 
-  // Success level logging
+  // Success level logging (using info level with success metadata)
   success(message: string, data: LogData = null): void {
-    console.log(`[SUCCESS] ${message}`, data || '');
-    this.writeToFile('success', message, data);
+    this.winstonLogger.info(
+      message,
+      data ? { data, logType: 'success' } : { logType: 'success' },
+    );
+  }
+
+  // Get the underlying winston logger for advanced usage
+  getWinstonLogger(): winston.Logger {
+    return this.winstonLogger;
   }
 }
 
