@@ -63,11 +63,9 @@ export interface ICapitalConfig {
 }
 
 export interface ISizingConfig {
-  baseSizeUsd: number;
   maxAdds: number;
   addOnAdverseMovePct: number;
   addMultiplier: number;
-  maxPositionUsd: number;
 }
 
 export interface ITpConfig {
@@ -225,11 +223,9 @@ const capitalConfigSchema = new Schema(
 
 const sizingConfigSchema = new Schema(
   {
-    baseSizeUsd: { type: Number, required: true },
     maxAdds: { type: Number, required: true },
     addOnAdverseMovePct: { type: Number, required: true },
     addMultiplier: { type: Number, required: true },
-    maxPositionUsd: { type: Number, required: true },
   },
   { _id: false },
 );

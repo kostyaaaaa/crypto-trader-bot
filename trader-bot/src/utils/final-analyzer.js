@@ -1,4 +1,4 @@
-// utils/final-analyzer.js
+import axios from "axios";
 import { analyzeCandles } from '../modules/candles/analyze-сandles.js';
 import { analyzeLiquidity } from '../modules/orderbook/analyze-liquidity.js';
 import { analyzeLiquidations } from '../modules/liquidations/analyze-liquidations.js';
@@ -8,14 +8,13 @@ import { analyzeFunding } from '../modules/funding/analyze-funding.js';
 import { analyzeCorrelation } from '../modules/correlation/analyze-correlation.js';
 import { analyzeTrendRegime } from '../modules/trendRegime/analyze-trend-regime.js';
 import { analyzeLongShort } from '../modules/longshort/analyze-longshort.js';
-import { saveDoc, loadDocs } from '../storage/storage.js';
-import { aggregateCandles } from './candles.js';
+import { saveDoc } from '../storage/storage.js';
 
 export async function finalAnalyzer({
-  symbol = 'ETHUSDT',
-  analysisConfig = {},
-  save = true,
-} = {}) {
+                                      symbol = 'ETHUSDT',
+                                      analysisConfig = {},
+                                      save = true,
+                                    } = {}) {
   const {
     candleTimeframe = '1m',
     oiWindow = 10,
@@ -28,10 +27,20 @@ export async function finalAnalyzer({
     weights = {},
     moduleThresholds = {},
   } = analysisConfig;
-
-  // --- завантажуємо й агрегуємо 1m свічки ---
-  const rawCandles = await loadDocs('candles', symbol, 500);
-  const candles = aggregateCandles(rawCandles, candleTimeframe);
+  const needed = Math.max(21, volWindow, corrWindow, oiWindow, fundingWindow, longShortWindow) + 5;
+  // --- свічки напряму з Binance ---
+  const klineRes = await axios.get("https://fapi.binance.com/fapi/v1/klines", {
+    params: { symbol, interval: candleTimeframe, limit: needed },
+  });
+  const candles = klineRes.data.map(k => ({
+    time: new Date(k[0]).toISOString(),
+    open: parseFloat(k[1]),
+    high: parseFloat(k[2]),
+    low: parseFloat(k[3]),
+    close: parseFloat(k[4]),
+    volume: parseFloat(k[5]),
+  }));
+  const lastPrice = candles[candles.length - 1]?.close || null;
 
   // --- модулі ---
   const modules = {};
@@ -39,7 +48,7 @@ export async function finalAnalyzer({
   modules.volatility = await analyzeVolatility(symbol, candles, volWindow);
   modules.trendRegime = await analyzeTrendRegime(symbol, candles, 14);
 
-  modules.liquidity = await analyzeLiquidity(symbol, liqWindow);
+  modules.liquidity = await analyzeLiquidity(symbol, liqWindow, lastPrice);
   modules.funding = await analyzeFunding(symbol, fundingWindow);
   modules.liquidations = await analyzeLiquidations(symbol, liqSentWindow);
   modules.openInterest = await analyzeOpenInterest(symbol, oiWindow);
@@ -50,7 +59,7 @@ export async function finalAnalyzer({
   function weightedScore(side) {
     return Object.entries(modules).reduce((acc, [k, v]) => {
       if (!v) return acc;
-      const value = v.meta?.[side] || 0; // беремо з meta
+      const value = v.meta?.[side] || 0;
       const threshold = moduleThresholds[k] || 0;
       if (value < threshold) return acc;
       return acc + value * (weights[k] || 0);
@@ -67,31 +76,13 @@ export async function finalAnalyzer({
   else if (scoreSHORT > 50) decision = 'WEAK SHORT';
 
   const bias =
-    scoreLONG > scoreSHORT
-      ? 'LONG'
-      : scoreSHORT > scoreLONG
-        ? 'SHORT'
-        : 'NEUTRAL';
+      scoreLONG > scoreSHORT ? 'LONG' :
+          scoreSHORT > scoreLONG ? 'SHORT' :
+              'NEUTRAL';
 
   const filledModules = Object.values(modules).filter(
-    (m) => m && (m.meta?.LONG ?? 0) + (m.meta?.SHORT ?? 0) > 0,
+      (m) => m && (m.meta?.LONG ?? 0) + (m.meta?.SHORT ?? 0) > 0,
   ).length;
-
-  // --- дебаг таблиця ---
-  const debugRows = Object.entries(modules).map(([k, v]) => ({
-    module: k,
-    signal: v?.signal || '—',
-    LONG: v?.meta?.LONG ?? 0,
-    SHORT: v?.meta?.SHORT ?? 0,
-    strength: v?.strength ?? 0,
-    weight: weights[k] || 0,
-    threshold: moduleThresholds[k] || 0,
-    passed: v
-      ? (v.meta?.LONG ?? 0) >= (moduleThresholds[k] || 0) ||
-        (v.meta?.SHORT ?? 0) >= (moduleThresholds[k] || 0)
-      : false,
-  }));
-  console.table(debugRows);
 
   const result = {
     time: new Date().toISOString(),
