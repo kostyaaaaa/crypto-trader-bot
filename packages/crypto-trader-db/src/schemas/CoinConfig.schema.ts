@@ -124,6 +124,7 @@ export interface IStrategyConfig {
 // Main coin configuration interface
 export interface ICoinConfig {
   symbol: string;
+  isActive: boolean;
   analysisConfig: IAnalysisConfig;
   strategy: IStrategyConfig;
   createdAt?: Date;
@@ -326,9 +327,8 @@ export const CoinConfigSchema = new Schema<ICoinConfig>(
     symbol: {
       type: String,
       required: true,
-      unique: true,
-      index: true,
     },
+    isActive: { type: Boolean, required: true },
     analysisConfig: { type: analysisConfigSchema, required: true },
     strategy: { type: strategyConfigSchema, required: true },
   },
@@ -339,6 +339,6 @@ export const CoinConfigSchema = new Schema<ICoinConfig>(
 );
 
 // Add indexes for better query performance
-CoinConfigSchema.index({ symbol: 1 });
+CoinConfigSchema.index({ symbol: 1 }, { unique: true });
 CoinConfigSchema.index({ createdAt: -1 });
 CoinConfigSchema.index({ updatedAt: -1 });

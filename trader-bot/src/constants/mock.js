@@ -1,6 +1,7 @@
-export const ANALYSIS_CONFIG = {
-  ENAUSDT: {
-    // --- Налаштування аналізу ---
+export const ANALYSIS_CONFIG = [
+ {
+    symbol: "ENAUSDT",
+    isActive: true,
     analysisConfig: {
       candleTimeframe: '5m',
       oiWindow: 10,
@@ -32,8 +33,6 @@ export const ANALYSIS_CONFIG = {
         longShort: 10,
       },
     },
-
-    // --- Налаштування торгової стратегії ---
     strategy: {
       entry: {
         minScore: { LONG: 44, SHORT: 44 },
@@ -53,25 +52,25 @@ export const ANALYSIS_CONFIG = {
       },
       capital: {
         account: 100,
-        riskPerTradePct: 20,
+        riskPerTradePct: 10,
         leverage: 5,
         maxConcurrentPositions: 3,
       },
       sizing: {
         maxAdds: 2,
         addOnAdverseMovePct: 0.5,
-        addMultiplier: 1.0,
+        addMultiplier: 0.5,
       },
       exits: {
         tp: {
           use: true,
-          tpGridPct: [10],
+          tpGridPct: [5],
           tpGridSizePct: [100],
         },
         sl: {
           // 🔽 Можна перемикати
           type: 'hard', // 'hard' або 'atr'
-          hardPct: 10, // використовується тільки коли type='hard'
+          hardPct: 5, // використовується тільки коли type='hard'
           atrMult: 1.5, // використовується тільки коли type='atr'
           signalRules: {
             flipIf: { scoreGap: 10, minOppScore: 55 },
@@ -91,9 +90,10 @@ export const ANALYSIS_CONFIG = {
     },
   },
 
-  SOLUSDT: {
-    // --- Налаштування аналізу ---
-    analysisConfig: {
+ {
+    symbol: "SOLUSDT",
+   isActive: true,
+   analysisConfig: {
       candleTimeframe: '15m',
       oiWindow: 12, // ~1h історії
       liqWindow: 20,
@@ -124,8 +124,6 @@ export const ANALYSIS_CONFIG = {
         longShort: 10,
       },
     },
-
-    // --- Налаштування торгової стратегії ---
     strategy: {
       entry: {
         minScore: { LONG: 46, SHORT: 46 }, // трохи вище за ENA
@@ -145,14 +143,14 @@ export const ANALYSIS_CONFIG = {
       },
       capital: {
         account: 100,
-        riskPerTradePct: 20,
+        riskPerTradePct: 10,
         leverage: 5,
         maxConcurrentPositions: 3,
       },
       sizing: {
         maxAdds: 2,
         addOnAdverseMovePct: 0.5,
-        addMultiplier: 1.0,
+        addMultiplier: 0.5,
       },
       exits: {
         tp: {
@@ -182,9 +180,10 @@ export const ANALYSIS_CONFIG = {
       },
     },
   },
-  ETHUSDT: {
-    // --- Налаштування аналізу ---
-    analysisConfig: {
+ {
+    symbol: "ETHUSDT",
+   isActive: true,
+   analysisConfig: {
       candleTimeframe: '15m', // працюємо на 15 хвилинних свічках
       oiWindow: 20, // більше даних OI (~5 годин)
       liqWindow: 30, // ліквідність ширша
@@ -216,8 +215,6 @@ export const ANALYSIS_CONFIG = {
         longShort: 12,
       },
     },
-
-    // --- Налаштування торгової стратегії ---
     strategy: {
       entry: {
         minScore: { LONG: 55, SHORT: 55 }, // більш строгий поріг
@@ -244,7 +241,7 @@ export const ANALYSIS_CONFIG = {
       sizing: {
         maxAdds: 1, // максимум один долив
         addOnAdverseMovePct: 1, // додаємо тільки якщо пішло проти на 1%
-        addMultiplier: 1.0,
+        addMultiplier: 0.5,
       },
       exits: {
         tp: {
@@ -262,7 +259,7 @@ export const ANALYSIS_CONFIG = {
           },
         },
         time: {
-          maxHoldMin: 240, // максимум 4 години на угоду
+          maxHoldMin: 0, // максимум 4 години на угоду
           noPnLFallback: 'close',
         },
         trailing: {
@@ -273,4 +270,4 @@ export const ANALYSIS_CONFIG = {
       },
     },
   },
-};
+]

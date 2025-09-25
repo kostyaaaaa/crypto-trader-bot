@@ -10,6 +10,9 @@ import { executeTrade } from '../binance/exchange-executor.js';
 import { getUserTrades } from '../binance/binance.js';
 import { notifyTrade } from '../../utils/notify.js';
 
+// 👇 нове
+import { openPosition } from './historyStore.js';
+
 const TRADE_MODE = process.env.TRADE_MODE || 'paper';
 
 export async function tradingEngine(symbol, config) {
@@ -38,7 +41,9 @@ export async function tradingEngine(symbol, config) {
 
           if (minutesSince < cooldown) {
             console.log(
-              `⏸️ ${symbol}: cooldown ${cooldown}m, залишилось ${(cooldown - minutesSince).toFixed(1)}m`,
+              `⏸️ ${symbol}: cooldown ${cooldown}m, залишилось ${(
+                cooldown - minutesSince
+              ).toFixed(1)}m`,
             );
             return;
           }
@@ -57,12 +62,10 @@ export async function tradingEngine(symbol, config) {
     return;
   }
 
-  // 1. аналізи
   const lastAnalyses = analysisHistory.reverse();
   const analysis = lastAnalyses.at(-1);
   const decisions = lastAnalyses.map((a) => a.bias);
 
-  // 2. більшість
   const majority = decisions
     .sort(
       (a, b) =>
@@ -76,7 +79,6 @@ export async function tradingEngine(symbol, config) {
     return;
   }
 
-  // 3. перевірка останнього аналізу
   if (analysis.bias !== majority) {
     console.log(
       `⚠️ ${symbol}: skip, last analysis bias ${analysis.bias} ≠ majority ${majority}`,
@@ -87,7 +89,6 @@ export async function tradingEngine(symbol, config) {
   const { entry, capital } = config.strategy;
   const { scores, modules, coverage } = analysis;
 
-  // 3a. min score
   const minScore = entry.minScore[majority];
   if (scores[majority] < minScore) {
     console.log(
@@ -96,7 +97,6 @@ export async function tradingEngine(symbol, config) {
     return;
   }
 
-  // 3b. min modules
   if (coverage) {
     const [filled] = coverage.split('/').map(Number);
     if (filled < entry.minModules) {
@@ -107,7 +107,6 @@ export async function tradingEngine(symbol, config) {
     }
   }
 
-  // 3c. required modules
   if (entry.requiredModules?.length) {
     for (const req of entry.requiredModules) {
       if (!modules[req] || (modules[req].signal ?? 'NEUTRAL') === 'NEUTRAL') {
@@ -117,7 +116,6 @@ export async function tradingEngine(symbol, config) {
     }
   }
 
-  // 3d. side bias tolerance
   const diff = Math.abs(scores.LONG - scores.SHORT);
   if (diff < entry.sideBiasTolerance) {
     console.log(
@@ -126,7 +124,6 @@ export async function tradingEngine(symbol, config) {
     return;
   }
 
-  // 3e. volatility filter
   if (modules?.volatility) {
     const { signal, meta } = modules.volatility;
     if (signal === 'NONE' && meta?.regime === 'DEAD') {
@@ -139,7 +136,6 @@ export async function tradingEngine(symbol, config) {
     }
   }
 
-  // 3f. spread filter
   if (modules?.liquidity?.meta?.spreadPct > entry.maxSpreadPct) {
     console.log(
       `⚠️ ${symbol}: skip, spread ${modules.liquidity.meta.spreadPct}% > max ${entry.maxSpreadPct}%`,
@@ -147,7 +143,6 @@ export async function tradingEngine(symbol, config) {
     return;
   }
 
-  // 3g. funding filter
   const fr = modules?.funding?.meta?.avgFunding;
   const absOver = entry.avoidWhen?.fundingExtreme?.absOver;
   if (absOver && Math.abs(fr) > absOver) {
@@ -155,22 +150,17 @@ export async function tradingEngine(symbol, config) {
     return;
   }
 
-  // 3h. trend regime → advisory
   if (!modules?.trendRegime || modules.trendRegime.signal === 'NEUTRAL') {
     console.log(`ℹ️ ${symbol}: ADX regime NEUTRAL (no trend)`);
   }
 
-  // 4. higher TF
   const mainTF = config.analysisConfig.candleTimeframe || '1m';
   const higherTF = getHigherTF(mainTF);
   if (higherTF) {
-    // беремо невелику кількість свічок для старшого ТФ
     const limit = 100;
     const klineRes = await axios.get(
       'https://fapi.binance.com/fapi/v1/klines',
-      {
-        params: { symbol, interval: higherTF, limit },
-      },
+      { params: { symbol, interval: higherTF, limit } },
     );
     const candles = klineRes.data.map((k) => ({
       time: new Date(k[0]).toISOString(),
@@ -202,18 +192,16 @@ export async function tradingEngine(symbol, config) {
     }
   }
 
-  // --- 5. отримуємо останню ціну для входу ---
   const lastPriceRes = await axios.get(
     'https://fapi.binance.com/fapi/v1/ticker/price',
-    {
-      params: { symbol },
-    },
+    { params: { symbol } },
   );
   const entryPrice = parseFloat(lastPriceRes.data.price);
 
-  // 6. відкриття угоди
+  // --- 6. відкриття угоди ---
+  let position;
   if (TRADE_MODE === 'live') {
-    const position = await executeTrade(
+    position = await executeTrade(
       symbol,
       config,
       analysis,
@@ -223,9 +211,16 @@ export async function tradingEngine(symbol, config) {
     if (position) {
       console.log(`🟢 [LIVE] New Binance position opened:`, position);
       notifyTrade(position, 'OPENED');
+
+      // 👇 додаємо в історію
+      await openPosition(symbol, {
+        side: position.side,
+        entryPrice: position.entryPrice,
+        size: position.size,
+      });
     }
   } else {
-    const position = await preparePosition(
+    position = await preparePosition(
       symbol,
       config,
       analysis,
@@ -234,5 +229,12 @@ export async function tradingEngine(symbol, config) {
     );
     console.log(`🟢 [PAPER] New simulated position opened:`, position);
     notifyTrade(position, 'OPENED');
+
+    // 👇 додаємо в історію
+    await openPosition(symbol, {
+      side: position.side,
+      entryPrice: position.entryPrice,
+      size: position.size,
+    });
   }
 }

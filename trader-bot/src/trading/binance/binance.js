@@ -26,14 +26,24 @@ function oppositeOrderSide(side) {
 /* ========= Exchange info / filters ========= */
 
 export async function getSymbolFilters(symbol) {
-  const info = await client.futuresExchangeInfo();
-  const sym = info.symbols.find((s) => s.symbol === symbol);
-  return sym?.filters || [];
+  try {
+    const info = await client.futuresExchangeInfo();
+    const sym = info.symbols.find((s) => s.symbol === symbol);
+    return sym?.filters || [];
+  } catch (err) {
+    console.error(`❌ getSymbolFilters failed for ${symbol}:`, err.message);
+    return [];
+  }
 }
 
 export async function getSymbolInfo(symbol) {
-  const info = await client.futuresExchangeInfo();
-  return info.symbols.find((s) => s.symbol === symbol) || null;
+  try {
+    const info = await client.futuresExchangeInfo();
+    return info.symbols.find((s) => s.symbol === symbol) || null;
+  } catch (err) {
+    console.error(`❌ getSymbolInfo failed for ${symbol}:`, err.message);
+    return null;
+  }
 }
 
 /* ========= Quantization ========= */
@@ -75,160 +85,200 @@ export function adjustPrice(symbolFilters, price) {
 /* ========= Account utils ========= */
 
 export async function getFuturesBalance(asset = 'USDT') {
-  const balances = await client.futuresAccountBalance();
-  return balances.find((b) => b.asset === asset)?.balance || 0;
+  try {
+    const balances = await client.futuresAccountBalance();
+    return balances.find((b) => b.asset === asset)?.balance || 0;
+  } catch (err) {
+    console.error(`❌ getFuturesBalance failed for ${asset}:`, err.message);
+    return 0;
+  }
 }
 
 export async function getPosition(symbol) {
-  const positions = await client.futuresPositionRisk();
-  return positions.find((p) => p.symbol === symbol) || null;
+  try {
+    const positions = await client.futuresPositionRisk();
+    return positions.find((p) => p.symbol === symbol) || null;
+  } catch (err) {
+    console.error(`❌ getPosition failed for ${symbol}:`, err.message);
+    return null;
+  }
 }
 
 export async function getOpenOrders(symbol) {
-  return await client.futuresOpenOrders({ symbol });
+  try {
+    return await client.futuresOpenOrders({ symbol });
+  } catch (err) {
+    console.error(`❌ getOpenOrders failed for ${symbol}:`, err.message);
+    return [];
+  }
 }
 
 /* ========= Orders ========= */
 
 export async function openMarketOrder(symbol, side, quantity) {
-  const filters = await getSymbolFilters(symbol);
-  const orderSide = normalizeOrderSide(side);
-  const qty = adjustQuantity(filters, quantity);
+  try {
+    const filters = await getSymbolFilters(symbol);
+    const orderSide = normalizeOrderSide(side);
+    const qty = adjustQuantity(filters, quantity);
 
-  if (!qty || Number(qty) <= 0) {
-    throw new Error(`Quantity too small for ${symbol}: ${quantity}`);
+    if (!qty || Number(qty) <= 0) {
+      throw new Error(`Quantity too small for ${symbol}: ${quantity}`);
+    }
+
+    return await client.futuresOrder({
+      symbol,
+      side: orderSide,
+      type: 'MARKET',
+      quantity: qty,
+    });
+  } catch (err) {
+    console.error(`❌ openMarketOrder failed for ${symbol}:`, err.message);
+    throw err; // хай летить, бо це критично
   }
-
-  return await client.futuresOrder({
-    symbol,
-    side: orderSide,
-    type: 'MARKET',
-    quantity: qty,
-  });
 }
 
-/**
- * Place STOP LOSS order
- */
 export async function placeStopLoss(symbol, positionSide, stopPrice, quantity) {
-  const filters = await getSymbolFilters(symbol);
-  const closeSide = oppositeOrderSide(positionSide);
-  const qty = adjustQuantity(filters, quantity);
-  const price = adjustPrice(filters, stopPrice);
+  try {
+    const filters = await getSymbolFilters(symbol);
+    const closeSide = oppositeOrderSide(positionSide);
+    const qty = adjustQuantity(filters, quantity);
+    const price = adjustPrice(filters, stopPrice);
 
-  if (!qty || Number(qty) <= 0)
-    throw new Error(`SL qty too small for ${symbol}`);
-  if (!price || Number(price) <= 0)
-    throw new Error(`SL price invalid for ${symbol}`);
+    if (!qty || Number(qty) <= 0)
+      throw new Error(`SL qty too small for ${symbol}`);
+    if (!price || Number(price) <= 0)
+      throw new Error(`SL price invalid for ${symbol}`);
 
-  return await client.futuresOrder({
-    symbol,
-    side: closeSide,
-    type: 'STOP_MARKET',
-    stopPrice: price,
-    quantity: qty,
-    reduceOnly: true,
-    // workingType: 'MARK_PRICE',
-  });
+    return await client.futuresOrder({
+      symbol,
+      side: closeSide,
+      type: 'STOP_MARKET',
+      stopPrice: price,
+      quantity: qty,
+      reduceOnly: true,
+    });
+  } catch (err) {
+    console.error(`❌ placeStopLoss failed for ${symbol}:`, err.message);
+    return null;
+  }
 }
 
 export async function placeTakeProfit(symbol, positionSide, tpPrice, quantity) {
-  const filters = await getSymbolFilters(symbol);
-  const closeSide = oppositeOrderSide(positionSide);
-  const qty = adjustQuantity(filters, quantity);
-  const price = adjustPrice(filters, tpPrice);
+  try {
+    const filters = await getSymbolFilters(symbol);
+    const closeSide = oppositeOrderSide(positionSide);
+    const qty = adjustQuantity(filters, quantity);
+    const price = adjustPrice(filters, tpPrice);
 
-  if (!qty || Number(qty) <= 0)
-    throw new Error(`TP qty too small for ${symbol}`);
-  if (!price || Number(price) <= 0)
-    throw new Error(`TP price invalid for ${symbol}`);
+    if (!qty || Number(qty) <= 0)
+      throw new Error(`TP qty too small for ${symbol}`);
+    if (!price || Number(price) <= 0)
+      throw new Error(`TP price invalid for ${symbol}`);
 
-  return await client.futuresOrder({
-    symbol,
-    side: closeSide,
-    type: 'TAKE_PROFIT_MARKET',
-    stopPrice: price,
-    quantity: qty,
-    reduceOnly: true,
-    // workingType: 'MARK_PRICE',
-  });
+    return await client.futuresOrder({
+      symbol,
+      side: closeSide,
+      type: 'TAKE_PROFIT_MARKET',
+      stopPrice: price,
+      quantity: qty,
+      reduceOnly: true,
+    });
+  } catch (err) {
+    console.error(`❌ placeTakeProfit failed for ${symbol}:`, err.message);
+    return null;
+  }
 }
 
 export async function closePosition(symbol, side, quantity) {
-  const filters = await getSymbolFilters(symbol);
-  const closeSide = oppositeOrderSide(side);
-  const qty = adjustQuantity(filters, quantity);
+  try {
+    const filters = await getSymbolFilters(symbol);
+    const closeSide = oppositeOrderSide(side);
+    const qty = adjustQuantity(filters, quantity);
 
-  if (!qty || Number(qty) <= 0) {
-    throw new Error(`Close qty too small for ${symbol}: ${quantity}`);
+    if (!qty || Number(qty) <= 0) {
+      throw new Error(`Close qty too small for ${symbol}: ${quantity}`);
+    }
+
+    return await client.futuresOrder({
+      symbol,
+      side: closeSide,
+      type: 'MARKET',
+      quantity: qty,
+      reduceOnly: true,
+    });
+  } catch (err) {
+    console.error(`❌ closePosition failed for ${symbol}:`, err.message);
+    return null;
   }
-
-  return await client.futuresOrder({
-    symbol,
-    side: closeSide,
-    type: 'MARKET',
-    quantity: qty,
-    reduceOnly: true,
-  });
 }
 
 /* ========= Queries / maintenance ========= */
 
 export async function getOpenPositions() {
-  return await client.futuresPositionRisk();
+  try {
+    return await client.futuresPositionRisk();
+  } catch (err) {
+    console.error('❌ getOpenPositions failed:', err.message);
+    return [];
+  }
 }
 
 export async function cancelAllOrders(symbol) {
-  return await client.futuresCancelAllOpenOrders({ symbol });
+  try {
+    return await client.futuresCancelAllOpenOrders({ symbol });
+  } catch (err) {
+    console.error(`❌ cancelAllOrders failed for ${symbol}:`, err.message);
+    return null;
+  }
 }
 
 /* ========= Sync helpers ========= */
 
-/**
- * Get current live state for a symbol from Binance
- * - position: side, size, entryPrice
- * - orders: active SL/TP
- */
-
 export async function getLiveState(symbol) {
-  // 1. Позиція
-  const positions = await client.futuresPositionRisk();
-  const pos = positions.find((p) => p.symbol === symbol);
+  try {
+    const positions = await client.futuresPositionRisk();
+    const pos = positions.find((p) => p.symbol === symbol);
 
-  let position = { side: null, size: 0, entryPrice: null };
-  if (pos) {
-    const size = parseFloat(pos.positionAmt);
-    position = {
-      side: size > 0 ? 'LONG' : size < 0 ? 'SHORT' : null,
-      size: Math.abs(size),
-      entryPrice: size !== 0 ? parseFloat(pos.entryPrice) : null,
-    };
-  }
-
-  // 2. Ордери
-  const openOrders = await client.futuresOpenOrders({ symbol });
-  const orders = openOrders
-    .map((o) => {
-      const qty = parseFloat(o.origQty);
-      const stopPrice = parseFloat(o.stopPrice);
-      const type = o.type.includes('STOP')
-        ? 'SL'
-        : o.type.includes('TAKE_PROFIT')
-          ? 'TP'
-          : 'OTHER';
-
-      return {
-        type,
-        price: stopPrice || parseFloat(o.price) || null,
-        qty,
-        side: o.side,
-        reduceOnly: o.reduceOnly,
+    let position = { side: null, size: 0, entryPrice: null };
+    if (pos) {
+      const size = parseFloat(pos.positionAmt);
+      position = {
+        side: size > 0 ? 'LONG' : size < 0 ? 'SHORT' : null,
+        size: Math.abs(size),
+        entryPrice: size !== 0 ? parseFloat(pos.entryPrice) : null,
       };
-    })
-    .filter((o) => o.type !== 'OTHER');
+    }
 
-  return { position, orders };
+    const openOrders = await client.futuresOpenOrders({ symbol });
+    const orders = openOrders
+      .map((o) => {
+        const qty = parseFloat(o.origQty);
+        const stopPrice = parseFloat(o.stopPrice);
+        const type = o.type.includes('STOP')
+          ? 'SL'
+          : o.type.includes('TAKE_PROFIT')
+            ? 'TP'
+            : 'OTHER';
+
+        return {
+          type,
+          price: stopPrice || parseFloat(o.price) || null,
+          qty,
+          side: o.side,
+          reduceOnly: o.reduceOnly,
+        };
+      })
+      .filter((o) => o.type !== 'OTHER');
+
+    return { position, orders };
+  } catch (err) {
+    console.error(`❌ getLiveState failed for ${symbol}:`, err.message);
+    return { position: null, orders: [] };
+  }
 }
+
+/* ========= Leverage ========= */
+
 function signParams(params) {
   const query = new URLSearchParams(params).toString();
   const signature = crypto
@@ -238,35 +288,38 @@ function signParams(params) {
   return `${query}&signature=${signature}`;
 }
 
-/**
- * Виставляє плече для символу
- */
 export async function setLeverage(symbol, leverage) {
-  const endpoint = '/fapi/v1/leverage';
-  const ts = Date.now();
+  try {
+    const endpoint = '/fapi/v1/leverage';
+    const ts = Date.now();
 
-  const params = {
-    symbol,
-    leverage,
-    timestamp: ts,
-    recvWindow: 5000,
-  };
+    const params = {
+      symbol,
+      leverage,
+      timestamp: ts,
+      recvWindow: 5000,
+    };
 
-  const query = signParams(params);
-  const res = await fetch(`${BASE_URL}${endpoint}?${query}`, {
-    method: 'POST',
-    headers: {
-      'X-MBX-APIKEY': process.env.BINANCE_API_KEY,
-    },
-  });
+    const query = signParams(params);
+    const res = await fetch(`${BASE_URL}${endpoint}?${query}`, {
+      method: 'POST',
+      headers: { 'X-MBX-APIKEY': process.env.BINANCE_API_KEY },
+    });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Binance setLeverage error: ${res.status} ${err}`);
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`Binance setLeverage error: ${res.status} ${err}`);
+    }
+
+    return await res.json();
+  } catch (err) {
+    console.error(`❌ setLeverage failed for ${symbol}:`, err.message);
+    return null;
   }
-
-  return await res.json();
 }
+
+/* ========= Trades ========= */
+
 export async function getUserTrades(symbol, options = {}) {
   try {
     const res = await client.futuresUserTrades({
@@ -275,12 +328,11 @@ export async function getUserTrades(symbol, options = {}) {
       fromId: options.fromId,
     });
 
-    // Нормалізація під твій стиль
     return res.map((t) => ({
       id: t.id,
       orderId: t.orderId,
       symbol: t.symbol,
-      side: t.side, // BUY / SELL
+      side: t.side,
       price: Number(t.price),
       qty: Number(t.qty),
       realizedPnl: Number(t.realizedPnl),
@@ -288,32 +340,31 @@ export async function getUserTrades(symbol, options = {}) {
       time: t.time,
     }));
   } catch (err) {
-    console.error(
-      `❌ getUserTrades failed for ${symbol}:`,
-      err?.message || err,
-    );
+    console.error(`❌ getUserTrades failed for ${symbol}:`, err.message);
     return [];
   }
 }
-export async function cancelStopOrders(symbol) {
+
+export async function cancelStopOrders(symbol, opts = {}) {
+  const { onlySL = false, onlyTP = false } = opts;
   try {
     const res = await client.futuresOpenOrders({ symbol });
     if (!Array.isArray(res)) return;
 
-    const stopOrders = res.filter(
-      (o) => o.type.includes('STOP') || o.type.includes('TRAILING_STOP_MARKET'),
-    );
+    for (let o of res) {
+      const isSL =
+        o.type.includes('STOP') || o.type.includes('TRAILING_STOP_MARKET');
+      const isTP = o.type.includes('TAKE_PROFIT');
 
-    for (let o of stopOrders) {
+      // фільтрація
+      if (onlySL && !isSL) continue;
+      if (onlyTP && !isTP) continue;
+      if (!onlySL && !onlyTP && !(isSL || isTP)) continue; // за замовчуванням — тільки SL/TP
+
       await client.futuresCancelOrder({ symbol, orderId: o.orderId });
-      console.log(
-        `❌ Canceled stop order ${o.type} @ ${symbol} (${o.orderId})`,
-      );
+      console.log(`❌ Canceled ${o.type} @ ${symbol} (${o.orderId})`);
     }
   } catch (err) {
-    console.error(
-      `❌ Failed to cancel stop orders for ${symbol}:`,
-      err.message,
-    );
+    console.error(`❌ cancelStopOrders failed for ${symbol}:`, err.message);
   }
 }

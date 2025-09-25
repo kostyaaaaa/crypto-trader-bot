@@ -152,5 +152,159 @@
     "sellsValue": 0,
     "totalValue": 300757.92,
     "minValue": 50000
+  },
+  {
+    "symbol": "ETHUSDT",
+    "time": "2025-09-24T19:45:40.697Z",
+    "count": 1,
+    "buysCount": 0,
+    "sellsCount": 1,
+    "buysValue": 0,
+    "sellsValue": 794772.07,
+    "totalValue": 794772.07,
+    "minValue": 50000
+  },
+  {
+    "symbol": "ETHUSDT",
+    "time": "2025-09-24T20:07:07.981Z",
+    "count": 1,
+    "buysCount": 0,
+    "sellsCount": 1,
+    "buysValue": 0,
+    "sellsValue": 96863.01,
+    "totalValue": 96863.01,
+    "minValue": 50000
+  },
+  {
+    "symbol": "ETHUSDT",
+    "time": "2025-09-24T21:57:57.707Z",
+    "count": 2,
+    "buysCount": 0,
+    "sellsCount": 2,
+    "buysValue": 0,
+    "sellsValue": 263111.28,
+    "totalValue": 263111.28,
+    "minValue": 50000
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-24T21:58:57.646Z",
+    "count": 2,
+    "buysCount": 0,
+    "sellsCount": 2,
+    "buysValue": 0,
+    "sellsValue": 170495.6,
+    "totalValue": 170495.6,
+    "minValue": 50000
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-24T21:59:57.646Z",
+    "count": 1,
+    "buysCount": 0,
+    "sellsCount": 1,
+    "buysValue": 0,
+    "sellsValue": 115998.61,
+    "totalValue": 115998.61,
+    "minValue": 50000
+  },
+  {
+    "symbol": "ETHUSDT",
+    "time": "2025-09-25T07:08:59.442Z",
+    "count": 1,
+    "buysCount": 0,
+    "sellsCount": 1,
+    "buysValue": 0,
+    "sellsValue": 59826.15,
+    "totalValue": 59826.15,
+    "minValue": 50000
+  },
+  {
+    "symbol": "ENAUSDT",
+    "time": "2025-09-25T07:58:23.485Z",
+    "count": 1,
+    "buysCount": 0,
+    "sellsCount": 1,
+    "buysValue": 0,
+    "sellsValue": 58207.42,
+    "totalValue": 58207.42,
+    "minValue": 50000
+  },
+  {
+    "symbol": "ETHUSDT",
+    "time": "2025-09-25T09:49:01.233Z",
+    "count": 1,
+    "buysCount": 0,
+    "sellsCount": 1,
+    "buysValue": 0,
+    "sellsValue": 88289.71,
+    "totalValue": 88289.71,
+    "minValue": 50000
+  },
+  {
+    "symbol": "SOLUSDT",
+    "time": "2025-09-25T09:56:01.249Z",
+    "count": 1,
+    "buysCount": 0,
+    "sellsCount": 1,
+    "buysValue": 0,
+    "sellsValue": 370252.41,
+    "totalValue": 370252.41,
+    "minValue": 50000
+  },
+  {
+    "symbol": "ETHUSDT",
+    "time": "2025-09-25T10:48:01.302Z",
+    "count": 1,
+    "buysCount": 0,
+    "sellsCount": 1,
+    "buysValue": 0,
+    "sellsValue": 297759.33,
+    "totalValue": 297759.33,
+    "minValue": 50000
+  },
+  {
+    "symbol": "ETHUSDT",
+    "time": "2025-09-25T10:52:01.305Z",
+    "count": 2,
+    "buysCount": 0,
+    "sellsCount": 2,
+    "buysValue": 0,
+    "sellsValue": 280897.26,
+    "totalValue": 280897.26,
+    "minValue": 50000
+  },
+  {
+    "symbol": "ETHUSDT",
+    "time": "2025-09-25T11:08:01.313Z",
+    "count": 1,
+    "buysCount": 0,
+    "sellsCount": 1,
+    "buysValue": 0,
+    "sellsValue": 156980.85,
+    "totalValue": 156980.85,
+    "minValue": 50000
+  },
+  {
+    "symbol": "SOLUSDT",
+    "time": "2025-09-25T11:10:01.309Z",
+    "count": 1,
+    "buysCount": 0,
+    "sellsCount": 1,
+    "buysValue": 0,
+    "sellsValue": 63057.2,
+    "totalValue": 63057.2,
+    "minValue": 50000
+  },
+  {
+    "symbol": "SOLUSDT",
+    "time": "2025-09-25T11:13:01.310Z",
+    "count": 1,
+    "buysCount": 0,
+    "sellsCount": 1,
+    "buysValue": 0,
+    "sellsValue": 75319.99,
+    "totalValue": 75319.99,
+    "minValue": 50000
   }
 ]

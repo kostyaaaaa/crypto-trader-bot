@@ -64,3 +64,29 @@ export async function loadDocs(collection, symbol, limit = 100) {
     // 	.toArray();
   }
 }
+
+export async function saveDocs(collection, docs, maxDocs = 1000) {
+  if (USE_FILES) {
+    let arr = Array.isArray(docs) ? docs : [];
+    if (arr.length > maxDocs) {
+      arr = arr.slice(-maxDocs);
+    }
+    fs.writeFileSync(`${collection}.json`, JSON.stringify(arr, null, 2));
+  } else {
+    // Mongo update many
+  }
+}
+
+export async function loadDocsRaw(collection) {
+  if (USE_FILES) {
+    try {
+      const db = JSON.parse(fs.readFileSync(`${collection}.json`, 'utf-8'));
+      return Array.isArray(db) ? db : [];
+    } catch {
+      return [];
+    }
+  } else {
+    // Mongo find all
+    return [];
+  }
+}

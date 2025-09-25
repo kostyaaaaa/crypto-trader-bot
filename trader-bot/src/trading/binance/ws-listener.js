@@ -59,25 +59,22 @@ export async function startUserStream() {
   });
 
   // Потрібно оновлювати listenKey раз на ~30 хв
-  setInterval(
-    async () => {
-      try {
-        await axios.put(
-          'https://fapi.binance.com/fapi/v1/listenKey',
-          {},
-          {
-            headers: {
-              'X-MBX-APIKEY': process.env.BINANCE_API_KEY,
-            },
+  setInterval(async () => {
+    try {
+      await axios.put(
+        'https://fapi.binance.com/fapi/v1/listenKey',
+        {},
+        {
+          headers: {
+            'X-MBX-APIKEY': process.env.BINANCE_API_KEY,
           },
-        );
-        console.log('♻️ listenKey refreshed');
-      } catch (err) {
-        console.error('❌ Failed to refresh listenKey:', err.message);
-      }
-    },
-    25 * 60 * 1000,
-  );
+        },
+      );
+      console.log('♻️ listenKey refreshed');
+    } catch (err) {
+      console.error('❌ Failed to refresh listenKey:', err.message);
+    }
+  }, 25 * 60 * 1000);
 }
 
 // -------------------------

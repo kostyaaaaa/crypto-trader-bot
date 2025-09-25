@@ -18,16 +18,14 @@ function oppositeSide(side) {
 /**
  * Отримати активні позиції
  */
-export async function getActivePositions(symbol = null) {
-  if (symbol) {
-    const { position, orders } = await getLiveState(symbol);
-    return position?.side ? [{ ...position, orders }] : [];
-  } else {
-    const positions = await getOpenPositions();
-    return positions.filter((p) => Number(p.positionAmt) !== 0);
+export async function getActivePositions(symbol) {
+  if (!symbol) {
+    throw new Error("getActivePositions requires a symbol");
   }
-}
 
+  const { position, orders } = await getLiveState(symbol);
+  return position?.side ? [{ ...position, orders }] : [];
+}
 /**
  * Закрити позицію повністю
  */
