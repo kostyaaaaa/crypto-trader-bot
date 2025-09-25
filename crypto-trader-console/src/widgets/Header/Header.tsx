@@ -4,6 +4,7 @@ import { type FC } from 'react';
 import styles from './Header.module.scss';
 import { ROUTERS_PATH } from '../../router/constants';
 import { Link, useLocation } from 'react-router-dom';
+import logo from '../../assets/react.svg';
 
 const Header: FC = () => {
   const [opened, { toggle }] = useDisclosure(false);
@@ -12,7 +13,7 @@ const Header: FC = () => {
   return (
     <header className={styles.header}>
       <Container size="md" className={styles.inner}>
-        <img src="/src/assets/react.svg" alt="react" />
+        <img src={logo} alt="react" />
         <Group gap={5} visibleFrom="xs" display="flex">
           {links.map((link: ILink) => {
             const isActive = location.pathname === link.link;
