@@ -4,6 +4,7 @@
 
 import WebSocket from 'ws';
 import { saveDoc } from '../../storage/storage.js';
+import { logStream } from '../../utils/logger.js';
 
 export function LiquidationsStepWS(
   symbol = 'ETHUSDT',
@@ -15,11 +16,7 @@ export function LiquidationsStepWS(
 
   let bucket = []; // буфер для ліквідацій за поточний інтервал (1 хв)
 
-  ws.on('open', () =>
-    console.log(
-      `✅ Connected to Force Orders stream (symbol=${symbol}, minValue=${minValue})`,
-    ),
-  );
+  ws.on('open', () => logStream(symbol, 'forceOrder'));
 
   ws.on('message', (msg) => {
     const raw = JSON.parse(msg.toString());

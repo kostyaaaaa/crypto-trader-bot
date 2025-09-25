@@ -1,54 +1,59 @@
-// analyze-liquidity.js
-// --- Аналізує дані ордербуку ---
-// Середній дисбаланс між bid/ask → сила покупців чи продавців
-// 0.5 = баланс, >0.5 → LONG, <0.5 → SHORT
+// modules/orderbook/analyze-liquidity.js
+// --- Аналіз ліквідності з ордербуку (через агреговані "ліквідність-свічки")
 
 import { loadDocs } from '../../storage/storage.js';
+import { getLastPrice } from '../../utils/getLastPrice.js';
 
 export async function analyzeLiquidity(symbol = 'ETHUSDT', window = 20) {
-  const liquidity = await loadDocs('liquidity', symbol, window);
-  if (!liquidity || liquidity.length < window) {
-    console.log(`⚠️ Not enough liquidity data for ${symbol}, need ${window}`);
+  // Беремо останні window хвилинних агрегатів ліквідності
+  const liq = await loadDocs('liquidity', symbol, window);
+  if (!liq || liq.length === 0) {
+    console.log(`⚠️ No liquidity aggregates for ${symbol}`);
     return null;
   }
 
-  // середні показники
+  // Середні значення по вікну
   const avgImbalance =
-    liquidity.reduce((s, c) => s + parseFloat(c.avgImbalance), 0) /
-    liquidity.length;
+    liq.reduce((s, d) => s + (Number(d.avgImbalance) || 0), 0) / liq.length; // ~0..1
+  const avgSpreadAbs =
+    liq.reduce((s, d) => s + (Number(d.avgSpread) || 0), 0) / liq.length; // у цінах
 
-  const avgSpread =
-    liquidity.reduce((s, c) => s + parseFloat(c.avgSpread), 0) /
-    liquidity.length;
+  // Спред у % від поточної ціни
+  const lastPrice = await getLastPrice(symbol);
+  const spreadPct =
+    lastPrice && lastPrice > 0 ? (avgSpreadAbs / lastPrice) * 100 : null;
 
-  // базові очки: відхилення від 0.5 (тобто рівноваги)
-  const diff = avgImbalance - 0.5; // >0 → LONG, <0 → SHORT
-  let longScore = 50 + diff * 200; // масштабуємо, щоб 0.6 = 70, 0.4 = 30
-  let shortScore = 100 - longScore;
+  // imbalanceBias: (-1..+1), 0 — баланс, >0 — перевага bids (лонгово)
+  const bias = (avgImbalance - 0.5) * 2; // -1..+1
+  const strength = Math.min(30, Math.abs(bias) * 400); // нормалізуємо у 0..30
 
-  // штраф за широкий спред: якщо avgSpread дуже великий, знижуємо впевненість
-  const spreadPenalty = Math.min(avgSpread * 10, 20); // макс -20 балів
-  longScore = Math.max(0, longScore - spreadPenalty / 2);
-  shortScore = Math.max(0, shortScore - spreadPenalty / 2);
-
-  // нормалізація в межах 0–100
-  longScore = Math.round(Math.max(0, Math.min(100, longScore)));
-  shortScore = Math.round(Math.max(0, Math.min(100, shortScore)));
-
-  // сигнал
   let signal = 'NEUTRAL';
-  if (longScore > shortScore) signal = 'LONG';
-  else if (shortScore > longScore) signal = 'SHORT';
+  if (bias > 0.05) signal = 'LONG';
+  else if (bias < -0.05) signal = 'SHORT';
+
+  let LONG = 50,
+    SHORT = 50;
+  if (signal === 'LONG') {
+    LONG += strength;
+    SHORT -= strength;
+  } else if (signal === 'SHORT') {
+    SHORT += strength;
+    LONG -= strength;
+  }
 
   return {
+    module: 'liquidity',
     symbol,
-    signal,
-    LONG: longScore,
-    SHORT: shortScore,
-    data: {
-      candlesUsed: liquidity.length,
-      avgImbalance: avgImbalance.toFixed(3),
-      avgSpread: avgSpread.toFixed(4),
+    signal, // LONG / SHORT / NEUTRAL
+    strength, // 0..30
+    meta: {
+      window,
+      avgImbalance: Number(avgImbalance.toFixed(3)),
+      avgSpreadAbs: Number(avgSpreadAbs.toFixed(6)),
+      spreadPct: spreadPct != null ? Number(spreadPct.toFixed(3)) : null,
+      LONG,
+      SHORT,
     },
+    spreadPct: spreadPct != null ? Number(spreadPct.toFixed(3)) : null, // залишаємо для engine
   };
 }

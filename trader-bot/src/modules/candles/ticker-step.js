@@ -4,6 +4,7 @@
 
 import WebSocket from 'ws';
 import { saveDoc } from '../../storage/storage.js';
+import { logStream } from '../../utils/logger.js';
 
 export function TickerStepWS(symbol = 'ETHUSDT') {
   const lower = symbol.toLowerCase();
@@ -60,8 +61,8 @@ export function TickerStepWS(symbol = 'ETHUSDT') {
     }
   });
 
-  wsKline.on('open', () => console.log(`✅ Connected to ${symbol} kline_1m`));
-  wsBook.on('open', () => console.log(`✅ Connected to ${symbol} bookTicker`));
+  wsKline.on('open', () => logStream(symbol, 'kline_1m'));
+  wsBook.on('open', () => logStream(symbol, 'bookTicker'));
 
   wsKline.on('error', (err) =>
     console.error('❌ Kline WS error:', err.message),
