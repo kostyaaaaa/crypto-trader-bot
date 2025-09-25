@@ -4,14 +4,12 @@ import { QueryKeys, getAllCoinConfigs } from '../../api';
 const useConfiguration = () => {
   const { data } = useQuery({
     queryKey: [QueryKeys.AllCoinConfigs],
-    queryFn: async () => {
-      const data = await getAllCoinConfigs();
-      return data;
-    },
+    queryFn: getAllCoinConfigs,
     refetchOnWindowFocus: false,
+    retry: false,
   });
 
-  return { data };
+  return { configs: data?.data };
 };
 
 export default useConfiguration;
