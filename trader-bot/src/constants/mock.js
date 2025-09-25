@@ -1,6 +1,6 @@
 export const ANALYSIS_CONFIG = [
- {
-    symbol: "ENAUSDT",
+  {
+    symbol: 'ENAUSDT',
     isActive: true,
     analysisConfig: {
       candleTimeframe: '5m',
@@ -90,10 +90,10 @@ export const ANALYSIS_CONFIG = [
     },
   },
 
- {
-    symbol: "SOLUSDT",
-   isActive: true,
-   analysisConfig: {
+  {
+    symbol: 'SOLUSDT',
+    isActive: true,
+    analysisConfig: {
       candleTimeframe: '15m',
       oiWindow: 12, // ~1h історії
       liqWindow: 20,
@@ -180,10 +180,10 @@ export const ANALYSIS_CONFIG = [
       },
     },
   },
- {
-    symbol: "ETHUSDT",
-   isActive: true,
-   analysisConfig: {
+  {
+    symbol: 'ETHUSDT',
+    isActive: true,
+    analysisConfig: {
       candleTimeframe: '15m', // працюємо на 15 хвилинних свічках
       oiWindow: 20, // більше даних OI (~5 годин)
       liqWindow: 30, // ліквідність ширша
@@ -270,4 +270,4 @@ export const ANALYSIS_CONFIG = [
       },
     },
   },
-]
+];

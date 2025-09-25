@@ -1,14 +1,16 @@
 import type { TCoinConfigResponse } from '../../types';
 import axiosInterceptor from '../axiosClient';
 
-export const getAllCoinConfigs = async (): Promise<{
+export const getConfigBySymbol = async (
+  symbol: string,
+): Promise<{
   count: number;
-  data: TCoinConfigResponse[];
+  data: TCoinConfigResponse;
   message: string;
   success: boolean;
   timestamp: string;
 }> => {
-  const { data } = await axiosInterceptor.get(`/coinconfig`);
+  const { data } = await axiosInterceptor.get(`/coinconfig/${symbol}`);
 
   return data;
 };

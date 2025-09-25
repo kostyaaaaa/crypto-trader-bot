@@ -20,7 +20,7 @@ function oppositeSide(side) {
  */
 export async function getActivePositions(symbol) {
   if (!symbol) {
-    throw new Error("getActivePositions requires a symbol");
+    throw new Error('getActivePositions requires a symbol');
   }
 
   const { position, orders } = await getLiveState(symbol);

@@ -4,4 +4,5 @@ export const QueryKeys = {
   FuturesBalance: 'futuresBalance',
   AllSpotPrices: 'AllSpotPrices',
   AllCoinConfigs: 'AllCoinConfigs',
+  GetCoinConfig: 'GetCoinConfig',
 } as const;

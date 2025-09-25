@@ -8,9 +8,8 @@ import { ANALYSIS_CONFIG } from './constants/mock.js';
 import { tradingEngine } from './trading/core/engine.js';
 import { monitorPositions } from './trading/core/monitor.js';
 import { startUserStream } from './trading/binance/ws-listener.js';
-import {CoinConfigModel} from "crypto-trader-db";
+import { CoinConfigModel } from 'crypto-trader-db';
 const TRADE_MODE = process.env.TRADE_MODE || 'paper';
-
 
 // async function loadCoinConfigs() {
 //   if (TRADE_MODE === 'paper') {
@@ -52,31 +51,36 @@ ANALYSIS_CONFIG.forEach(({ symbol, isActive, analysisConfig, strategy }) => {
 });
 
 async function subscribeCoinConfigs() {
-  const changeStream = CoinConfigModel.watch([], { fullDocument: "updateLookup" });
+  const changeStream = CoinConfigModel.watch([], {
+    fullDocument: 'updateLookup',
+  });
 
-  changeStream.on("change", (change) => {
-    console.log("🔔 CoinConfig change:", change);
+  changeStream.on('change', (change) => {
+    console.log('🔔 CoinConfig change:', change);
 
-    if (change.operationType === "insert") {
+    if (change.operationType === 'insert') {
       const newConfig = change.fullDocument;
-      console.log("➕ New config added:", newConfig.symbol);
+      console.log('➕ New config added:', newConfig.symbol);
       // startAnalyzer(newConfig.symbol, newConfig);
     }
 
-    if (change.operationType === "update" || change.operationType === "replace") {
+    if (
+      change.operationType === 'update' ||
+      change.operationType === 'replace'
+    ) {
       const updatedConfig = change.fullDocument;
-      console.log("♻️ Config updated:", updatedConfig.symbol);
+      console.log('♻️ Config updated:', updatedConfig.symbol);
       // перезапусти аналітику для цієї монети
     }
 
-    if (change.operationType === "delete") {
-      console.log("🗑️ Config removed:", change.documentKey._id);
+    if (change.operationType === 'delete') {
+      console.log('🗑️ Config removed:', change.documentKey._id);
       // зупини аналізатор для цього символа
     }
   });
 
-  changeStream.on("error", (err) => {
-    console.error("❌ Change stream error:", err);
+  changeStream.on('error', (err) => {
+    console.error('❌ Change stream error:', err);
   });
 }
 await connectDB();

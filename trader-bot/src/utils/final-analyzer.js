@@ -87,8 +87,8 @@ export async function finalAnalyzer({
     scoreLONG > scoreSHORT
       ? 'LONG'
       : scoreSHORT > scoreLONG
-      ? 'SHORT'
-      : 'NEUTRAL';
+        ? 'SHORT'
+        : 'NEUTRAL';
 
   const filledModules = Object.values(modules).filter(
     (m) => m && (m.meta?.LONG ?? 0) + (m.meta?.SHORT ?? 0) > 0,
