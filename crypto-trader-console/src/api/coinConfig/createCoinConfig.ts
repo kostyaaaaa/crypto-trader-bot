@@ -1,13 +1,13 @@
 import axiosInterceptor from '../axiosClient';
 
-export const getAllCoinConfigs = async (): Promise<{
+export const createCoinConfig = async (): Promise<{
   count: number;
   data: [];
   message: string;
   success: boolean;
   timestamp: string;
 }> => {
-  const { data } = await axiosInterceptor.get(`/coinconfig`);
+  const { data } = await axiosInterceptor.post(`/coinconfig`);
 
   return data;
 };
