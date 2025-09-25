@@ -1,7 +1,7 @@
 import type { TCoinConfig, TCoinConfigResponse } from '../../types';
 import axiosInterceptor from '../axiosClient';
 
-export const createCoinConfig = async (
+export const updateCoinConfig = async (
   body: TCoinConfig,
 ): Promise<{
   data: TCoinConfigResponse;
@@ -9,7 +9,10 @@ export const createCoinConfig = async (
   success: boolean;
   timestamp: string;
 }> => {
-  const { data } = await axiosInterceptor.post(`/coinconfig`, body);
+  const { data } = await axiosInterceptor.put(
+    `/coinconfig/${body.symbol}`,
+    body,
+  );
 
   return data;
 };

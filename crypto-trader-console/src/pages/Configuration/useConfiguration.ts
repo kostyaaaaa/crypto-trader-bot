@@ -9,7 +9,7 @@ const useConfiguration = () => {
     retry: false,
   });
 
-  return { data };
+  return { configs: data?.data };
 };
 
 export default useConfiguration;
