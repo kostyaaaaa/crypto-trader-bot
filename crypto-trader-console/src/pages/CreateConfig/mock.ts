@@ -1,7 +1,8 @@
 import type { TCoinConfig } from '../../types';
 
 export const mockCreateConfigData: TCoinConfig = {
-  symbol: 'ENAUSDT',
+  symbol: '',
+  isActive: true,
   analysisConfig: {
     candleTimeframe: '15m',
     oiWindow: 20,
