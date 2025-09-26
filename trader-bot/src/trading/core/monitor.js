@@ -11,10 +11,9 @@ import {
   addToPosition,
   adjustPosition,
   getHistory,
-  reconcilePositions,
   updateStopPrice,
-  updateTakeProfits,
 } from './historyStore.js';
+import { loadDocs } from '../../storage/storage.js';
 
 const TRADE_MODE = process.env.TRADE_MODE || 'paper';
 
@@ -52,12 +51,19 @@ export async function monitorPositions({ symbol, strategy }) {
     return;
   }
 
-  const reconciled = await reconcilePositions();
-
   if (!positions.length) return;
 
   const price = await getMarkPrice(symbol);
   if (price == null) return;
+
+  // Отримуємо останній аналіз
+  let lastAnalysis = null;
+  try {
+    const analysisDocs = await loadDocs('analysis', symbol, 1);
+    if (Array.isArray(analysisDocs) && analysisDocs.length > 0) {
+      lastAnalysis = analysisDocs[0];
+    }
+  } catch {}
 
   for (let pos of positions) {
     // ВАЖЛИВО: це live-позиція з Binance
@@ -77,6 +83,7 @@ export async function monitorPositions({ symbol, strategy }) {
 
     /* ===== 1) TRAILING ===== */
     const trailingCfg = strategy?.exits?.trailing;
+
     // зберігаємо стейт трелінгу в оперативці на об'єкті pos (можемо винести у БД пізніше)
     if (trailingCfg?.use && entryPrice) {
       try {
@@ -139,6 +146,16 @@ export async function monitorPositions({ symbol, strategy }) {
       const condition =
         (side === 'LONG' && price <= adversePrice) ||
         (side === 'SHORT' && price >= adversePrice);
+
+      // Перевірка сигналу аналізу: якщо є останній аналіз і сигнал протилежний позиції, не додаємо
+      if (
+        lastAnalysis &&
+        lastAnalysis.signal &&
+        ((side === 'LONG' && lastAnalysis.signal === 'SHORT') ||
+          (side === 'SHORT' && lastAnalysis.signal === 'LONG'))
+      ) {
+        continue;
+      }
 
       if (condition && addsCount < sizing.maxAdds) {
         // Беремо поточний нотіонал з live-даних: qty * entryPrice

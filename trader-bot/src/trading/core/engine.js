@@ -193,14 +193,6 @@ export async function tradingEngine(symbol, config) {
   );
   const entryPrice = parseFloat(lastPriceRes.data.price);
 
-  // --- 6. відкриття угоди ---
-  console.log('🚀 Opening position', {
-    symbol,
-    side: majority,
-    entryPrice,
-    riskPct: config.strategy.capital?.riskPerTradePct,
-    leverage: config.strategy.capital?.leverage,
-  });
   let position;
   if (TRADE_MODE === 'live') {
     position = await executeTrade(
