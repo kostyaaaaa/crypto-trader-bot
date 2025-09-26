@@ -2,21 +2,23 @@
 import axios from 'axios';
 import WebSocket from 'ws';
 import { notifyTrade } from '../../utils/notify.js';
-import logger from 'crypto-trader-server/dist/utils/Logger.js';
+import {
+  closePositionHistory,
+  getOpenPosition,
+  updateStopPrice,
+  updateTakeProfits,
+} from '../core/historyStore.js';
+import { cancelAllOrders, getPosition, openMarketOrder } from './binance.js';
 
 // -------------------------
-// 1. Отримуємо listenKey
+// 1. Отримання listenKey
 // -------------------------
 async function getListenKey() {
   try {
     const res = await axios.post(
       'https://fapi.binance.com/fapi/v1/listenKey',
       {},
-      {
-        headers: {
-          'X-MBX-APIKEY': process.env.BINANCE_API_KEY,
-        },
-      },
+      { headers: { 'X-MBX-APIKEY': process.env.BINANCE_API_KEY } },
     );
     return res.data.listenKey;
   } catch (err) {
@@ -39,10 +41,10 @@ export async function startUserStream() {
     console.log('🔌 Binance user stream connected');
   });
 
-  ws.on('message', (raw) => {
+  ws.on('message', async (raw) => {
     try {
       const msg = JSON.parse(raw.toString());
-      handleEvent(msg);
+      await handleEvent(msg);
     } catch (err) {
       console.error('❌ Failed to parse WS message:', err);
     }
@@ -58,18 +60,14 @@ export async function startUserStream() {
     ws.close();
   });
 
-  // Потрібно оновлювати listenKey раз на ~30 хв
+  // оновлення listenKey раз на 25 хв
   setInterval(
     async () => {
       try {
         await axios.put(
           'https://fapi.binance.com/fapi/v1/listenKey',
           {},
-          {
-            headers: {
-              'X-MBX-APIKEY': process.env.BINANCE_API_KEY,
-            },
-          },
+          { headers: { 'X-MBX-APIKEY': process.env.BINANCE_API_KEY } },
         );
         console.log('♻️ listenKey refreshed');
       } catch (err) {
@@ -81,40 +79,123 @@ export async function startUserStream() {
 }
 
 // -------------------------
-// 3. Обробка івентів
+// 3. Автозакриття хвостів
 // -------------------------
-function handleEvent(msg) {
+async function forceCloseIfLeftover(symbol) {
+  try {
+    const live = await getPosition(symbol);
+    if (!live) return;
+
+    const amt = Number(live.positionAmt);
+    if (amt === 0) return;
+
+    const side = amt > 0 ? 'SELL' : 'BUY';
+    await openMarketOrder(symbol, side, Math.abs(amt));
+    console.log(`🔧 Forced close leftover ${amt} on ${symbol}`);
+  } catch (err) {
+    console.error(`❌ Failed to force close leftover ${symbol}:`, err.message);
+  }
+}
+
+// -------------------------
+// 4. Обробка івентів
+// -------------------------
+async function handleEvent(msg) {
+  console.log('🔔 WS EVENT RAW:', JSON.stringify(msg));
   switch (msg.e) {
     case 'ACCOUNT_UPDATE':
       console.log('📊 Account update:', msg.a);
       break;
 
-    case 'ORDER_TRADE_UPDATE':
+    case 'ORDER_TRADE_UPDATE': {
       const o = msg.o;
+      const symbol = o.s;
+      const status = o.X;
+      const side = o.S;
+      const type = o.ot;
+      const lastPx = Number(o.L);
+      const lastQty = Number(o.l);
+
       console.log(
-        `📦 Order update: ${o.s} ${o.S} status=${o.X}, lastPx=${o.L}, lastQty=${o.l}`,
+        `📦 Order update: ${symbol} ${side} status=${status}, type=${type}, lastPx=${lastPx}, lastQty=${lastQty}, orderId=${o.i}`,
       );
 
-      if (o.X === 'FILLED') {
-        if (o.S === 'SELL') {
-          notifyTrade(
-            {
-              symbol: o.s,
-              side: 'SHORT',
-              entryPrice: Number(o.L),
-              size: Number(o.l) * Number(o.L),
-              leverage: 5,
-              qty: Number(o.l),
-              stopPrice: null,
-              takeProfits: [],
-              rrrToFirstTp: null,
-              exitReason: 'FILLED',
-            },
-            'CLOSED',
+      if (status === 'FILLED') {
+        const pos = await getOpenPosition(symbol); // 👈 тільки активна позиція
+        console.log(pos, ';pos');
+        if (!pos && (type === 'STOP_MARKET' || type === 'TAKE_PROFIT_MARKET')) {
+          console.warn(
+            `⚠️ ${symbol}: FILLED ${type} but no OPEN position in DB. Forcing close.`,
           );
+          const closed = await closePositionHistory(symbol, {
+            closedBy: type === 'STOP_MARKET' ? 'SL' : 'TP',
+          });
+          await cancelAllOrders(symbol);
+          await forceCloseIfLeftover(symbol);
+          if (closed) notifyTrade(closed, 'CLOSED');
+          return;
+        }
+        // STOP_MARKET logic
+        if (type === 'STOP_MARKET') {
+          console.log(`🛑 ${symbol}: Stop-loss triggered`);
+          if (pos) {
+            // Update stop price as filled
+            await updateStopPrice(symbol, lastPx, 'FILLED');
+            // Close position history
+            const closed = await closePositionHistory(symbol, {
+              closedBy: 'SL',
+            });
+            await cancelAllOrders(symbol);
+            await forceCloseIfLeftover(symbol);
+            if (closed) notifyTrade(closed, 'CLOSED');
+          }
+        }
+        // TAKE_PROFIT_MARKET logic
+        else if (type === 'TAKE_PROFIT_MARKET') {
+          console.log(`🎯 ${symbol}: Take-profit triggered`);
+          if (pos && Array.isArray(pos.takeProfits)) {
+            // Clone TPs
+            const updatedTps = pos.takeProfits.map((tp) => ({ ...tp }));
+            // Find the first unfilled TP near lastPx
+            const tolerance = Math.max(0.01, Math.abs(pos.entryPrice * 0.001)); // 0.1% tolerance or min 0.01
+            let found = false;
+            for (let tp of updatedTps) {
+              if (
+                !tp.filled &&
+                Math.abs(Number(tp.price) - lastPx) <= tolerance
+              ) {
+                tp.filled = true;
+                found = true;
+                break;
+              }
+            }
+            // Update TP list in DB
+            await updateTakeProfits(
+              symbol,
+              updatedTps,
+              pos.entryPrice,
+              'TP_FILLED',
+            );
+            // If all TPs are now filled, close position
+            const allFilled = updatedTps.every((tp) => tp.filled);
+            if (allFilled) {
+              const closed = await closePositionHistory(symbol, {
+                closedBy: 'TP',
+              });
+              await cancelAllOrders(symbol);
+              await forceCloseIfLeftover(symbol);
+              if (closed) notifyTrade(closed, 'CLOSED');
+            }
+            // Else, just update TPs, don't close position
+          }
+        }
+        // MARKET order
+        else if (type === 'MARKET') {
+          console.log(`✅ Market order filled for ${symbol} (${side})`);
         }
       }
       break;
+    }
 
     default:
       console.log('ℹ️ Unhandled WS event:', msg);

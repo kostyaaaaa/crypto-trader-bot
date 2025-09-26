@@ -1,5 +1,6 @@
 import connectDB from './config/database.js';
-
+import dns from 'dns';
+dns.setDefaultResultOrder('ipv4first');
 import { OrderBookStepWS } from './modules/orderbook/order-book-step.js';
 import { LiquidationsStepWS } from './modules/liquidations/liquidations-step.js';
 import { finalAnalyzer } from './utils/final-analyzer.js';

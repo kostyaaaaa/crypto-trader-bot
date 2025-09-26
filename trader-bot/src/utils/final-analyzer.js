@@ -13,7 +13,6 @@ import { saveDoc } from '../storage/storage.js';
 export async function finalAnalyzer({
   symbol = 'ETHUSDT',
   analysisConfig = {},
-  save = true,
 } = {}) {
   const {
     candleTimeframe = '1m',
@@ -37,9 +36,19 @@ export async function finalAnalyzer({
       longShortWindow,
     ) + 5;
   // --- свічки напряму з Binance ---
-  const klineRes = await axios.get('https://fapi.binance.com/fapi/v1/klines', {
-    params: { symbol, interval: candleTimeframe, limit: needed },
-  });
+  let klineRes;
+  try {
+    klineRes = await axios.get('https://fapi.binance.com/fapi/v1/klines', {
+      params: { symbol, interval: candleTimeframe, limit: needed },
+    });
+  } catch (err) {
+    if (err && err.code === 'ENOTFOUND') {
+      console.warn(`⚠️ ${symbol} skipped (DNS error)`);
+      return null;
+    }
+    throw err;
+  }
+  if (!klineRes) return null;
   const candles = klineRes.data.map((k) => ({
     time: new Date(k[0]).toISOString(),
     open: parseFloat(k[1]),
@@ -107,10 +116,6 @@ export async function finalAnalyzer({
     bias,
     decision,
   };
-
-  if (save) {
-    await saveDoc('analysis', result);
-  }
-
+  await saveDoc('analysis', result);
   return result;
 }

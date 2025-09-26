@@ -12,6 +12,7 @@ import {
 } from './binance.js';
 
 import { preparePosition } from '../core/prepare.js';
+import { updateStopPrice, updateTakeProfits } from '../core/historyStore.js';
 
 const TRADE_MODE = process.env.TRADE_MODE || 'paper';
 
@@ -19,13 +20,52 @@ function isValidStop(side, lastPrice, stopPrice) {
   return side === 'LONG' ? stopPrice < lastPrice : stopPrice > lastPrice;
 }
 
+/**
+ * НОРМАЛІЗАЦІЯ TP:
+ *  - фільтрує невалідні
+ *  - гарантує суму = 100% (останній добирає залишок)
+ *  - якщо сума > 100 — масштабуються пропорційно
+ */
+function normalizeTpPlan(tps = []) {
+  const plan = (tps || [])
+    .map((tp) => ({
+      price: Number(tp.price),
+      sizePct: Number(tp.sizePct),
+    }))
+    .filter(
+      (tp) =>
+        Number.isFinite(tp.price) &&
+        Number.isFinite(tp.sizePct) &&
+        tp.sizePct > 0,
+    );
+
+  if (plan.length === 0) return [];
+
+  const sum = plan.reduce((s, tp) => s + tp.sizePct, 0);
+
+  if (sum === 100) return plan;
+
+  if (sum < 100) {
+    // добираємо залишок останньому
+    const last = plan[plan.length - 1];
+    last.sizePct += 100 - sum;
+    return plan;
+  }
+
+  // sum > 100 → масштабувати пропорційно
+  return plan.map((tp) => ({ ...tp, sizePct: (tp.sizePct / sum) * 100 }));
+}
+
 export async function executeTrade(symbol, cfg, analysis, side, price) {
-  // 0) готуємо локальний опис (тільки щоб порахувати size/SL/TP)
+  // 0) Локальна підготовка параметрів стратегії (size/SL/TP)
   let pos = await preparePosition(symbol, cfg, analysis, side, price);
-  const { size, entryPrice, takeProfits, stopPrice } = pos;
   const leverage = cfg?.strategy?.capital?.leverage || 10;
 
-  // PAPER: нічого не зберігаємо — просто повертаємо опис для логів/тестів
+  // нормалізуємо TP-план (через %)
+  pos.takeProfits = normalizeTpPlan(pos.takeProfits);
+  const { size, entryPrice, takeProfits, stopPrice } = pos;
+
+  // PAPER MODE — просто повертаємо підготовлену позицію
   if (TRADE_MODE === 'paper') {
     console.log(
       `🟢 [PAPER] Simulated ${side} ${symbol} @ ${entryPrice} (size=${size}$, lev=${leverage}x)`,
@@ -33,12 +73,14 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
     return pos;
   }
 
-  // ---- LIVE MODE ----
-  // 1) Виставляємо плече ПЕРЕД відкриттям
+  // LIVE MODE
+  const orderIds = { entry: null, stop: null, takes: [] };
+
+  // 1) Плече перед входом
   try {
     await setLeverage(symbol, leverage);
     console.log(`⚙️ Set leverage ${leverage}x for ${symbol}`);
-    pos.leverage = leverage; // фіксуємо у локальному об'єкті (для повернення)
+    pos.leverage = leverage;
   } catch (err) {
     console.error(
       `❌ Failed to set leverage for ${symbol}:`,
@@ -58,8 +100,12 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
     return null;
   }
 
+  // кількість у базовій валюті
   const rawQty = size / entryPrice;
   const qty = adjustQuantity(filters, rawQty);
+  console.log(
+    `📏 Position sizing ${symbol}: size=${size}$, entry=${entryPrice}, rawQty=${rawQty}, adjustedQty=${qty}`,
+  );
   if (!qty || Number(qty) <= 0) {
     console.error(
       `❌ Quantity too small, skip trade ${symbol} (raw=${rawQty})`,
@@ -67,7 +113,7 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
     return null;
   }
 
-  // 3) Скасуємо всі старі ордери для символу (щоб не ловити конфлікти)
+  // 3) Скасовуємо всі активні ордери по символу (захист від “зависів”)
   try {
     await cancelAllOrders(symbol);
   } catch (err) {
@@ -77,10 +123,17 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
     );
   }
 
-  // 4) Відкриваємо маркет-угоду
+  // 4) Маркет-вхід
   try {
-    await openMarketOrder(symbol, side === 'LONG' ? 'BUY' : 'SELL', qty);
-    console.log(`✅ [LIVE] Opened ${side} ${symbol}, qty=${qty}`);
+    const entryOrder = await openMarketOrder(
+      symbol,
+      side === 'LONG' ? 'BUY' : 'SELL',
+      qty,
+    );
+    orderIds.entry = entryOrder?.orderId || null;
+    console.log(
+      `✅ [LIVE] Opened ${side} ${symbol}, qty=${qty}, orderId=${orderIds.entry}`,
+    );
   } catch (err) {
     console.error(
       `❌ Failed to open market order for ${symbol}:`,
@@ -89,45 +142,123 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
     return null;
   }
 
-  // 5) Ставимо SL
-  if (stopPrice && isValidStop(side, entryPrice, stopPrice)) {
-    try {
-      const stopPx = adjustPrice(filters, stopPrice);
-      await placeStopLoss(symbol, side, stopPx, qty);
-      console.log(`🛑 Stop-loss placed @ ${stopPx}`);
-    } catch (err) {
-      console.warn(`⚠️ Failed to place SL for ${symbol}:`, err?.message || err);
-    }
+  // 5) Stop-loss (reduceOnly, валідність ціни)
+  let effectiveStopPrice = stopPrice;
+  if (!effectiveStopPrice) {
+    console.warn(
+      `⚠️ No stopPrice calculated for ${symbol}, fallback to hard stop (-5%).`,
+    );
+    effectiveStopPrice =
+      side === 'LONG' ? entryPrice * 0.95 : entryPrice * 1.05;
   }
 
-  // 6) Ставимо TP(и)
-  if (Array.isArray(takeProfits) && takeProfits.length) {
-    for (const tp of takeProfits) {
+  if (isValidStop(side, entryPrice, effectiveStopPrice)) {
+    try {
+      const stopPx = adjustPrice(filters, effectiveStopPrice);
+      const slOrder = await placeStopLoss(symbol, side, stopPx, qty);
+      orderIds.stop = slOrder?.orderId || null;
+      console.log(`🛑 Stop-loss placed @ ${stopPx}, orderId=${orderIds.stop}`);
       try {
-        const tpQty = adjustQuantity(filters, (qty * tp.sizePct) / 100);
-        if (Number(tpQty) <= 0) continue;
-
-        const tpPx = adjustPrice(filters, tp.price);
-        await placeTakeProfit(symbol, side, tpPx, tpQty);
-        console.log(`🎯 Take-profit @ ${tpPx} (${tp.sizePct}%)`);
+        await updateStopPrice(symbol, stopPx, 'OPEN');
       } catch (err) {
         console.warn(
-          `⚠️ Failed to place TP for ${symbol}:`,
+          `⚠️ Failed to update stop price for ${symbol}:`,
           err?.message || err,
         );
       }
+    } catch (err) {
+      console.warn(`⚠️ Failed to place SL for ${symbol}:`, err?.message || err);
     }
+  } else {
+    console.log(
+      `ℹ️ SL skipped (invalid or not provided): stopPrice=${effectiveStopPrice}`,
+    );
   }
 
-  // 7) Підтягнемо факт із Binance (для повернення актуальних цифр)
+  // 6) Take-profits (reduceOnly, сума = 100%)
+  if (Array.isArray(takeProfits) && takeProfits.length) {
+    try {
+      // Квантуємо TP-кількості; останній TP отримує залишок після квантування
+      const totalQty = Number(qty);
+      let allocated = 0;
+      const tpPlan = [];
+
+      for (let i = 0; i < takeProfits.length; i++) {
+        const { price: p, sizePct } = takeProfits[i];
+
+        // TP рахується від avgEntry, краще передавати відкориговані значення
+        // сирий розрахунок
+        const targetRaw = (totalQty * sizePct) / 100;
+
+        // для останнього TP – віддамо весь залишок (щоб сума дорівнювала totalQty)
+        let tpQty;
+        if (i === takeProfits.length - 1) {
+          const remainder = Math.max(totalQty - allocated, 0);
+          tpQty = remainder;
+        } else {
+          // квантуємо не останні
+          const q = adjustQuantity(filters, targetRaw);
+          tpQty = Number(q);
+        }
+
+        if (!Number.isFinite(tpQty) || tpQty <= 0) {
+          console.log(`ℹ️ Skip TP#${i + 1}: qty=${tpQty}`);
+          continue;
+        }
+
+        // не перевищуємо загальну кількість
+        if (allocated + tpQty > totalQty)
+          tpQty = Math.max(totalQty - allocated, 0);
+        if (tpQty <= 0) continue;
+
+        const tpPx = adjustPrice(filters, p);
+        const tpOrder = await placeTakeProfit(symbol, side, tpPx, tpQty);
+
+        allocated += tpQty;
+        if (tpOrder?.orderId) orderIds.takes.push(tpOrder.orderId);
+
+        tpPlan.push({ price: tpPx, sizePct });
+
+        console.log(
+          `🎯 TP#${i + 1} @ ${tpPx} for qty=${tpQty} (${sizePct.toFixed(2)}%), orderId=${tpOrder?.orderId}`,
+        );
+      }
+
+      try {
+        await updateTakeProfits(symbol, tpPlan, entryPrice, 'OPEN');
+      } catch (err) {
+        console.warn(
+          `⚠️ Failed to update take profits for ${symbol}:`,
+          err?.message || err,
+        );
+      }
+
+      // якщо через квантування сума < totalQty — інформуємо (дрібна різниця ок)
+      const diff = totalQty - allocated;
+      if (diff > 0) {
+        console.log(`ℹ️ Unallocated qty due to quantization: ${diff}`);
+      }
+    } catch (err) {
+      console.warn(
+        `⚠️ Failed to place TP grid for ${symbol}:`,
+        err?.message || err,
+      );
+    }
+  } else {
+    console.log('ℹ️ No TP plan provided (skip TP placement).');
+  }
+
+  // 7) Підтверджуємо фактичні цифри з Binance (entry avg, фактична кількість)
   try {
     const live = await getPosition(symbol);
     if (live && Number(live.positionAmt) !== 0) {
       const avgEntry = Number(live.entryPrice);
       pos = {
         ...pos,
+        // Використовуємо фактичний avgEntry з Binance для коректних TP/SL
         entryPrice: avgEntry,
-        size: Math.abs(Number(live.positionAmt)) * avgEntry, // $-нотіонал фактичної позиції
+        size: Math.abs(Number(live.positionAmt)) * avgEntry, // фактичний $-нотіонал
+        orderIds,
         updates: [
           ...(pos.updates || []),
           {
@@ -137,14 +268,16 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
           },
         ],
       };
+    } else {
+      pos.orderIds = orderIds;
     }
   } catch (err) {
     console.warn(
       `⚠️ Failed to read live position for ${symbol}:`,
       err?.message || err,
     );
+    pos.orderIds = orderIds;
   }
 
-  // 8) НІЧОГО НЕ ЗБЕРІГАЄМО ЛОКАЛЬНО — просто повертаємо стан
   return pos;
 }

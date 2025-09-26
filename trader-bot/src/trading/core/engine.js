@@ -10,7 +10,6 @@ import { executeTrade } from '../binance/exchange-executor.js';
 import { getUserTrades } from '../binance/binance.js';
 import { notifyTrade } from '../../utils/notify.js';
 
-// 👇 нове
 import { openPosition } from './historyStore.js';
 
 const TRADE_MODE = process.env.TRADE_MODE || 'paper';
@@ -22,10 +21,9 @@ export async function tradingEngine(symbol, config) {
   // 0. Перевіряємо відкриті позиції
   const activePositions = await getActivePositions(symbol);
   if (activePositions.length > 0) {
-    console.log(`⚠️ ${symbol}: skip, already active position exists`);
+    console.log(`⏸️ ${symbol}: skip, active positions exist`);
     return;
   }
-
   // cooldown
   if (config.strategy.entry.cooldownMin > 0) {
     try {
@@ -58,11 +56,12 @@ export async function tradingEngine(symbol, config) {
   }
 
   if (!analysisHistory || analysisHistory.length < lookback) {
-    console.log(`⚠️ ${symbol}: skip, not enough analyses (need ${lookback})`);
+    console.log(`⏸️ ${symbol}: skip, not enough analysis history`);
     return;
   }
 
   const lastAnalyses = analysisHistory.reverse();
+
   const analysis = lastAnalyses.at(-1);
   const decisions = lastAnalyses.map((a) => a.bias);
 
@@ -80,9 +79,7 @@ export async function tradingEngine(symbol, config) {
   }
 
   if (analysis.bias !== majority) {
-    console.log(
-      `⚠️ ${symbol}: skip, last analysis bias ${analysis.bias} ≠ majority ${majority}`,
-    );
+    console.log(`⏸️ ${symbol}: skip, analysis.bias !== majority`);
     return;
   }
 
@@ -92,7 +89,7 @@ export async function tradingEngine(symbol, config) {
   const minScore = entry.minScore[majority];
   if (scores[majority] < minScore) {
     console.log(
-      `⚠️ ${symbol}: skip, score ${scores[majority]} < minScore ${minScore}`,
+      `⏸️ ${symbol}: skip, score ${scores[majority]} < minScore ${minScore}`,
     );
     return;
   }
@@ -101,7 +98,7 @@ export async function tradingEngine(symbol, config) {
     const [filled] = coverage.split('/').map(Number);
     if (filled < entry.minModules) {
       console.log(
-        `⚠️ ${symbol}: skip, only ${filled} modules < min ${entry.minModules}`,
+        `⏸️ ${symbol}: skip, coverage ${filled} < minModules ${entry.minModules}`,
       );
       return;
     }
@@ -110,7 +107,7 @@ export async function tradingEngine(symbol, config) {
   if (entry.requiredModules?.length) {
     for (const req of entry.requiredModules) {
       if (!modules[req] || (modules[req].signal ?? 'NEUTRAL') === 'NEUTRAL') {
-        console.log(`⚠️ ${symbol}: skip, required module ${req} not confirmed`);
+        console.log(`⏸️ ${symbol}: skip, required module ${req} not satisfied`);
         return;
       }
     }
@@ -119,7 +116,7 @@ export async function tradingEngine(symbol, config) {
   const diff = Math.abs(scores.LONG - scores.SHORT);
   if (diff < entry.sideBiasTolerance) {
     console.log(
-      `⚠️ ${symbol}: skip, bias difference ${diff} < tolerance ${entry.sideBiasTolerance}`,
+      `⏸️ ${symbol}: skip, side bias diff ${diff} < tolerance ${entry.sideBiasTolerance}`,
     );
     return;
   }
@@ -127,18 +124,17 @@ export async function tradingEngine(symbol, config) {
   if (modules?.volatility) {
     const { signal, meta } = modules.volatility;
     if (signal === 'NONE' && meta?.regime === 'DEAD') {
-      console.log(`⚠️ ${symbol}: skip, market DEAD volatility`);
+      console.log(`⏸️ ${symbol}: skip, volatility regime DEAD`);
       return;
     }
     if (signal === 'NONE' && meta?.regime === 'EXTREME') {
-      console.log(`⚠️ ${symbol}: EXTREME volatility, reducing risk`);
       capital.riskPerTradePct = capital.riskPerTradePct / 2;
     }
   }
 
   if (modules?.liquidity?.meta?.spreadPct > entry.maxSpreadPct) {
     console.log(
-      `⚠️ ${symbol}: skip, spread ${modules.liquidity.meta.spreadPct}% > max ${entry.maxSpreadPct}%`,
+      `⏸️ ${symbol}: skip, spread ${modules.liquidity.meta.spreadPct} > maxSpreadPct ${entry.maxSpreadPct}`,
     );
     return;
   }
@@ -146,7 +142,7 @@ export async function tradingEngine(symbol, config) {
   const fr = modules?.funding?.meta?.avgFunding;
   const absOver = entry.avoidWhen?.fundingExtreme?.absOver;
   if (absOver && Math.abs(fr) > absOver) {
-    console.log(`⚠️ ${symbol}: skip, funding extreme ${fr}`);
+    console.log(`⏸️ ${symbol}: skip, funding extreme abs(${fr}) > ${absOver}`);
     return;
   }
 
@@ -175,19 +171,18 @@ export async function tradingEngine(symbol, config) {
     const higherVol = await analyzeVolatility(symbol, candles, 14);
 
     if (!higherTrend || !higherVol) {
-      console.log(`⚠️ ${symbol}: skip, no higher TF data (${higherTF})`);
       return;
     }
 
     if (higherTrend.signal !== majority) {
       console.log(
-        `ℹ️ ${symbol}: higher TF ${higherTF} conflict (trend=${higherTrend.signal})`,
+        `⚠️ ${symbol}: higherTrend.signal !== majority, risk reduced`,
       );
       capital.riskPerTradePct = capital.riskPerTradePct / 2;
     }
 
     if (higherVol.signal === 'NONE' && higherVol.meta?.regime === 'DEAD') {
-      console.log(`⚠️ ${symbol}: skip, higher TF ${higherTF} DEAD volatility`);
+      console.log(`⏸️ ${symbol}: skip, higherVol regime DEAD`);
       return;
     }
   }
@@ -199,6 +194,13 @@ export async function tradingEngine(symbol, config) {
   const entryPrice = parseFloat(lastPriceRes.data.price);
 
   // --- 6. відкриття угоди ---
+  console.log('🚀 Opening position', {
+    symbol,
+    side: majority,
+    entryPrice,
+    riskPct: config.strategy.capital?.riskPerTradePct,
+    leverage: config.strategy.capital?.leverage,
+  });
   let position;
   if (TRADE_MODE === 'live') {
     position = await executeTrade(
@@ -208,15 +210,29 @@ export async function tradingEngine(symbol, config) {
       majority,
       entryPrice,
     );
+
     if (position) {
       console.log(`🟢 [LIVE] New Binance position opened:`, position);
       notifyTrade(position, 'OPENED');
 
-      // 👇 додаємо в історію
       await openPosition(symbol, {
         side: position.side,
         entryPrice: position.entryPrice,
         size: position.size,
+        stopLoss: position.stopLoss,
+        takeProfits: position.takeProfits,
+        trailingCfg: config.strategy?.exits?.trailing,
+        analysis,
+        strategyMeta: {
+          leverage: config.strategy.capital?.leverage,
+          riskPct: config.strategy.capital?.riskPerTradePct,
+          strategyName: config.strategy.name || null,
+        },
+        orderIds: {
+          entry: position.orderId,
+          stop: position.stopOrderId,
+          takes: position.takeOrderIds || [],
+        },
       });
     }
   } else {
@@ -227,14 +243,26 @@ export async function tradingEngine(symbol, config) {
       majority,
       entryPrice,
     );
-    console.log(`🟢 [PAPER] New simulated position opened:`, position);
     notifyTrade(position, 'OPENED');
 
-    // 👇 додаємо в історію
     await openPosition(symbol, {
       side: position.side,
       entryPrice: position.entryPrice,
       size: position.size,
+      stopLoss: position.stopLoss,
+      takeProfits: position.takeProfits,
+      trailingCfg: config.strategy?.exits?.trailing,
+      analysis,
+      strategyMeta: {
+        leverage: config.strategy.capital?.leverage,
+        riskPct: config.strategy.capital?.riskPerTradePct,
+        strategyName: config.strategy.name || null,
+      },
+      orderIds: {
+        entry: position.orderId,
+        stop: position.stopOrderId,
+        takes: position.takeOrderIds || [],
+      },
     });
   }
 }

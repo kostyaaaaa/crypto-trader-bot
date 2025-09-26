@@ -1,4 +1,5 @@
 // modules/orderbook/analyze-liquidity.js
+import { log } from 'console';
 import { loadDocs } from '../../storage/storage.js';
 
 export async function analyzeLiquidity(
@@ -7,6 +8,7 @@ export async function analyzeLiquidity(
   lastPrice = null,
 ) {
   const liq = await loadDocs('liquidity', symbol, window);
+
   if (!liq || liq.length === 0) {
     console.log(`⚠️ No liquidity aggregates for ${symbol}`);
     return null;
