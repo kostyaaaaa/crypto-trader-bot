@@ -461,7 +461,7 @@ export default CoinConfigTemplate;
 interface ICoinConfigTemplateProps {
   register: UseFormRegister<TCoinConfig>;
   disabledSymbol?: boolean;
-  control: Control<TCoinConfig, any, TCoinConfig>;
+  control: Control<TCoinConfig, unknown, TCoinConfig>;
 }
 
 const moduleKeys = [
