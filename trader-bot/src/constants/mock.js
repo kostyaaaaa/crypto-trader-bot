@@ -35,7 +35,7 @@ export const ANALYSIS_CONFIG = [
     },
     strategy: {
       entry: {
-        minScore: { LONG: 50, SHORT: 50 },
+        minScore: { LONG: 46, SHORT: 46 },
         minModules: 3,
         requiredModules: ['trend'], // можна додати ['trend','trendRegime'] якщо хочеш жорсткіше
         maxSpreadPct: 0.05,
@@ -53,7 +53,7 @@ export const ANALYSIS_CONFIG = [
       capital: {
         account: 100,
         riskPerTradePct: 10,
-        leverage: 20,
+        leverage: 10,
         maxConcurrentPositions: 3,
       },
       sizing: {
@@ -64,13 +64,13 @@ export const ANALYSIS_CONFIG = [
       exits: {
         tp: {
           use: true,
-          tpGridPct: [5],
+          tpGridPct: [12],
           tpGridSizePct: [100],
         },
         sl: {
           // 🔽 Можна перемикати
           type: 'hard', // 'hard' або 'atr'
-          hardPct: 5, // використовується тільки коли type='hard'
+          hardPct: 7, // використовується тільки коли type='hard'
           atrMult: 1.5, // використовується тільки коли type='atr'
           signalRules: {
             flipIf: { scoreGap: 10, minOppScore: 55 },
@@ -83,8 +83,8 @@ export const ANALYSIS_CONFIG = [
         },
         trailing: {
           use: true,
-          startAfterPct: 0.8,
-          trailStepPct: 0.3,
+          startAfterPct: 0.2,
+          trailStepPct: 0.1,
         },
       },
     },
@@ -126,7 +126,7 @@ export const ANALYSIS_CONFIG = [
     },
     strategy: {
       entry: {
-        minScore: { LONG: 50, SHORT: 50 }, // трохи вище за ENA
+        minScore: { LONG: 47, SHORT: 47 }, // трохи вище за ENA
         minModules: 3,
         requiredModules: ['trend'], // можна додати 'trendRegime' якщо хочеш жорсткіше
         maxSpreadPct: 0.05,
@@ -144,7 +144,7 @@ export const ANALYSIS_CONFIG = [
       capital: {
         account: 100,
         riskPerTradePct: 10,
-        leverage: 20,
+        leverage: 10,
         maxConcurrentPositions: 3,
       },
       sizing: {
@@ -155,13 +155,13 @@ export const ANALYSIS_CONFIG = [
       exits: {
         tp: {
           use: true,
-          tpGridPct: [8],
+          tpGridPct: [12],
           tpGridSizePct: [100],
         },
         sl: {
           // 🔽 Можна перемикати
           type: 'hard', // 'hard' або 'atr'
-          hardPct: 6, // використовується тільки коли type='hard'
+          hardPct: 10, // використовується тільки коли type='hard'
           atrMult: 1.5, // використовується тільки коли type='atr'
           signalRules: {
             flipIf: { scoreGap: 10, minOppScore: 55 },
@@ -174,8 +174,8 @@ export const ANALYSIS_CONFIG = [
         },
         trailing: {
           use: true,
-          startAfterPct: 0.8,
-          trailStepPct: 0.3,
+          startAfterPct: 0.2,
+          trailStepPct: 0.1,
         },
       },
     },
@@ -264,8 +264,8 @@ export const ANALYSIS_CONFIG = [
         },
         trailing: {
           use: true,
-          startAfterPct: 1.5, // після +1.5% починаємо трейлити
-          trailStepPct: 0.7, // підтягуємо на 0.7%
+          startAfterPct: 0.2,
+          trailStepPct: 0.1,
         },
       },
     },
@@ -324,7 +324,7 @@ export const ANALYSIS_CONFIG = [
       capital: {
         account: 100,
         riskPerTradePct: 8, // зменшуємо ризик для волатильного BNB
-        leverage: 25,
+        leverage: 10,
         maxConcurrentPositions: 2,
       },
       sizing: {
@@ -335,12 +335,12 @@ export const ANALYSIS_CONFIG = [
       exits: {
         tp: {
           use: true,
-          tpGridPct: [5], // два тейки: перший “забрати частину”, другий — закрити
+          tpGridPct: [10], // два тейки: перший “забрати частину”, другий — закрити
           tpGridSizePct: [100], // 50% / 50%
         },
         sl: {
           type: 'hard',
-          hardPct: 4.5,
+          hardPct: 8,
           atrMult: 1.5,
           signalRules: {
             flipIf: { scoreGap: 10, minOppScore: 55 },
@@ -353,8 +353,8 @@ export const ANALYSIS_CONFIG = [
         },
         trailing: {
           use: true,
-          startAfterPct: 0.8,
-          trailStepPct: 0.3,
+          startAfterPct: 0.2,
+          trailStepPct: 0.1,
         },
       },
     },
@@ -443,8 +443,8 @@ export const ANALYSIS_CONFIG = [
         },
         trailing: {
           use: true,
-          startAfterPct: 1.0,
-          trailStepPct: 0.5,
+          startAfterPct: 0.2,
+          trailStepPct: 0.1,
         },
       },
     },

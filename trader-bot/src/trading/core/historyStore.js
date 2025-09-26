@@ -36,14 +36,11 @@ export async function openPosition(
     strategyMeta,
   },
 ) {
-  const pos = await getOpenPosition(symbol);
-  if (pos) return pos;
-
   const newPos = {
     symbol,
     side,
     entryPrice,
-    size, // ⚠️ це НОТІОНАЛ ($)
+    size,
     openedAt: Date.now(),
     status: 'OPEN',
 
@@ -85,9 +82,16 @@ export async function openPosition(
       strategyName: strategyMeta?.strategyName ?? null,
       openedBy: 'BOT',
     },
+    dima: 'OPEN',
   };
 
-  await saveDoc(COLLECTION, newPos);
+  console.log('save 1');
+  // Always insert a new document
+  const savedPos = await saveDoc(COLLECTION, newPos);
+  if (savedPos?._id) {
+    newPos._id = savedPos._id;
+  }
+
   return newPos;
 }
 
@@ -98,6 +102,7 @@ export async function addToPosition(symbol, { qty, price }) {
 
   const effectivePrice = price || pos.entryPrice || 0;
   const addNotional = qty * effectivePrice;
+  console.log('save 2');
 
   return await updateDoc(
     COLLECTION,
@@ -132,23 +137,14 @@ export async function adjustPosition(
   if (tps !== undefined) newAdjustment.tps = tps;
   if (reason !== undefined) newAdjustment.reason = reason;
 
-  // For types that should only keep latest version (SL_UPDATE, TP_UPDATE), replace last one if exists
-  if (type === 'SL_UPDATE' || type === 'TP_UPDATE') {
-    const idx = newAdjustments.findIndex((adj) => adj.type === type);
-    if (idx !== -1) {
-      newAdjustments[idx] = newAdjustment;
-    } else {
-      newAdjustments.push(newAdjustment);
-    }
-  } else {
-    // For other key types, just append
-    newAdjustments.push(newAdjustment);
-  }
+  // Just append adjustment without merge logic
+  newAdjustments.push(newAdjustment);
 
   // Limit adjustments to last 20 entries
   if (newAdjustments.length > 20) {
     newAdjustments.splice(0, newAdjustments.length - 20);
   }
+  console.log('save 3');
 
   await updateDoc(
     COLLECTION,
@@ -169,13 +165,14 @@ export async function closePositionHistory(
 ) {
   const pos = await getOpenPosition(symbol);
   if (!pos) return null;
+  console.log('save 4');
 
   await updateDoc(
     COLLECTION,
     { _id: pos._id },
     {
       $set: {
-        status: 'CLOSED',
+        status: 'CLOSED DIMA',
         closedAt: Date.now(),
         finalPnl,
         closedBy,
@@ -183,7 +180,6 @@ export async function closePositionHistory(
     },
   );
 
-  // ⬅️ повертаємо оновлений об’єкт
   return {
     ...pos,
     status: 'CLOSED',
@@ -208,39 +204,12 @@ export async function reconcilePositions() {
       const live = await getPosition(pos.symbol);
       if (!live || Number(live.positionAmt) === 0) {
         const c = await closePositionHistory(pos.symbol, {
-          closedBy: 'DESYNC',
+          closedBy: 'DESYNC DIMA',
         });
         if (c) {
           closed.push(c);
+          crossOriginIsolated.log(123123);
           await notifyTrade(c, 'CLOSED');
-        }
-      } else {
-        const liveSize = Math.abs(Number(live.positionAmt));
-        const storedSize = pos.size || 0;
-
-        if (liveSize > 0 && liveSize < storedSize) {
-          // Calculate proportion filled
-          const filledNotional = storedSize - liveSize;
-
-          // Mark TPs as filled proportionally
-          let remainingFill = filledNotional;
-          const updatedTps = pos.takeProfits.map((tp) => {
-            if (tp.filled) return tp;
-            const tpNotional = (tp.sizePct / 100) * storedSize;
-            if (remainingFill >= tpNotional) {
-              remainingFill -= tpNotional;
-              return { ...tp, filled: true };
-            } else {
-              return tp; // leave unfilled for partials
-            }
-          });
-
-          await updateTakeProfits(
-            pos.symbol,
-            updatedTps,
-            pos.entryPrice,
-            'RECONCILE',
-          );
         }
       }
     } catch (err) {
@@ -263,35 +232,15 @@ export async function updateStopPrice(symbol, price, reason) {
   }
 
   const ts = Date.now();
-  let newAdjustments = pos.adjustments ? [...pos.adjustments] : [];
-
-  // Normalize new adjustment
   const newAdjustment = { type: 'SL_UPDATE', price, reason, ts };
+  const newAdjustments = pos.adjustments
+    ? [...pos.adjustments, newAdjustment]
+    : [newAdjustment];
 
-  // Find last SL_UPDATE adjustment
-  const lastSLIdx = newAdjustments
-    .map((adj) => adj.type)
-    .lastIndexOf('SL_UPDATE');
-  if (lastSLIdx !== -1) {
-    const lastSL = newAdjustments[lastSLIdx];
-    const timeDiff = ts - lastSL.ts;
-    const priceDiffPct = Math.abs(price - lastSL.price) / (lastSL.price || 1);
-
-    if (timeDiff <= 30000 || priceDiffPct < 0.001) {
-      // Overwrite last SL_UPDATE
-      newAdjustments[lastSLIdx] = newAdjustment;
-    } else {
-      // Append new SL_UPDATE
-      newAdjustments.push(newAdjustment);
-    }
-  } else {
-    newAdjustments.push(newAdjustment);
-  }
-
-  // Limit adjustments to last 20 entries
   if (newAdjustments.length > 20) {
     newAdjustments.splice(0, newAdjustments.length - 20);
   }
+  console.log('save 5');
 
   await updateDoc(
     COLLECTION,
@@ -312,44 +261,16 @@ export async function updateTakeProfits(symbol, tps, baseEntry, reason) {
   const pos = await getOpenPosition(symbol);
   if (!pos) return null;
 
-  // Compare new TPs with current to avoid unnecessary update
-  const currentTps = pos.takeProfits || [];
-  const tpsEqual =
-    currentTps.length === tps.length &&
-    currentTps.every((tp, i) => {
-      const newTp = tps[i];
-      return (
-        tp.price === newTp.price &&
-        tp.sizePct === newTp.sizePct &&
-        tp.filled === newTp.filled
-      );
-    });
-  if (tpsEqual) {
-    return pos; // no change, skip update
-  }
-
   const ts = Date.now();
-  let newAdjustments = pos.adjustments ? [...pos.adjustments] : [];
-
-  // Normalize new adjustment
   const newAdjustment = { type: 'TP_UPDATE', tps, baseEntry, reason, ts };
+  const newAdjustments = pos.adjustments
+    ? [...pos.adjustments, newAdjustment]
+    : [newAdjustment];
 
-  // Find last TP_UPDATE adjustment
-  const lastTPIdx = newAdjustments
-    .map((adj) => adj.type)
-    .lastIndexOf('TP_UPDATE');
-  if (lastTPIdx !== -1) {
-    const lastTP = newAdjustments[lastTPIdx];
-    // Replace last TP_UPDATE with new one
-    newAdjustments[lastTPIdx] = newAdjustment;
-  } else {
-    newAdjustments.push(newAdjustment);
-  }
-
-  // Limit adjustments to last 20 entries
   if (newAdjustments.length > 20) {
     newAdjustments.splice(0, newAdjustments.length - 20);
   }
+  console.log('save 6');
 
   await updateDoc(
     COLLECTION,
