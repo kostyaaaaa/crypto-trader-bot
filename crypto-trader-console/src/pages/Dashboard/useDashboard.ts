@@ -43,7 +43,10 @@ const useDashboard = () => {
     refetchOnWindowFocus: false,
   });
 
-  useQuery<IGetFuturesBalanceResponse, Error>({
+  const {
+    refetch: refetchFuturesPositions,
+    isLoading: isLoadingFuturesPositions,
+  } = useQuery<IGetFuturesBalanceResponse, Error>({
     queryKey: [QueryKeys.FuturesBalance],
     queryFn: async () => {
       const data = await getFuturesBalance();
@@ -120,6 +123,8 @@ const useDashboard = () => {
     futuresUSDBalance,
     accountPnlData,
     futuresPositions,
+    refetchFuturesPositions,
+    isLoadingFuturesPositions,
   };
 };
 

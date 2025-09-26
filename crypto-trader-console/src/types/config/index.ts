@@ -1,5 +1,6 @@
 export type TCoinConfig = {
   symbol: string;
+  isActive: boolean;
   analysisConfig: {
     candleTimeframe: string;
     oiWindow: number;
@@ -54,7 +55,7 @@ export type TCoinConfig = {
         tpGridSizePct: number[];
       };
       sl: {
-        type: string;
+        type: 'atr' | 'hard';
         hardPct: number;
         atrMult: number;
         signalRules: {
@@ -69,7 +70,7 @@ export type TCoinConfig = {
       };
       time: {
         maxHoldMin: number;
-        noPnLFallback: string;
+        noPnLFallback: 'none' | 'breakeven' | 'closeSmallLoss';
       };
       trailing: {
         use: boolean;
@@ -78,12 +79,6 @@ export type TCoinConfig = {
       };
     };
   };
-};
-
-export type TCoinConfigResponse = TCoinConfig & {
-  createdAt: string;
-  updatedAt: string;
-  _id: string;
 };
 
 type TAnalysisModule = {
@@ -95,4 +90,10 @@ type TAnalysisModule = {
   openInterest: number;
   correlation: number;
   longShort: number;
+};
+
+export type TCoinConfigResponse = TCoinConfig & {
+  createdAt: string;
+  updatedAt: string;
+  _id: string;
 };

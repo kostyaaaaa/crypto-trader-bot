@@ -3,9 +3,10 @@ import { CoinConfigTemplate } from '../../widgets';
 import useCoinConfig from './useCoinConfig';
 
 import styles from './CoinConfig.module.scss';
+import { Button } from '@mantine/core';
 
 const CoinConfig: FC = () => {
-  const { isLoading, register, handleSubmit, onSubmit, symbol } =
+  const { isLoading, register, handleSubmit, onSubmit, symbol, control } =
     useCoinConfig();
 
   if (isLoading) return <div>Loading...</div>;
@@ -14,11 +15,21 @@ const CoinConfig: FC = () => {
     <div className={styles.wrapper}>
       <h2>Update {symbol} Config</h2>
 
-      <CoinConfigTemplate
+      <form
+        className={styles.wrapper__form}
         onSubmit={handleSubmit(onSubmit)}
-        register={register}
-        disabledSymbol
-      />
+        noValidate
+      >
+        <CoinConfigTemplate
+          register={register}
+          disabledSymbol
+          control={control}
+        />
+
+        <Button type="submit" variant="gradient">
+          Submit Config
+        </Button>
+      </form>
     </div>
   );
 };

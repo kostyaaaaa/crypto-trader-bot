@@ -7,7 +7,7 @@ import clsx from 'clsx';
 import { formatDate } from '../../utils/formatDate';
 
 const Configuration: FC = () => {
-  const { configs } = useConfiguration();
+  const { configs, deleteCoinConfigMutate } = useConfiguration();
 
   const [scrolled, setScrolled] = useState<boolean>(false);
 
@@ -25,6 +25,14 @@ const Configuration: FC = () => {
       </Table.Td>
       <Table.Td>{row.strategy.capital.account}</Table.Td>
       <Table.Td>{formatDate(row.updatedAt)}</Table.Td>
+      <Table.Td>
+        <Button
+          variant="light"
+          onClick={() => deleteCoinConfigMutate(row.symbol)}
+        >
+          Delete
+        </Button>
+      </Table.Td>
     </Table.Tr>
   ));
 
@@ -52,6 +60,7 @@ const Configuration: FC = () => {
                   <Table.Th>Symbol</Table.Th>
                   <Table.Th>strategy capital account</Table.Th>
                   <Table.Th>Last updated</Table.Th>
+                  <Table.Th></Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>{rows}</Table.Tbody>
