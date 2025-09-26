@@ -12508,7 +12508,7 @@ var require_react_dom_client_development = __commonJS({
                         break;
                       case 'script':
                         current2 = current2.createElement('div');
-                        current2.innerHTML = '<script><\/script>';
+                        current2.innerHTML = '<script></script>';
                         current2 = current2.removeChild(current2.firstChild);
                         break;
                       case 'select':

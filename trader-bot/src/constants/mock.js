@@ -1,6 +1,7 @@
-export const ANALYSIS_CONFIG = {
-  ENAUSDT: {
-    // --- Налаштування аналізу ---
+export const ANALYSIS_CONFIG = [
+  {
+    symbol: 'ENAUSDT',
+    isActive: true,
     analysisConfig: {
       candleTimeframe: '5m',
       oiWindow: 10,
@@ -32,15 +33,13 @@ export const ANALYSIS_CONFIG = {
         longShort: 10,
       },
     },
-
-    // --- Налаштування торгової стратегії ---
     strategy: {
       entry: {
-        minScore: { LONG: 44, SHORT: 44 },
+        minScore: { LONG: 50, SHORT: 50 },
         minModules: 3,
         requiredModules: ['trend'], // можна додати ['trend','trendRegime'] якщо хочеш жорсткіше
         maxSpreadPct: 0.05,
-        cooldownMin: 3,
+        cooldownMin: 10,
         avoidWhen: {
           volatility: 'DEAD',
           fundingExtreme: { absOver: 0.12 },
@@ -52,28 +51,26 @@ export const ANALYSIS_CONFIG = {
         extremeAbove: 2.5,
       },
       capital: {
-        account: 200,
-        riskPerTradePct: 0.5,
-        leverage: 5,
+        account: 100,
+        riskPerTradePct: 10,
+        leverage: 20,
         maxConcurrentPositions: 3,
       },
       sizing: {
-        baseSizeUsd: 10,
         maxAdds: 2,
         addOnAdverseMovePct: 0.5,
-        addMultiplier: 1.0,
-        maxPositionUsd: 30,
+        addMultiplier: 0.5,
       },
       exits: {
         tp: {
           use: true,
-          tpGridPct: [3, 5],
-          tpGridSizePct: [60, 40],
+          tpGridPct: [5],
+          tpGridSizePct: [100],
         },
         sl: {
           // 🔽 Можна перемикати
           type: 'hard', // 'hard' або 'atr'
-          hardPct: 1.2, // використовується тільки коли type='hard'
+          hardPct: 5, // використовується тільки коли type='hard'
           atrMult: 1.5, // використовується тільки коли type='atr'
           signalRules: {
             flipIf: { scoreGap: 10, minOppScore: 55 },
@@ -93,101 +90,9 @@ export const ANALYSIS_CONFIG = {
     },
   },
 
-  HIFIUSDT: {
-    // --- Налаштування аналізу ---
-    analysisConfig: {
-      candleTimeframe: '1m',
-      oiWindow: 15, // трохи коротше, щоб швидше реагувати
-      liqWindow: 10, // ліквідність більш чутлива
-      liqSentWindow: 2, // останні 2 хв ліквідацій
-      fundingWindow: 20, // funding на 20 хв
-      volWindow: 14, // стандартний ATR(14)
-      corrWindow: 2, // мінімальний вплив BTC на 1m
-      longShortWindow: 2, // швидше реагуємо на L/S зміни
-
-      weights: {
-        trend: 0.25, // залишаємо вагу на тренд
-        trendRegime: 0.1, // ADX на 1m менш надійний
-        liquidity: 0.25, // ліквідність головна
-        funding: 0.05, // слабкий вплив
-        liquidations: 0.1, // хай буде більший вплив
-        openInterest: 0.15, // важливий фактор
-        correlation: 0.05, // мінімальний вплив
-        longShort: 0.05, // L/S трохи враховуємо
-      },
-
-      moduleThresholds: {
-        trend: 25, // нижчий поріг на 1m
-        trendRegime: 5,
-        liquidity: 15, // чутливіше
-        funding: 5, // дуже мʼяко
-        liquidations: 15,
-        openInterest: 10,
-        correlation: 3,
-        longShort: 3,
-      },
-    },
-
-    // --- Налаштування торгової стратегії ---
-    strategy: {
-      entry: {
-        minScore: { LONG: 35, SHORT: 35 }, // 🔽 нижчий поріг для входу
-        minModules: 2, // 2 модулі достатньо
-        requiredModules: [], // не блокуємо по тренду
-        maxSpreadPct: 0.08, // дозволяємо трохи ширший спред
-        cooldownMin: 1, // швидше перезаходимо
-        avoidWhen: {
-          volatility: 'DEAD',
-          fundingExtreme: { absOver: 0.15 },
-        },
-        sideBiasTolerance: 0.5, // нижча толерантність
-      },
-      volatilityFilter: {
-        deadBelow: 0.1,
-        extremeAbove: 4.0,
-      },
-      capital: {
-        account: 200,
-        riskPerTradePct: 0.5,
-        leverage: 5,
-        maxConcurrentPositions: 3,
-      },
-      sizing: {
-        baseSizeUsd: 10,
-        maxAdds: 2, // можна до 3 доливів
-        addOnAdverseMovePct: 0.4, // чутливіший долив
-        addMultiplier: 1.1, // трохи збільшуємо
-        maxPositionUsd: 40,
-      },
-      exits: {
-        tp: {
-          use: true,
-          tpGridPct: [0.8, 1.6], // дрібніші кроки для скальпу
-          tpGridSizePct: [50, 50],
-        },
-        sl: {
-          type: 'atr', // ✅ використовуємо ATR-стоп
-          hardPct: 1.2, // запаска
-          atrMult: 1.2, // SL = 1.2×ATR
-          signalRules: {
-            flipIf: { scoreGap: 10, minOppScore: 50 },
-            moduleFail: { required: [] },
-          },
-        },
-        time: {
-          maxHoldMin: 30, // максимум 30 хвилин тримаємо
-          noPnLFallback: 'close',
-        },
-        trailing: {
-          use: true,
-          startAfterPct: 0.5,
-          trailStepPct: 0.25,
-        },
-      },
-    },
-  },
-  SOLUSDT: {
-    // --- Налаштування аналізу ---
+  {
+    symbol: 'SOLUSDT',
+    isActive: true,
     analysisConfig: {
       candleTimeframe: '15m',
       oiWindow: 12, // ~1h історії
@@ -219,15 +124,13 @@ export const ANALYSIS_CONFIG = {
         longShort: 10,
       },
     },
-
-    // --- Налаштування торгової стратегії ---
     strategy: {
       entry: {
-        minScore: { LONG: 46, SHORT: 46 }, // трохи вище за ENA
+        minScore: { LONG: 50, SHORT: 50 }, // трохи вище за ENA
         minModules: 3,
         requiredModules: ['trend'], // можна додати 'trendRegime' якщо хочеш жорсткіше
         maxSpreadPct: 0.05,
-        cooldownMin: 3,
+        cooldownMin: 10,
         avoidWhen: {
           volatility: 'DEAD',
           fundingExtreme: { absOver: 0.15 }, // SOL трохи ширший діапазон
@@ -239,28 +142,26 @@ export const ANALYSIS_CONFIG = {
         extremeAbove: 3.0, // теж трохи вище
       },
       capital: {
-        account: 200,
-        riskPerTradePct: 0.5,
-        leverage: 5,
+        account: 100,
+        riskPerTradePct: 10,
+        leverage: 20,
         maxConcurrentPositions: 3,
       },
       sizing: {
-        baseSizeUsd: 12, // трохи більше за ENA
         maxAdds: 2,
         addOnAdverseMovePct: 0.5,
-        addMultiplier: 1.0,
-        maxPositionUsd: 36,
+        addMultiplier: 0.5,
       },
       exits: {
         tp: {
           use: true,
-          tpGridPct: [3, 5],
-          tpGridSizePct: [60, 40],
+          tpGridPct: [8],
+          tpGridSizePct: [100],
         },
         sl: {
           // 🔽 Можна перемикати
-          type: 'atr', // 'hard' або 'atr'
-          hardPct: 1.2, // використовується тільки коли type='hard'
+          type: 'hard', // 'hard' або 'atr'
+          hardPct: 6, // використовується тільки коли type='hard'
           atrMult: 1.5, // використовується тільки коли type='atr'
           signalRules: {
             flipIf: { scoreGap: 10, minOppScore: 55 },
@@ -279,4 +180,273 @@ export const ANALYSIS_CONFIG = {
       },
     },
   },
-};
+  {
+    symbol: 'ETHUSDT',
+    isActive: true,
+    analysisConfig: {
+      candleTimeframe: '15m', // працюємо на 15 хвилинних свічках
+      oiWindow: 20, // більше даних OI (~5 годин)
+      liqWindow: 30, // ліквідність ширша
+      liqSentWindow: 5,
+      fundingWindow: 96, // майже доба funding
+      volWindow: 14, // стандартний ATR(14)
+      corrWindow: 10, // враховуємо BTC кореляцію
+      longShortWindow: 10, // L/S ratio більш стабільний
+
+      weights: {
+        trend: 0.3, // тренд — ключовий для ETH
+        trendRegime: 0.15,
+        liquidity: 0.2, // стакан важливий, але не головний
+        funding: 0.1,
+        liquidations: 0.05,
+        openInterest: 0.15,
+        correlation: 0.03, // кореляція з BTC, але невелика
+        longShort: 0.02,
+      },
+
+      moduleThresholds: {
+        trend: 50, // тренд беремо сильніший
+        trendRegime: 7,
+        liquidity: 40,
+        funding: 20,
+        liquidations: 30,
+        openInterest: 25,
+        correlation: 12,
+        longShort: 12,
+      },
+    },
+    strategy: {
+      entry: {
+        minScore: { LONG: 55, SHORT: 55 }, // більш строгий поріг
+        minModules: 3,
+        requiredModules: ['trend', 'trendRegime'], // для надійності
+        maxSpreadPct: 0.05,
+        cooldownMin: 5, // рідше заходимо
+        avoidWhen: {
+          volatility: 'DEAD',
+          fundingExtreme: { absOver: 0.1 }, // funding до ±0.1 ок
+        },
+        sideBiasTolerance: 5,
+      },
+      volatilityFilter: {
+        deadBelow: 0.25, // для ETH мертва волатильність нижча
+        extremeAbove: 2.5,
+      },
+      capital: {
+        account: 100,
+        riskPerTradePct: 10, // ризик 10% від акаунту
+        leverage: 3, // помірне плече для ETH
+        maxConcurrentPositions: 2,
+      },
+      sizing: {
+        maxAdds: 1, // максимум один долив
+        addOnAdverseMovePct: 1, // додаємо тільки якщо пішло проти на 1%
+        addMultiplier: 0.5,
+      },
+      exits: {
+        tp: {
+          use: true,
+          tpGridPct: [6], // робимо сітку: перший TP на 5%, другий на 10%
+          tpGridSizePct: [100], // половину фіксуємо на TP1, половину на TP2
+        },
+        sl: {
+          type: 'atr', // краще SL по ATR на ефірі
+          hardPct: 5, // fallback — 5% від угоди
+          atrMult: 1.8, // ATR ×1.8 дає простір
+          signalRules: {
+            flipIf: { scoreGap: 12, minOppScore: 60 },
+            moduleFail: { required: ['trend'] },
+          },
+        },
+        time: {
+          maxHoldMin: 0, // максимум 4 години на угоду
+          noPnLFallback: 'close',
+        },
+        trailing: {
+          use: true,
+          startAfterPct: 1.5, // після +1.5% починаємо трейлити
+          trailStepPct: 0.7, // підтягуємо на 0.7%
+        },
+      },
+    },
+  },
+  {
+    symbol: 'BNBUSDT', // торгуємо BNB perpetual / ф’ючерс
+    isActive: true,
+    analysisConfig: {
+      candleTimeframe: '5m',
+      oiWindow: 20,
+      liqWindow: 30,
+      liqSentWindow: 10,
+      fundingWindow: 100,
+      volWindow: 14,
+      corrWindow: 5,
+      longShortWindow: 5,
+
+      weights: {
+        trend: 0.25,
+        trendRegime: 0.15,
+        liquidity: 0.2,
+        funding: 0.15,
+        liquidations: 0.05,
+        openInterest: 0.1,
+        correlation: 0.05,
+        longShort: 0.05,
+      },
+      moduleThresholds: {
+        trend: 40,
+        trendRegime: 5,
+        liquidity: 30,
+        funding: 15,
+        liquidations: 30,
+        openInterest: 20,
+        correlation: 10,
+        longShort: 10,
+      },
+    },
+    strategy: {
+      entry: {
+        minScore: { LONG: 46, SHORT: 46 },
+        minModules: 3,
+        requiredModules: ['trend'],
+        maxSpreadPct: 0.07, // BNB може мати трохи більший спред
+        cooldownMin: 3,
+        avoidWhen: {
+          volatility: 'DEAD',
+          fundingExtreme: { absOver: 0.15 },
+        },
+        sideBiasTolerance: 5,
+      },
+      volatilityFilter: {
+        deadBelow: 0.25,
+        extremeAbove: 3.0,
+      },
+      capital: {
+        account: 100,
+        riskPerTradePct: 8, // зменшуємо ризик для волатильного BNB
+        leverage: 25,
+        maxConcurrentPositions: 2,
+      },
+      sizing: {
+        maxAdds: 2,
+        addOnAdverseMovePct: 0.5,
+        addMultiplier: 0.5,
+      },
+      exits: {
+        tp: {
+          use: true,
+          tpGridPct: [5], // два тейки: перший “забрати частину”, другий — закрити
+          tpGridSizePct: [100], // 50% / 50%
+        },
+        sl: {
+          type: 'hard',
+          hardPct: 4.5,
+          atrMult: 1.5,
+          signalRules: {
+            flipIf: { scoreGap: 10, minOppScore: 55 },
+            moduleFail: { required: ['trend'] },
+          },
+        },
+        time: {
+          maxHoldMin: 0,
+          noPnLFallback: 'none',
+        },
+        trailing: {
+          use: true,
+          startAfterPct: 0.8,
+          trailStepPct: 0.3,
+        },
+      },
+    },
+  },
+  {
+    symbol: 'BTCUSDT',
+    isActive: true,
+    analysisConfig: {
+      candleTimeframe: '1h',
+      oiWindow: 48, // 2 days of 1h candles
+      liqWindow: 30,
+      liqSentWindow: 6,
+      fundingWindow: 72, // funding signal over a longer horizon
+      volWindow: 14, // ATR(14) on 1h
+      corrWindow: 10, // (kept for consistency; low weight for BTC itself)
+      longShortWindow: 12,
+
+      weights: {
+        trend: 0.3,
+        trendRegime: 0.2,
+        liquidity: 0.15,
+        funding: 0.1,
+        liquidations: 0.05,
+        openInterest: 0.15,
+        correlation: 0.02,
+        longShort: 0.03,
+      },
+      moduleThresholds: {
+        trend: 55,
+        trendRegime: 10, // higher ADX threshold on 1h
+        liquidity: 35,
+        funding: 20,
+        liquidations: 30,
+        openInterest: 30,
+        correlation: 12,
+        longShort: 12,
+      },
+    },
+    strategy: {
+      entry: {
+        minScore: { LONG: 58, SHORT: 58 },
+        minModules: 4,
+        requiredModules: ['trend', 'trendRegime', 'openInterest'],
+        maxSpreadPct: 0.02, // BTC has tight spreads
+        cooldownMin: 30, // fewer entries on 1h
+        avoidWhen: {
+          volatility: 'DEAD',
+          fundingExtreme: { absOver: 0.15 },
+        },
+        sideBiasTolerance: 6,
+      },
+      volatilityFilter: {
+        deadBelow: 0.15,
+        extremeAbove: 2.0,
+      },
+
+      capital: {
+        account: 100,
+        riskPerTradePct: 6, // lower risk per trade on BTC
+        leverage: 3,
+        maxConcurrentPositions: 1,
+      },
+      sizing: {
+        maxAdds: 1,
+        addOnAdverseMovePct: 0.8, // add only if price moves 0.8% against
+        addMultiplier: 0.5,
+      },
+      exits: {
+        tp: {
+          use: true,
+          tpGridPct: [2, 4, 6], // conservative targets on 1h BTC
+          tpGridSizePct: [40, 30, 30],
+        },
+        sl: {
+          type: 'atr', // ATR-based stops for trend swings
+          hardPct: 3, // fallback hard stop if ATR missing
+          atrMult: 2.2,
+          signalRules: {
+            flipIf: { scoreGap: 12, minOppScore: 60 },
+            moduleFail: { required: ['trend'] },
+          },
+        },
+        time: {
+          maxHoldMin: 480, // up to 8 hours
+          noPnLFallback: 'close',
+        },
+        trailing: {
+          use: true,
+          startAfterPct: 1.0,
+          trailStepPct: 0.5,
+        },
+      },
+    },
+  },
+];

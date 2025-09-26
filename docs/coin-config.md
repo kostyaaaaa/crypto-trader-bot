@@ -133,19 +133,9 @@
 
 ### `sizing`
 
-- `baseSizeUsd` → базовий розмір угоди.
 - `maxAdds` → скільки доливів (DCA) можна робити.
 - `addOnAdverseMovePct` → доливати при русі проти на X%.
 - `addMultiplier` → коефіцієнт розміру наступного доливу.
-- `maxPositionUsd` → ліміт на одну позицію.
-
-**Рекомендації**:
-
-- Скальпінг: `baseSizeUsd` малий (5–20$), `maxAdds = 2–3`.
-- Інтрадей: `baseSizeUsd` 20–50$, `maxAdds = 1–2`.
-- Свінг: `baseSizeUsd` більший (50–200$), `maxAdds = 0–1`.
-
----
 
 ### `exits`
 
@@ -229,11 +219,9 @@
       "maxConcurrentPositions": 3
     },
     "sizing": {
-      "baseSizeUsd": 10,
       "maxAdds": 2,
       "addOnAdverseMovePct": 0.4,
-      "addMultiplier": 1.1,
-      "maxPositionUsd": 30
+      "addMultiplier": 1.1
     },
     "exits": {
       "tp": { "use": true, "tpGridPct": [0.5, 1], "tpGridSizePct": [50, 50] },

@@ -3162,7 +3162,9 @@ var init_apexcharts_esm = __esm({
               return (e2.remove(), i2);
             } catch (e2) {
               throw new Error(
-                `Getting bbox of element "${t3.node.nodeName}" is not possible: ${e2.toString()}`,
+                `Getting bbox of element "${
+                  t3.node.nodeName
+                }" is not possible: ${e2.toString()}`,
               );
             }
           },

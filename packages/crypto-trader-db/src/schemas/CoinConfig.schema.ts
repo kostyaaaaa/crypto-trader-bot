@@ -63,11 +63,9 @@ export interface ICapitalConfig {
 }
 
 export interface ISizingConfig {
-  baseSizeUsd: number;
   maxAdds: number;
   addOnAdverseMovePct: number;
   addMultiplier: number;
-  maxPositionUsd: number;
 }
 
 export interface ITpConfig {
@@ -126,6 +124,7 @@ export interface IStrategyConfig {
 // Main coin configuration interface
 export interface ICoinConfig {
   symbol: string;
+  isActive: boolean;
   analysisConfig: IAnalysisConfig;
   strategy: IStrategyConfig;
   createdAt?: Date;
@@ -225,11 +224,9 @@ const capitalConfigSchema = new Schema(
 
 const sizingConfigSchema = new Schema(
   {
-    baseSizeUsd: { type: Number, required: true },
     maxAdds: { type: Number, required: true },
     addOnAdverseMovePct: { type: Number, required: true },
     addMultiplier: { type: Number, required: true },
-    maxPositionUsd: { type: Number, required: true },
   },
   { _id: false },
 );
@@ -330,9 +327,8 @@ export const CoinConfigSchema = new Schema<ICoinConfig>(
     symbol: {
       type: String,
       required: true,
-      unique: true,
-      index: true,
     },
+    isActive: { type: Boolean, required: true },
     analysisConfig: { type: analysisConfigSchema, required: true },
     strategy: { type: strategyConfigSchema, required: true },
   },
@@ -343,6 +339,6 @@ export const CoinConfigSchema = new Schema<ICoinConfig>(
 );
 
 // Add indexes for better query performance
-CoinConfigSchema.index({ symbol: 1 });
+CoinConfigSchema.index({ symbol: 1 }, { unique: true });
 CoinConfigSchema.index({ createdAt: -1 });
 CoinConfigSchema.index({ updatedAt: -1 });

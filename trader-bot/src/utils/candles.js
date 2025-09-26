@@ -7,21 +7,24 @@ export function aggregateCandles(candles, timeframe = '1m') {
   if (!match) throw new Error(`Unsupported timeframe: ${timeframe}`);
   let factor = parseInt(match[1], 10);
   if (match[2] === 'h') factor *= 60; // години → хвилини
-
-  const grouped = [];
-  let bucket = null;
+  const bucketMs = factor * 60 * 1000;
 
   // важливо: свічки сортуємо
   candles.sort((a, b) => new Date(a.time) - new Date(b.time));
 
+  const grouped = [];
+  let bucket = null;
+  let bucketStart = null;
+
   for (const c of candles) {
     const ts = new Date(c.time).getTime();
-    const bucketStart =
-      Math.floor(ts / (factor * 60 * 1000)) * (factor * 60 * 1000);
+    const thisBucketStart = Math.floor(ts / bucketMs) * bucketMs;
 
-    if (!bucket || bucket.time !== bucketStart) {
+    if (!bucket || thisBucketStart !== bucketStart) {
+      // закриваємо попередній bucket
       if (bucket) grouped.push(bucket);
 
+      bucketStart = thisBucketStart;
       bucket = {
         time: new Date(bucketStart).toISOString(),
         open: c.open,
@@ -38,6 +41,13 @@ export function aggregateCandles(candles, timeframe = '1m') {
     }
   }
 
-  if (bucket) grouped.push(bucket);
+  // ⚠️ Не пушимо останній bucket, якщо він ще не завершений
+  if (bucket) {
+    const now = Date.now();
+    if (now - bucketStart >= bucketMs) {
+      grouped.push(bucket);
+    }
+  }
+
   return grouped;
 }

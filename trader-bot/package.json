@@ -11,11 +11,13 @@
   "description": "",
   "type": "module",
   "dependencies": {
+    "crypto-trader-db": "*",
     "axios": "^1.12.2",
     "binance-api-node": "^0.12.9",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "mongoose": "^8.18.1",
+    "node-telegram-bot-api": "^0.66.0",
     "nodemon": "^3.1.10",
     "ws": "^8.18.3"
   }
