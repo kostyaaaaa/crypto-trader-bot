@@ -1,6 +1,6 @@
 import { type FC } from 'react';
 import styles from './CoinConfigTemplate.module.scss';
-import { Autocomplete, Button, Tabs } from '@mantine/core';
+import { Autocomplete, Tabs } from '@mantine/core';
 import {
   Controller,
   type Control,
