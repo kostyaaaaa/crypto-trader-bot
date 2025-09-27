@@ -156,18 +156,22 @@ export async function adjustPosition(
 // Закриття (додаємо closedBy)
 export async function closePositionHistory(
   symbol,
-  { finalPnl = null, closedBy = 'UNKNOWN' } = {},
+  { closedBy = 'UNKNOWN' } = {},
 ) {
   const pos = await getOpenPosition(symbol);
   if (!pos) return null;
-  const trades = await getUserTrades(symbol, { limit: 20 });
-  // const lastClosed = [...trades]
-  // .reverse()
-  // .find((t) => Number(t.realizedPnl) !== 0);
-  console.log('====================================');
-  console.log(trades, 'trades');
-  console.log('====================================');
+  const trades = await getUserTrades(symbol, { limit: 100 });
 
+  // знаходимо останній ордер з PnL
+  const lastOrderId = [...trades]
+    .reverse()
+    .find((t) => t.realizedPnl !== 0)?.orderId;
+
+  if (!lastOrderId) return null;
+
+  // агрегуємо всі трейди цього ордера
+  const orderTrades = trades.filter((t) => t.orderId === lastOrderId);
+  const totalPnl = orderTrades.reduce((sum, t) => sum + t.realizedPnl, 0);
   await updateDoc(
     COLLECTION,
     { _id: pos._id },
@@ -175,7 +179,7 @@ export async function closePositionHistory(
       $set: {
         status: 'CLOSED',
         closedAt: Date.now(),
-        finalPnl,
+        finalPnl: totalPnl,
         closedBy,
       },
     },
@@ -185,7 +189,7 @@ export async function closePositionHistory(
     ...pos,
     status: 'CLOSED',
     closedAt: Date.now(),
-    finalPnl,
+    finalPnl: totalPnl,
     closedBy,
   };
 }

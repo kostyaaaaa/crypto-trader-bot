@@ -103,97 +103,131 @@ async function forceCloseIfLeftover(symbol) {
 async function handleEvent(msg) {
   switch (msg.e) {
     case 'ACCOUNT_UPDATE':
+      // 🔹 Тут обробляються події акаунта (баланс, маржа, зміни у wallet).
+      // Зараз нічого не робимо, але можна додати логіку оновлення балансу.
       break;
 
     case 'ORDER_TRADE_UPDATE': {
-      const o = msg.o;
-      const symbol = o.s;
-      const status = o.X;
-      const side = o.S;
-      const type = o.ot;
-      const lastPx = Number(o.L);
-      const lastQty = Number(o.l);
+      // 🔹 Це основний івент про статус ордерів (Binance Futures).
+      // Викликається коли:
+      //   - ордер частково або повністю виконаний,
+      //   - спрацював SL / TP,
+      //   - ордер відмінено тощо.
 
+      const o = msg.o;
+      const symbol = o.s; // символ (наприклад "BTCUSDT")
+      const status = o.X; // статус ордера (NEW, PARTIALLY_FILLED, FILLED, CANCELED...)
+      const side = o.S; // BUY / SELL
+      const type = o.ot; // тип ордера (MARKET, STOP_MARKET, TAKE_PROFIT_MARKET)
+      const lastPx = Number(o.L); // ціна останньої угоди в рамках цього ордера
+      const lastQty = Number(o.l); // кількість останньої угоди
       console.log(
         `📦 Order update: ${symbol} ${side} status=${status}, type=${type}, lastPx=${lastPx}, lastQty=${lastQty}, orderId=${o.i}`,
       );
 
-      if (status === 'FILLED') {
-        const pos = await getOpenPosition(symbol); // 👈 тільки активна позиція
-        if (!pos && (type === 'STOP_MARKET' || type === 'TAKE_PROFIT_MARKET')) {
-          console.warn(
-            `⚠️ ${symbol}: FILLED ${type} but no OPEN position in DB. Forcing close.`,
-          );
+      if (status !== 'FILLED') {
+        // 🔹 Нас цікавлять тільки повністю виконані ордери.
+        // Якщо ордер ще не FILLED → виходимо.
+        break;
+      }
+
+      // Перевіряємо чи є у нас відкрита позиція по цьому символу в БД
+      const pos = await getOpenPosition(symbol);
+
+      // =======================
+      // 🛑 Випадок: закриваючий ордер (SL/TP), але в БД немає відкритої позиції
+      // =======================
+      if (!pos && (type === 'STOP_MARKET' || type === 'TAKE_PROFIT_MARKET')) {
+        console.warn(
+          `⚠️ ${symbol}: FILLED ${type} but no OPEN position in DB. Forcing close.`,
+        );
+        const closed = await closePositionHistory(symbol, {
+          closedBy: type === 'STOP_MARKET' ? 'SL' : 'TP', // маркуємо чим закрилось
+        });
+        await cancelAllOrders(symbol); // прибираємо всі інші ордери
+        await forceCloseIfLeftover(symbol); // підстраховка: якщо щось залишилось на біржі
+        if (closed) notifyTrade(closed, 'CLOSED'); // пушимо в нотифікації
+        return;
+      }
+
+      // =======================
+      // 🛑 Stop-loss (STOP_MARKET)
+      // =======================
+      if (type === 'STOP_MARKET') {
+        console.log(`🛑 ${symbol}: Stop-loss triggered`);
+        if (pos) {
+          // Оновлюємо ціну SL як "виконану"
+          await updateStopPrice(symbol, lastPx, 'FILLED');
+
+          // Закриваємо позицію в історії
           const closed = await closePositionHistory(symbol, {
-            closedBy: type === 'STOP_MARKET' ? 'SL' : 'TP',
+            closedBy: 'SL',
           });
+
+          // Чистимо залишки
           await cancelAllOrders(symbol);
           await forceCloseIfLeftover(symbol);
+
+          // Відправляємо нотифікацію
           if (closed) notifyTrade(closed, 'CLOSED');
-          return;
         }
-        // STOP_MARKET logic
-        if (type === 'STOP_MARKET') {
-          console.log(`🛑 ${symbol}: Stop-loss triggered`);
-          if (pos) {
-            // Update stop price as filled
-            await updateStopPrice(symbol, lastPx, 'FILLED');
-            // Close position history
+      }
+
+      // =======================
+      // 🎯 Take-profit (TAKE_PROFIT_MARKET)
+      // =======================
+      else if (type === 'TAKE_PROFIT_MARKET') {
+        console.log(`🎯 ${symbol}: Take-profit triggered`);
+        if (pos && Array.isArray(pos.takeProfits)) {
+          // Беремо копію поточних тейків
+          const updatedTps = pos.takeProfits.map((tp) => ({ ...tp }));
+
+          // Шукаємо тейк, який відповідає ціні (з невеликою похибкою)
+          const tolerance = Math.max(0.01, Math.abs(pos.entryPrice * 0.001)); // 0.1% або мін. 0.01
+          let found = false;
+          for (let tp of updatedTps) {
+            if (
+              !tp.filled &&
+              Math.abs(Number(tp.price) - lastPx) <= tolerance
+            ) {
+              tp.filled = true; // позначаємо цей TP як виконаний
+              found = true;
+              break;
+            }
+          }
+
+          // Оновлюємо список тейків у БД
+          await updateTakeProfits(
+            symbol,
+            updatedTps,
+            pos.entryPrice,
+            'TP_FILLED',
+          );
+
+          // Якщо ВСІ тейки виконані → закриваємо позицію
+          const allFilled = updatedTps.every((tp) => tp.filled);
+          if (allFilled) {
             const closed = await closePositionHistory(symbol, {
-              closedBy: 'SL',
+              closedBy: 'TP',
             });
             await cancelAllOrders(symbol);
             await forceCloseIfLeftover(symbol);
             if (closed) notifyTrade(closed, 'CLOSED');
           }
-        }
-        // TAKE_PROFIT_MARKET logic
-        else if (type === 'TAKE_PROFIT_MARKET') {
-          console.log(`🎯 ${symbol}: Take-profit triggered`);
-          if (pos && Array.isArray(pos.takeProfits)) {
-            // Clone TPs
-            const updatedTps = pos.takeProfits.map((tp) => ({ ...tp }));
-            // Find the first unfilled TP near lastPx
-            const tolerance = Math.max(0.01, Math.abs(pos.entryPrice * 0.001)); // 0.1% tolerance or min 0.01
-            let found = false;
-            for (let tp of updatedTps) {
-              if (
-                !tp.filled &&
-                Math.abs(Number(tp.price) - lastPx) <= tolerance
-              ) {
-                tp.filled = true;
-                found = true;
-                break;
-              }
-            }
-            // Update TP list in DB
-            await updateTakeProfits(
-              symbol,
-              updatedTps,
-              pos.entryPrice,
-              'TP_FILLED',
-            );
-            // If all TPs are now filled, close position
-            const allFilled = updatedTps.every((tp) => tp.filled);
-            if (allFilled) {
-              const closed = await closePositionHistory(symbol, {
-                closedBy: 'TP',
-              });
-              await cancelAllOrders(symbol);
-              await forceCloseIfLeftover(symbol);
-              if (closed) notifyTrade(closed, 'CLOSED');
-            }
-            // Else, just update TPs, don't close position
-          }
-        }
-        // MARKET order
-        else if (type === 'MARKET') {
-          console.log(`✅ Market order filled for ${symbol} (${side})`);
+          // Інакше залишаємо позицію відкритою (частковий TP)
         }
       }
-      break;
+
+      // =======================
+      // ✅ MARKET (звичайний маркет ордер, відкриття/закриття)
+      // =======================
+      else if (type === 'MARKET') {
+        console.log(`✅ Market order filled for ${symbol} (${side})`);
+        // Тут можна обробити логіку відкриття нової позиції або закриття вручну
+      }
     }
 
     default:
+    // 🔹 Якщо прийшов інший івент, ми його ігноруємо.
   }
 }

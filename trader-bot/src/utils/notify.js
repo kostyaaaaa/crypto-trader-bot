@@ -68,6 +68,7 @@ export async function notifyTrade(position = {}, action = 'UPDATE') {
       : position.initialOpenedAt
         ? new Date(position.initialOpenedAt).toISOString()
         : '—';
+    const PNL = position.finalPnl ?? null;
     const closedAt = position.closedAt
       ? new Date(position.closedAt).toISOString()
       : '—';
@@ -111,6 +112,7 @@ export async function notifyTrade(position = {}, action = 'UPDATE') {
 
     const body = [
       `Side: *${side}*`,
+      !!PNL ? `PNL: ${PNL}$` : '',
       `Entry: ${fmtPrice(entryPrice)}`,
       `Size (USD notional): ${size ? Number(size).toFixed(2) + ' $' : '—'}`,
       `Leverage: ${leverage ?? '—'}x`,
