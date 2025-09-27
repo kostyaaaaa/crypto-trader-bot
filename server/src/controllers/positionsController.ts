@@ -12,56 +12,67 @@ interface PositionListResponse {
   timestamp: string;
 }
 
-// Get positions data by time and symbol
-const getPositionsByTimeAndSymbol = async (
+// Get positions data by date range and symbol
+const getPositionsByDateRangeAndSymbol = async (
   req: Request,
   res: Response<PositionListResponse | ApiErrorResponse>,
 ): Promise<void> => {
   try {
-    const { symbol, time } = req.query;
+    const { symbol, dateFrom, dateTo } = req.query;
 
-    if (!symbol || !time) {
+    if (!symbol || !dateFrom || !dateTo) {
       res.status(400).json({
         error: 'Missing parameters',
-        message: 'Both symbol and time query parameters are required',
+        message: 'symbol, dateFrom, and dateTo query parameters are required',
       });
       return;
     }
 
     logger.info(
-      `Fetching positions data for symbol: ${symbol} with openedAt > ${time}`,
+      `Fetching closed positions history for symbol: ${symbol} between ${dateFrom} and ${dateTo}`,
     );
 
-    const positionTime = parseInt(time as string);
+    const startDate = new Date(dateFrom as string);
+    const endDate = new Date(dateTo as string);
 
-    if (isNaN(positionTime)) {
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       res.status(400).json({
-        error: 'Invalid time format',
-        message: 'Please provide a valid timestamp (number) for time parameter',
+        error: 'Invalid timestamp format',
+        message:
+          'Please provide valid ISO timestamp strings for dateFrom and dateTo parameters',
       });
       return;
     }
 
-    // Find positions data for the symbol where openedAt is greater than provided time
-    const positionsData = await PositionModel.findBySymbolAndTimeGreaterThan(
-      symbol as string,
-      positionTime,
-    );
+    if (startDate >= endDate) {
+      res.status(400).json({
+        error: 'Invalid date range',
+        message: 'dateFrom must be earlier than dateTo',
+      });
+      return;
+    }
+
+    // Find closed positions data for the symbol within the timestamp range
+    const positionsData = await PositionModel.find({
+      symbol,
+      status: 'CLOSED',
+      openedAt: { $gte: startDate, $lte: endDate },
+    }).sort({ openedAt: 1 });
 
     logger.success(
-      `Successfully fetched ${positionsData.length} position records for symbol: ${symbol} with openedAt > ${time}`,
+      `Successfully fetched ${positionsData.length} closed position records for symbol: ${symbol} between ${dateFrom} and ${dateTo}`,
     );
 
     res.json({
       success: true,
-      message: `Positions data for ${symbol} with openedAt > ${time} retrieved successfully`,
+      message: `Closed positions history for ${symbol} between ${dateFrom} and ${dateTo} retrieved successfully`,
       data: positionsData,
       count: positionsData.length,
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
     logger.error(
-      `Error fetching positions data by time and symbol for: ${req.query.symbol}`,
+      `Error fetching closed positions history by date range and symbol for: ${req.query.symbol}`,
       {
         message: error.message,
         stack: error.stack,
@@ -69,10 +80,11 @@ const getPositionsByTimeAndSymbol = async (
     );
 
     res.status(500).json({
-      error: 'Failed to fetch positions data by time and symbol',
+      error:
+        'Failed to fetch closed positions history by date range and symbol',
       message: error.message,
     });
   }
 };
 
-export { getPositionsByTimeAndSymbol };
+export { getPositionsByDateRangeAndSymbol };

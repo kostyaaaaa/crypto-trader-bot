@@ -53,7 +53,7 @@ export interface IPosition {
   side: string;
   entryPrice: number;
   size: number;
-  openedAt: number;
+  openedAt: Date;
   status: string;
   stopPrice: number;
   initialStopPrice: number | null;
@@ -158,7 +158,7 @@ export const PositionSchema = new Schema<IPosition>(
       required: true,
     },
     openedAt: {
-      type: Number,
+      type: Date,
       required: true,
       index: true,
     },
@@ -204,7 +204,7 @@ export const PositionSchema = new Schema<IPosition>(
       required: true,
     },
     closedAt: {
-      type: Number,
+      type: Date,
       index: true,
     },
     closedBy: {

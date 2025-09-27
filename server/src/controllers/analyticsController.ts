@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
 import { AnalysisModel, IAnalysis } from 'crypto-trader-db';
+import { Request, Response } from 'express';
 import logger from '../utils/Logger.js';
 import { ApiErrorResponse } from './common.type.js';
 
@@ -12,56 +12,66 @@ interface AnalysisListResponse {
   timestamp: string;
 }
 
-// Get analysis data by time and symbol
-const getAnalysisByTimeAndSymbol = async (
+// Get analysis data by date range and symbol
+const getAnalysisByDateRangeAndSymbol = async (
   req: Request,
   res: Response<AnalysisListResponse | ApiErrorResponse>,
 ): Promise<void> => {
   try {
-    const { symbol, time } = req.query;
+    const { symbol, dateFrom, dateTo } = req.query;
 
-    if (!symbol || !time) {
+    if (!symbol || !dateFrom || !dateTo) {
       res.status(400).json({
         error: 'Missing parameters',
-        message: 'Both symbol and time query parameters are required',
+        message: 'symbol, dateFrom, and dateTo query parameters are required',
       });
       return;
     }
 
     logger.info(
-      `Fetching analysis data for symbol: ${symbol} with time > ${time}`,
+      `Fetching analysis data for symbol: ${symbol} between ${dateFrom} and ${dateTo}`,
     );
 
-    const analysisTime = new Date(time as string);
+    const startDate = new Date(dateFrom as string);
+    const endDate = new Date(dateTo as string);
 
-    if (isNaN(analysisTime.getTime())) {
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       res.status(400).json({
         error: 'Invalid date format',
-        message: 'Please provide a valid ISO date string for time parameter',
+        message:
+          'Please provide valid ISO timestamp strings for dateFrom and dateTo parameters',
       });
       return;
     }
 
-    // Find analysis data for the symbol where time is greater than provided time
+    if (startDate >= endDate) {
+      res.status(400).json({
+        error: 'Invalid date range',
+        message: 'dateFrom must be earlier than dateTo',
+      });
+      return;
+    }
+
+    // Find analysis data for the symbol within the date range
     const analysisData = await AnalysisModel.find({
       symbol,
-      time: { $gt: analysisTime },
+      time: { $gte: startDate, $lte: endDate },
     }).sort({ time: 1 });
 
     logger.success(
-      `Successfully fetched ${analysisData.length} analysis records for symbol: ${symbol} with time > ${time}`,
+      `Successfully fetched ${analysisData.length} analysis records for symbol: ${symbol} between ${dateFrom} and ${dateTo}`,
     );
 
     res.json({
       success: true,
-      message: `Analysis data for ${symbol} with time > ${time} retrieved successfully`,
+      message: `Analysis data for ${symbol} between ${dateFrom} and ${dateTo} retrieved successfully`,
       data: analysisData,
       count: analysisData.length,
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
     logger.error(
-      `Error fetching analysis data by time and symbol for: ${req.query.symbol}`,
+      `Error fetching analysis data by date range and symbol for: ${req.query.symbol}`,
       {
         message: error.message,
         stack: error.stack,
@@ -69,10 +79,10 @@ const getAnalysisByTimeAndSymbol = async (
     );
 
     res.status(500).json({
-      error: 'Failed to fetch analysis data by time and symbol',
+      error: 'Failed to fetch analysis data by date range and symbol',
       message: error.message,
     });
   }
 };
 
-export { getAnalysisByTimeAndSymbol };
+export { getAnalysisByDateRangeAndSymbol };

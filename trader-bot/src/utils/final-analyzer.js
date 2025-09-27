@@ -1,13 +1,13 @@
 import axios from 'axios';
 import { analyzeCandles } from '../analize-modules/candles/analyze-сandles.js';
-import { analyzeLiquidity } from '../analize-modules/orderbook/analyze-liquidity.js';
-import { analyzeLiquidations } from '../analize-modules/liquidations/analyze-liquidations.js';
-import { analyzeOpenInterest } from '../analize-modules/openinterest/analyze-openinterest.js';
-import { analyzeVolatility } from '../analize-modules/volatility/analyze-volatility.js';
-import { analyzeFunding } from '../analize-modules/funding/analyze-funding.js';
 import { analyzeCorrelation } from '../analize-modules/correlation/analyze-correlation.js';
-import { analyzeTrendRegime } from '../analize-modules/trendRegime/analyze-trend-regime.js';
+import { analyzeFunding } from '../analize-modules/funding/analyze-funding.js';
+import { analyzeLiquidations } from '../analize-modules/liquidations/analyze-liquidations.js';
 import { analyzeLongShort } from '../analize-modules/longshort/analyze-longshort.js';
+import { analyzeOpenInterest } from '../analize-modules/openinterest/analyze-openinterest.js';
+import { analyzeLiquidity } from '../analize-modules/orderbook/analyze-liquidity.js';
+import { analyzeTrendRegime } from '../analize-modules/trendRegime/analyze-trend-regime.js';
+import { analyzeVolatility } from '../analize-modules/volatility/analyze-volatility.js';
 import { saveDoc } from '../storage/storage.js';
 
 export async function finalAnalyzer({
@@ -104,7 +104,7 @@ export async function finalAnalyzer({
   ).length;
 
   const result = {
-    time: new Date().toISOString(),
+    time: new Date(),
     symbol,
     timeframe: candleTimeframe,
     modules,
