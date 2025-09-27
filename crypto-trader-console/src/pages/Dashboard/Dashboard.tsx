@@ -1,16 +1,49 @@
-import { type FC } from 'react';
+import { useState, type FC } from 'react';
 import { CardWrapper } from '../../components';
-import './Dashboard.css';
 import useDashboard from './useDashboard';
+import { Button, ScrollArea, Table } from '@mantine/core';
+import clsx from 'clsx';
+import styles from './Dashboard.module.scss';
 
 const Dashboard: FC = () => {
-  const { spotUSDBalance, futuresUSDBalance, accountPnlData } = useDashboard();
+  const {
+    spotUSDBalance,
+    futuresUSDBalance,
+    accountPnlData,
+    futuresPositions,
+    refetchFuturesPositions,
+    isLoadingFuturesPositions,
+  } = useDashboard();
   const currentPnl = accountPnlData?.realizedPnL ?? 0;
   const isPlusPnl = currentPnl >= 0;
 
+  const [scrolled, setScrolled] = useState<boolean>(false);
+
+  const rows = futuresPositions?.map((row) => {
+    const isLong = parseFloat(row.positionAmt) > 0;
+    return (
+      <Table.Tr
+        key={row.symbol}
+        className={styles[+row.unrealizedProfit > 0 ? 'long' : 'short']}
+      >
+        <Table.Td>{row.symbol}</Table.Td>
+        <Table.Td className={styles[isLong ? 'green' : 'red']}>
+          {isLong ? 'LONG' : 'SHORT'}
+        </Table.Td>
+        <Table.Td>{parseFloat(row.entryPrice)}</Table.Td>
+        <Table.Td>${parseFloat(row.positionInitialMargin).toFixed(3)}</Table.Td>
+        <Table.Td>
+          x{row.leverage}, total = ($
+          {(+row.positionInitialMargin * +row.leverage).toFixed(3)})
+        </Table.Td>
+        <Table.Td>{row.unrealizedProfit}</Table.Td>
+      </Table.Tr>
+    );
+  });
+
   return (
-    <div className="dashboard">
-      <div className="dashboard-info">
+    <div className={styles.dashboard}>
+      <div className={styles['dashboard-info']}>
         <CardWrapper>
           <p>
             Орієнтовний баланс спота: $
@@ -23,10 +56,43 @@ const Dashboard: FC = () => {
 
         <CardWrapper>
           PNL за сьогодні{' '}
-          <span className={isPlusPnl ? 'green' : 'red'}>
+          <span className={styles[isPlusPnl ? 'green' : 'red']}>
             {(isPlusPnl ? '+' : '-') + currentPnl}$
           </span>
         </CardWrapper>
+      </div>
+
+      <div>
+        <h5 className={styles.openFutures}>
+          Відкриті фьючерс угоди:
+          <Button
+            disabled={isLoadingFuturesPositions}
+            variant="light"
+            onClick={() => refetchFuturesPositions()}
+          >
+            Refresh
+          </Button>
+        </h5>
+
+        {!!futuresPositions?.length && (
+          <ScrollArea onScrollPositionChange={({ y }) => setScrolled(y !== 0)}>
+            <Table miw={700}>
+              <Table.Thead
+                className={clsx(styles.header, { [styles.scrolled]: scrolled })}
+              >
+                <Table.Tr>
+                  <Table.Th>Symbol</Table.Th>
+                  <Table.Th>Position</Table.Th>
+                  <Table.Th>Entry Coin Price</Table.Th>
+                  <Table.Th>Initial Margin</Table.Th>
+                  <Table.Th>Leverage</Table.Th>
+                  <Table.Th>Unrealized Profit</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>{rows}</Table.Tbody>
+            </Table>
+          </ScrollArea>
+        )}
       </div>
 
       {/* <CustomChart />

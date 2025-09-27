@@ -7,22 +7,20 @@ import { mockCreateConfigData } from './mock';
 const useCreateConfig = () => {
   const { mutate: createCoinConfigMutate } = useMutation({
     mutationFn: createCoinConfig,
-    onSuccess: (data) => {
-      console.log(data);
-    },
     onError: (error) => {
       console.error('error:', error);
     },
   });
 
-  const { register, handleSubmit } = useForm<TCoinConfig>({
+  const { register, handleSubmit, control } = useForm<TCoinConfig>({
     defaultValues: mockCreateConfigData,
+    shouldUnregister: true,
   });
   const onSubmit: SubmitHandler<TCoinConfig> = (data) => {
     createCoinConfigMutate(data);
   };
 
-  return { register, handleSubmit, onSubmit };
+  return { register, handleSubmit, onSubmit, control };
 };
 
 export default useCreateConfig;

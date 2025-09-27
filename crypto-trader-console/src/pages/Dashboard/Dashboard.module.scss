@@ -29,3 +29,19 @@
   flex-wrap: wrap;
   padding-top: 24px;
 }
+
+.openFutures {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.long {
+  background-color: #c1ffc1 !important;
+}
+
+.short {
+  background-color: #ffc1c1 !important;
+}
