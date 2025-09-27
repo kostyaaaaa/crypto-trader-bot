@@ -1,5 +1,11 @@
 {
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "git.ignoredRepositories": ["/Users/admin"]
+  "git.ignoredRepositories": ["/Users/admin"],
+  "javascript.preferences.importModuleSpecifier": "relative",
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "conventionalCommits.scopes": ["trader-bot"]
 }

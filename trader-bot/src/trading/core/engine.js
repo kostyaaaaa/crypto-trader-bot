@@ -1,14 +1,14 @@
 // trading/core/engine.js
 import axios from 'axios';
+import { analyzeCandles } from '../../analize-modules/candles/analyze-сandles.js';
+import { analyzeVolatility } from '../../analize-modules/volatility/analyze-volatility.js';
 import { loadDocs } from '../../storage/storage.js';
+import { notifyTrade } from '../../utils/notify.js';
+import { getHigherTF } from '../../utils/timeframes.js';
+import { getUserTrades } from '../binance/binance.js';
+import { executeTrade } from '../binance/exchange-executor.js';
 import { getActivePositions } from './binance-positions-manager.js';
 import { preparePosition } from './prepare.js';
-import { getHigherTF } from '../../utils/timeframes.js';
-import { analyzeVolatility } from '../../analize-modules/volatility/analyze-volatility.js';
-import { analyzeCandles } from '../../analize-modules/candles/analyze-сandles.js';
-import { executeTrade } from '../binance/exchange-executor.js';
-import { getUserTrades } from '../binance/binance.js';
-import { notifyTrade } from '../../utils/notify.js';
 
 import { openPosition } from './historyStore.js';
 
@@ -201,7 +201,7 @@ export async function tradingEngine(symbol, config) {
       majority,
       entryPrice,
     );
-    console.log(position, 'open position engine');
+
     if (position) {
       notifyTrade(position, 'OPENED');
 
