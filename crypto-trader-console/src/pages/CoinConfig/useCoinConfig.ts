@@ -27,7 +27,7 @@ const useCoinConfig = () => {
     },
   });
 
-  const { register, handleSubmit, reset } = useForm<TCoinConfig>({
+  const { register, handleSubmit, reset, control } = useForm<TCoinConfig>({
     defaultValues: {},
   });
 
@@ -47,6 +47,7 @@ const useCoinConfig = () => {
     handleSubmit,
     onSubmit,
     symbol,
+    control,
   };
 };
 
