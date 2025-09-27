@@ -1,9 +1,10 @@
 import express, { Request, Response } from 'express';
-import accountRouter from './account.js';
-import coinConfigRouter from './coinConfig.js';
-import analyticsRouter from './analytics.js';
-import logger from '../utils/Logger.js';
 import { ApiErrorResponse } from '../controllers/common.type.js';
+import logger from '../utils/Logger.js';
+import accountRouter from './account.js';
+import analyticsRouter from './analytics.js';
+import coinConfigRouter from './coinConfig.js';
+import positionsRouter from './positions.js';
 
 const router = express.Router();
 
@@ -68,5 +69,8 @@ router.use('/coinconfig', coinConfigRouter);
 
 // Mount analytics routes
 router.use('/analytics', analyticsRouter);
+
+// Mount positions routes
+router.use('/positions', positionsRouter);
 
 export default router;
