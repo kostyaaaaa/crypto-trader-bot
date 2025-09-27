@@ -16,7 +16,6 @@ export async function analyzeOpenInterest(symbol = 'ETHUSDT', window = 5) {
       { params: { symbol, period: '5m', limit: window } },
     );
     if (!oiRes.data || oiRes.data.length < window) {
-      console.log(`⚠️ Not enough OI data for ${symbol}, need ${window}`);
       return null;
     }
 
@@ -26,7 +25,6 @@ export async function analyzeOpenInterest(symbol = 'ETHUSDT', window = 5) {
       { params: { symbol, interval: '5m', limit: window } },
     );
     if (!klineRes.data || klineRes.data.length < window) {
-      console.log(`⚠️ Not enough price data for ${symbol}, need ${window}`);
       return null;
     }
 

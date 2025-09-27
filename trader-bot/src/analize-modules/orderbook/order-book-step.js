@@ -8,7 +8,7 @@
 
 import WebSocket from 'ws';
 import { saveDoc } from '../../storage/storage.js';
-import { logStream } from '../../utils/logger.js';
+import logger from '../../utils/db-logger.js';
 
 export function OrderBookStepWS(symbol = 'BTCUSDT') {
   const ws = new WebSocket(
@@ -17,8 +17,8 @@ export function OrderBookStepWS(symbol = 'BTCUSDT') {
 
   let imbalances = [];
   let spreads = [];
-
-  ws.on('open', () => logStream(symbol, 'OrderBook'));
+  let interval;
+  ws.on('open', () => logger.success(symbol, 'OrderBook'));
 
   ws.on('message', (msg) => {
     const data = JSON.parse(msg.toString());
@@ -47,13 +47,7 @@ export function OrderBookStepWS(symbol = 'BTCUSDT') {
     console.error('❌ WS error:', err.message);
   });
 
-  ws.on('close', () => {
-    console.log('⚠️ WS closed, reconnecting...');
-    setTimeout(() => OrderBookStepWS(symbol), 5000);
-  });
-
-  // Раз у хвилину агрегуємо дані → створюємо "ліквідність-свічку"
-  setInterval(async () => {
+  interval = setInterval(async () => {
     if (imbalances.length === 0) return;
 
     const avgImbalance =
@@ -74,4 +68,9 @@ export function OrderBookStepWS(symbol = 'BTCUSDT') {
     imbalances = [];
     spreads = [];
   }, 60_000);
+
+  return () => {
+    clearInterval(interval);
+    ws.close();
+  };
 }

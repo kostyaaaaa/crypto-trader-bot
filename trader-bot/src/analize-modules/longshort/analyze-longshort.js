@@ -17,9 +17,6 @@ export async function analyzeLongShort(symbol = 'ETHUSDT', window = 5) {
     });
 
     if (!res.data || res.data.length < window) {
-      console.log(
-        `⚠️ Not enough long/short ratio data for ${symbol}, need ${window}`,
-      );
       return null;
     }
 

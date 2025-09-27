@@ -1,7 +1,7 @@
 // core/historyStore.js
-import { saveDoc, loadDocs, updateDoc } from '../../storage/storage.js';
-import { getPosition } from '../binance/binance.js';
+import { loadDocs, saveDoc, updateDoc } from '../../storage/storage.js';
 import { notifyTrade } from '../../utils/notify.js';
+import { getPosition, getUserTrades } from '../binance/binance.js';
 
 const COLLECTION = 'positions';
 
@@ -72,7 +72,6 @@ export async function openPosition(
           analysisId: analysis._id,
           bias: analysis.bias,
           scores: analysis.scores,
-          modules: analysis.modules,
         }
       : null,
 
@@ -82,10 +81,8 @@ export async function openPosition(
       strategyName: strategyMeta?.strategyName ?? null,
       openedBy: 'BOT',
     },
-    dima: 'OPEN',
   };
 
-  console.log('save 1');
   // Always insert a new document
   const savedPos = await saveDoc(COLLECTION, newPos);
   if (savedPos?._id) {
@@ -102,7 +99,6 @@ export async function addToPosition(symbol, { qty, price }) {
 
   const effectivePrice = price || pos.entryPrice || 0;
   const addNotional = qty * effectivePrice;
-  console.log('save 2');
 
   return await updateDoc(
     COLLECTION,
@@ -144,7 +140,6 @@ export async function adjustPosition(
   if (newAdjustments.length > 20) {
     newAdjustments.splice(0, newAdjustments.length - 20);
   }
-  console.log('save 3');
 
   await updateDoc(
     COLLECTION,
@@ -165,14 +160,20 @@ export async function closePositionHistory(
 ) {
   const pos = await getOpenPosition(symbol);
   if (!pos) return null;
-  console.log('save 4');
+  const trades = await getUserTrades(symbol, { limit: 20 });
+  // const lastClosed = [...trades]
+  // .reverse()
+  // .find((t) => Number(t.realizedPnl) !== 0);
+  console.log('====================================');
+  console.log(trades, 'trades');
+  console.log('====================================');
 
   await updateDoc(
     COLLECTION,
     { _id: pos._id },
     {
       $set: {
-        status: 'CLOSED DIMA',
+        status: 'CLOSED',
         closedAt: Date.now(),
         finalPnl,
         closedBy,
@@ -197,6 +198,7 @@ export async function getHistory(symbol, limit = 50) {
 // Reconcile local open positions with Binance live positions
 export async function reconcilePositions() {
   const all = await loadDocs(COLLECTION);
+
   const openPositions = all.filter((p) => p.status === 'OPEN');
   const closed = [];
   for (const pos of openPositions) {
@@ -204,10 +206,9 @@ export async function reconcilePositions() {
       const live = await getPosition(pos.symbol);
       if (!live || Number(live.positionAmt) === 0) {
         const c = await closePositionHistory(pos.symbol, {
-          closedBy: 'DESYNC DIMA',
+          closedBy: 'DESYNC',
         });
         if (c) {
-          closed.push(c);
           crossOriginIsolated.log(123123);
           await notifyTrade(c, 'CLOSED');
         }
@@ -240,7 +241,6 @@ export async function updateStopPrice(symbol, price, reason) {
   if (newAdjustments.length > 20) {
     newAdjustments.splice(0, newAdjustments.length - 20);
   }
-  console.log('save 5');
 
   await updateDoc(
     COLLECTION,
@@ -258,6 +258,8 @@ export async function updateStopPrice(symbol, price, reason) {
 }
 
 export async function updateTakeProfits(symbol, tps, baseEntry, reason) {
+  console.log('TP_UPDATE');
+
   const pos = await getOpenPosition(symbol);
   if (!pos) return null;
 
@@ -270,7 +272,6 @@ export async function updateTakeProfits(symbol, tps, baseEntry, reason) {
   if (newAdjustments.length > 20) {
     newAdjustments.splice(0, newAdjustments.length - 20);
   }
-  console.log('save 6');
 
   await updateDoc(
     COLLECTION,

@@ -6,7 +6,7 @@ import {
   placeStopLoss,
   placeTakeProfit,
 } from '../binance/binance.js';
-import { getActivePositions } from './positions.js';
+import { getActivePositions } from './binance-positions-manager.js';
 import {
   addToPosition,
   adjustPosition,
@@ -66,18 +66,14 @@ export async function monitorPositions({ symbol, strategy }) {
   } catch {}
 
   for (let pos of positions) {
-    // ВАЖЛИВО: це live-позиція з Binance
-    // очікуємо, що pos.size = КІЛЬКІСТЬ МОНЕТ (qty), entryPrice — середня ціна входу
     const { side, entryPrice, size: liveQty, orders } = pos;
     const dir = side === 'LONG' ? 1 : -1;
     const binanceSide = side === 'LONG' ? 'BUY' : 'SELL';
 
-    // поточний SL із відкритих ордерів
     const currentSL = Array.isArray(orders)
       ? (orders.find((o) => o.type === 'SL')?.price ?? null)
       : null;
 
-    // ---- читаємо додачі з БД (а не з Binance!) ----
     const openDoc = await getOpenHistoryDoc(symbol);
     const addsCount = openDoc?.adds?.length || 0;
 
@@ -87,10 +83,12 @@ export async function monitorPositions({ symbol, strategy }) {
     // зберігаємо стейт трелінгу в оперативці на об'єкті pos (можемо винести у БД пізніше)
     if (trailingCfg?.use && entryPrice) {
       try {
+        let trailingState = openDoc?.trailing || null;
+
         const movePct = ((price - entryPrice) / entryPrice) * 100 * dir;
 
-        if (!pos.trailing?.active && movePct >= trailingCfg.startAfterPct) {
-          pos.trailing = {
+        if (!trailingState?.active && movePct >= trailingCfg.startAfterPct) {
+          trailingState = {
             active: true,
             startAfterPct: trailingCfg.startAfterPct,
             trailStepPct: trailingCfg.trailStepPct,
@@ -98,18 +96,18 @@ export async function monitorPositions({ symbol, strategy }) {
           };
         }
 
-        if (pos.trailing?.active) {
-          if (side === 'LONG' && price > (pos.trailing.anchor || 0)) {
-            pos.trailing.anchor = price;
+        if (trailingState?.active) {
+          if (side === 'LONG' && price > (trailingState.anchor || 0)) {
+            trailingState.anchor = price;
           }
-          if (side === 'SHORT' && price < (pos.trailing.anchor || Infinity)) {
-            pos.trailing.anchor = price;
+          if (side === 'SHORT' && price < (trailingState.anchor || Infinity)) {
+            trailingState.anchor = price;
           }
 
           const newStop =
             side === 'LONG'
-              ? pos.trailing.anchor * (1 - trailingCfg.trailStepPct / 100)
-              : pos.trailing.anchor * (1 + trailingCfg.trailStepPct / 100);
+              ? trailingState.anchor * (1 - trailingCfg.trailStepPct / 100)
+              : trailingState.anchor * (1 + trailingCfg.trailStepPct / 100);
 
           const needUpdate =
             (side === 'LONG' && (!currentSL || newStop > currentSL)) ||
@@ -128,7 +126,7 @@ export async function monitorPositions({ symbol, strategy }) {
               size: liveQty,
             });
 
-            await updateStopPrice(symbol, newStop, 'TRAIL');
+            await updateStopPrice(symbol, newStop, 'TRAIL', trailingState);
           }
         }
       } catch {}
@@ -146,7 +144,6 @@ export async function monitorPositions({ symbol, strategy }) {
       const condition =
         (side === 'LONG' && price <= adversePrice) ||
         (side === 'SHORT' && price >= adversePrice);
-
       // Перевірка сигналу аналізу: якщо є останній аналіз і сигнал протилежний позиції, не додаємо
       if (
         lastAnalysis &&

@@ -101,10 +101,8 @@ async function forceCloseIfLeftover(symbol) {
 // 4. Обробка івентів
 // -------------------------
 async function handleEvent(msg) {
-  console.log('🔔 WS EVENT RAW:', JSON.stringify(msg));
   switch (msg.e) {
     case 'ACCOUNT_UPDATE':
-      console.log('📊 Account update:', msg.a);
       break;
 
     case 'ORDER_TRADE_UPDATE': {
@@ -122,7 +120,6 @@ async function handleEvent(msg) {
 
       if (status === 'FILLED') {
         const pos = await getOpenPosition(symbol); // 👈 тільки активна позиція
-        console.log(pos, ';pos');
         if (!pos && (type === 'STOP_MARKET' || type === 'TAKE_PROFIT_MARKET')) {
           console.warn(
             `⚠️ ${symbol}: FILLED ${type} but no OPEN position in DB. Forcing close.`,
@@ -198,6 +195,5 @@ async function handleEvent(msg) {
     }
 
     default:
-      console.log('ℹ️ Unhandled WS event:', msg);
   }
 }

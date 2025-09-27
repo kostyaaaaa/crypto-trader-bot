@@ -4,8 +4,7 @@
 
 import WebSocket from 'ws';
 import { saveDoc } from '../../storage/storage.js';
-import { logStream } from '../../utils/logger.js';
-
+import logger from '../../utils/db-logger.js';
 export function LiquidationsStepWS(
   symbol = 'ETHUSDT',
   minValue = 50_000,
@@ -13,10 +12,11 @@ export function LiquidationsStepWS(
 ) {
   // Binance stream: всі ліквідації
   const ws = new WebSocket('wss://fstream.binance.com/ws/!forceOrder@arr');
+  let interval;
 
   let bucket = []; // буфер для ліквідацій за поточний інтервал (1 хв)
 
-  ws.on('open', () => logStream(symbol, 'forceOrder'));
+  ws.on('open', () => logger.success(symbol, 'forceOrder'));
 
   ws.on('message', (msg) => {
     const raw = JSON.parse(msg.toString());
@@ -47,7 +47,7 @@ export function LiquidationsStepWS(
   });
 
   // Кожні windowMs (стандарт: 60с) формуємо "ліквідаційну свічку"
-  setInterval(async () => {
+  interval = setInterval(async () => {
     if (bucket.length === 0) return;
 
     const totalValue = bucket.reduce((s, x) => s + x.value, 0);
@@ -77,10 +77,11 @@ export function LiquidationsStepWS(
   }, windowMs);
 
   ws.on('error', (err) => console.error('❌ WS error:', err.message));
-  ws.on('close', () => {
-    console.log('⚠️ WS closed, reconnecting...');
-    setTimeout(() => LiquidationsStepWS(symbol, minValue, windowMs), 5000);
-  });
+
+  return () => {
+    clearInterval(interval);
+    ws.close();
+  };
 }
 
 /* ---------- helpers ---------- */
