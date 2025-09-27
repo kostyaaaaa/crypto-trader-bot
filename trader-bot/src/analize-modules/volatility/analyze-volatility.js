@@ -10,7 +10,6 @@ export async function analyzeVolatility(
   volatilityFilter = { deadBelow: 0.2, extremeAbove: 2.5 }, // дефолт
 ) {
   if (!candles || candles.length < window + 1) {
-    console.log(`⚠️ Not enough candles for ${symbol}, need ${window + 1}`);
     return null;
   }
 

@@ -34,7 +34,6 @@ export async function analyzeFunding(symbol = 'ETHUSDT', window = 60) {
     }));
 
     if (candles.length < window) {
-      console.log(`⚠️ Not enough funding data for ${symbol}, need ${window}`);
       return null;
     }
 

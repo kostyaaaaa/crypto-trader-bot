@@ -39,7 +39,6 @@ export async function analyzeCorrelation(symbol, window = 5) {
     });
 
     if (!res.data || res.data.length < window) {
-      console.log(`⚠️ Not enough BTC candles, need ${window}`);
       return null;
     }
 

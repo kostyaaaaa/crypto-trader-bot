@@ -4,7 +4,6 @@
 
 export async function analyzeTrendRegime(symbol, candles, period = 14) {
   if (!candles || candles.length < period + 2) {
-    console.log(`⚠️ Not enough candles for ADX (${symbol})`);
     return null;
   }
 

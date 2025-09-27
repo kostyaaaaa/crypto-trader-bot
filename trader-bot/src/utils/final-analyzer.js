@@ -1,13 +1,13 @@
 import axios from 'axios';
-import { analyzeCandles } from '../modules/candles/analyze-сandles.js';
-import { analyzeLiquidity } from '../modules/orderbook/analyze-liquidity.js';
-import { analyzeLiquidations } from '../modules/liquidations/analyze-liquidations.js';
-import { analyzeOpenInterest } from '../modules/openinterest/analyze-openinterest.js';
-import { analyzeVolatility } from '../modules/volatility/analyze-volatility.js';
-import { analyzeFunding } from '../modules/funding/analyze-funding.js';
-import { analyzeCorrelation } from '../modules/correlation/analyze-correlation.js';
-import { analyzeTrendRegime } from '../modules/trendRegime/analyze-trend-regime.js';
-import { analyzeLongShort } from '../modules/longshort/analyze-longshort.js';
+import { analyzeCandles } from '../analize-modules/candles/analyze-сandles.js';
+import { analyzeLiquidity } from '../analize-modules/orderbook/analyze-liquidity.js';
+import { analyzeLiquidations } from '../analize-modules/liquidations/analyze-liquidations.js';
+import { analyzeOpenInterest } from '../analize-modules/openinterest/analyze-openinterest.js';
+import { analyzeVolatility } from '../analize-modules/volatility/analyze-volatility.js';
+import { analyzeFunding } from '../analize-modules/funding/analyze-funding.js';
+import { analyzeCorrelation } from '../analize-modules/correlation/analyze-correlation.js';
+import { analyzeTrendRegime } from '../analize-modules/trendRegime/analyze-trend-regime.js';
+import { analyzeLongShort } from '../analize-modules/longshort/analyze-longshort.js';
 import { saveDoc } from '../storage/storage.js';
 
 export async function finalAnalyzer({

@@ -63,8 +63,6 @@ export async function notifyTrade(position = {}, action = 'UPDATE') {
     const tps = position.takeProfits ?? position.initialTPs ?? [];
     const closedBy =
       position.closedBy ?? position.closedReason ?? position.reason ?? null;
-    const finalPnl = position.finalPnl ?? null;
-    const rrr = position.rrrToFirstTp ?? null;
     const openedAt = position.openedAt
       ? new Date(position.openedAt).toISOString()
       : position.initialOpenedAt
@@ -118,25 +116,12 @@ export async function notifyTrade(position = {}, action = 'UPDATE') {
       `Leverage: ${leverage ?? '—'}x`,
       `SL: ${fmtPrice(stopLoss)}`,
       `TPs:\n${tpText}`,
-      `RRR to TP1: ${rrr ?? '—'}`,
-      `Final PnL: ${finalPnl ?? '—'}`,
       `Opened: ${openedAt}`,
       `Closed: ${closedAt}`,
     ].join('\n');
 
     const text = `${header}\n${body}`;
 
-    // лог в консолі
-    console.log(
-      '[notifyTrade]',
-      action,
-      symbol,
-      closedBy ? `(reason=${closedBy})` : '',
-      '\n',
-      body,
-    );
-
-    // відправка
     await sendTelegram(text);
   } catch (err) {
     console.error('notifyTrade failed:', err?.message || err);

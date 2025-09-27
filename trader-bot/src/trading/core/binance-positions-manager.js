@@ -15,9 +15,6 @@ function oppositeSide(side) {
   return side === 'LONG' ? 'SHORT' : 'LONG';
 }
 
-/**
- * Отримати активні позиції
- */
 export async function getActivePositions(symbol) {
   if (!symbol) {
     throw new Error('getActivePositions requires a symbol');
@@ -26,17 +23,11 @@ export async function getActivePositions(symbol) {
   const { position, orders } = await getLiveState(symbol);
   return position?.side ? [{ ...position, orders }] : [];
 }
-/**
- * Закрити позицію повністю
- */
 export async function closePosition(symbol, side, quantity) {
   return await binanceClosePosition(symbol, side, quantity);
 }
 
-/**
- * Часткове закриття
- */
-export async function partialClose(symbol, side, sizePct, price) {
+export async function partialClosePosition(symbol, side, sizePct, price) {
   const { position } = await getLiveState(symbol);
   if (!position?.side) return null;
 
@@ -44,13 +35,9 @@ export async function partialClose(symbol, side, sizePct, price) {
   return await binanceClosePosition(symbol, oppositeSide(side), qty / price);
 }
 
-/**
- * Долив до позиції (DCA/Add)
- */
 export async function applyAddToPosition(symbol, side, addUsd, price, exits) {
   const filters = await getSymbolFilters(symbol);
 
-  // 1. Відкрити додатковий маркет-ордер
   const rawQty = addUsd / price;
   const qty = adjustQuantity(filters, rawQty);
   if (!qty || Number(qty) <= 0) {
@@ -61,14 +48,11 @@ export async function applyAddToPosition(symbol, side, addUsd, price, exits) {
   await openMarketOrder(symbol, side === 'LONG' ? 'BUY' : 'SELL', qty);
   console.log(`➕ Added ${addUsd}$ to ${symbol} @ ${price}`);
 
-  // 2. Скасувати старі SL/TP
   await cancelAllOrders(symbol);
 
-  // 3. Порахувати новий розмір всієї позиції
   const { position } = await getLiveState(symbol);
   const totalQty = position?.size || Number(qty) || 0;
 
-  // 4. Виставити нові SL/TP
   if (exits?.sl?.price) {
     const stopPx = adjustPrice(filters, exits.sl.price);
     await placeStopLoss(symbol, side, stopPx, totalQty);
@@ -86,6 +70,5 @@ export async function applyAddToPosition(symbol, side, addUsd, price, exits) {
     }
   }
 
-  // 5. Повертаємо оновлений стан
   return await getLiveState(symbol);
 }

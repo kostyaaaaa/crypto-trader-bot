@@ -6,7 +6,6 @@ import { LiquidationsModel, LiquidityModel } from 'crypto-trader-db';
 
 dotenv.config();
 
-const USE_FILES = process.env.USE_FILES === 'true';
 const FILE_MAX = 1000;
 const DB_MAX = 10000;
 
@@ -23,22 +22,6 @@ function getModel(collection) {
 
 /* ========= SAVE ========= */
 export async function saveDoc(collection, doc) {
-  if (USE_FILES) {
-    let db = [];
-    try {
-      db = JSON.parse(fs.readFileSync(`${collection}.json`, 'utf-8'));
-      if (!Array.isArray(db)) db = [];
-    } catch {
-      db = [];
-    }
-
-    db.push(doc);
-    if (db.length > FILE_MAX) db = db.slice(-FILE_MAX);
-
-    fs.writeFileSync(`${collection}.json`, JSON.stringify(db, null, 2));
-    return;
-  }
-
   const Model = getModel(collection);
   const maxDocs = DB_MAX;
 
@@ -71,20 +54,6 @@ export async function saveDoc(collection, doc) {
 
 /* ========= LOAD ========= */
 export async function loadDocs(collection, symbol, limit = 100) {
-  if (USE_FILES) {
-    let db = [];
-    try {
-      db = JSON.parse(fs.readFileSync(`${collection}.json`, 'utf-8'));
-      if (!Array.isArray(db)) db = [];
-    } catch {
-      db = [];
-    }
-
-    if (symbol) db = db.filter((d) => d.symbol === symbol);
-    if (limit && db.length > limit) return db.slice(-limit);
-    return db;
-  }
-
   const Model = getModel(collection);
   const query = symbol ? { symbol } : {};
 
@@ -97,15 +66,6 @@ export async function loadDocs(collection, symbol, limit = 100) {
 
 /* ========= RAW ========= */
 export async function loadDocsRaw(collection) {
-  if (USE_FILES) {
-    try {
-      const db = JSON.parse(fs.readFileSync(`${collection}.json`, 'utf-8'));
-      return Array.isArray(db) ? db : [];
-    } catch {
-      return [];
-    }
-  }
-
   const Model = getModel(collection);
 
   if (Model.find && Model.create) {
@@ -116,53 +76,20 @@ export async function loadDocsRaw(collection) {
 }
 
 /* ========= UPDATE ========= */
-export async function updateDoc(collection, query, update) {
-  if (USE_FILES) {
-    let db = [];
-    try {
-      db = JSON.parse(fs.readFileSync(`${collection}.json`, 'utf-8'));
-      if (!Array.isArray(db)) db = [];
-    } catch {
-      db = [];
-    }
-
-    let updated = null;
-    db = db.map((doc) => {
-      const match = Object.keys(query).every((k) => doc[k] === query[k]);
-      if (!match) return doc;
-
-      // підтримка $set і $push у файловому режимі
-      updated = { ...doc };
-      if (update.$set) {
-        updated = { ...updated, ...update.$set };
-      }
-      if (update.$push) {
-        for (const [key, val] of Object.entries(update.$push)) {
-          if (!Array.isArray(updated[key])) updated[key] = [];
-          updated[key].push(val);
-        }
-      }
-      if (update.$inc) {
-        for (const [key, val] of Object.entries(update.$inc)) {
-          updated[key] = (updated[key] || 0) + val;
-        }
-      }
-      return updated;
-    });
-
-    fs.writeFileSync(`${collection}.json`, JSON.stringify(db, null, 2));
-    return updated;
-  }
-
+export async function updateDoc(collection, query, update, opts = {}) {
   const Model = getModel(collection);
 
   if (Model.findOneAndUpdate) {
     // mongoose
-    return await Model.findOneAndUpdate(query, update, { new: true });
+    return await Model.findOneAndUpdate(query, update, {
+      new: true,
+      upsert: opts.upsert === true,
+    });
   } else {
     // native
     return await Model.findOneAndUpdate(query, update, {
       returnDocument: 'after',
+      upsert: opts.upsert === true,
     });
   }
 }

@@ -1,6 +1,6 @@
 // trading/core/prepare.js
 
-import { autoTakeProfits } from './autoTakeProfits.js';
+import { autoTakeProfits } from './calculate-auto-take-profits.js';
 
 export async function preparePosition(symbol, cfg, analysis, side, entryPrice) {
   const { capital, exits } = cfg.strategy;
