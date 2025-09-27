@@ -41,7 +41,7 @@ export async function openPosition(
     side,
     entryPrice,
     size,
-    openedAt: Date.now(),
+    openedAt: new Date(),
     status: 'OPEN',
 
     // SL / TP
@@ -178,7 +178,7 @@ export async function closePositionHistory(
     {
       $set: {
         status: 'CLOSED',
-        closedAt: Date.now(),
+        closedAt: new Date(),
         finalPnl: totalPnl,
         closedBy,
       },
@@ -188,7 +188,7 @@ export async function closePositionHistory(
   return {
     ...pos,
     status: 'CLOSED',
-    closedAt: Date.now(),
+    closedAt: new Date(),
     finalPnl: totalPnl,
     closedBy,
   };
@@ -262,8 +262,6 @@ export async function updateStopPrice(symbol, price, reason) {
 }
 
 export async function updateTakeProfits(symbol, tps, baseEntry, reason) {
-  console.log('TP_UPDATE');
-
   const pos = await getOpenPosition(symbol);
   if (!pos) return null;
 

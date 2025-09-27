@@ -1,10 +1,10 @@
 // trading/core/monitorPositions.js
 import axios from 'axios';
+import { loadDocs } from '../../storage/storage.js';
 import {
-  openMarketOrder,
   cancelStopOrders,
+  openMarketOrder,
   placeStopLoss,
-  placeTakeProfit,
 } from '../binance/binance.js';
 import { getActivePositions } from './binance-positions-manager.js';
 import {
@@ -13,7 +13,6 @@ import {
   getHistory,
   updateStopPrice,
 } from './historyStore.js';
-import { loadDocs } from '../../storage/storage.js';
 
 const TRADE_MODE = process.env.TRADE_MODE || 'paper';
 
@@ -169,38 +168,12 @@ export async function monitorPositions({ symbol, strategy }) {
           try {
             await openMarketOrder(symbol, binanceSide, addQty.toFixed(3));
 
-            // 🔥 1) одразу оновлюємо SL на повний новий обсяг
-            const newTotalQty = liveQty + addQty;
-            if (currentSL) {
-              await cancelStopOrders(symbol, { onlySL: true });
-              await placeStopLoss(symbol, side, currentSL, newTotalQty);
-
-              await adjustPosition(symbol, {
-                type: 'SL',
-                price: currentSL,
-                size: newTotalQty,
-              });
-
-              await updateStopPrice(symbol, currentSL, 'ADD_RESET');
-            }
-
-            // ⚠️ Запис у ІСТОРІЮ (БД): просто фіксуємо долив (історія знає свій формат)
+            // ❌ SL/TP більше не чіпаємо
+            // ⚠️ Запис у ІСТОРІЮ (БД): просто фіксуємо долив
             await addToPosition(symbol, { qty: addQty, price });
           } catch {}
         } else {
-          const newTotalQty = liveQty + addQty;
-
-          // SL (симуляція)
-          if (currentSL) {
-            await adjustPosition(symbol, {
-              type: 'SL',
-              price: currentSL,
-              size: newTotalQty,
-            });
-
-            await updateStopPrice(symbol, currentSL, 'ADD_RESET');
-          }
-
+          // Симуляція — теж не чіпаємо SL/TP
           await addToPosition(symbol, { qty: addQty, price });
         }
       }
