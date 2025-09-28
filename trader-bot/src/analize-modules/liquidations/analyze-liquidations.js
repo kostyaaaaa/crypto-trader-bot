@@ -3,7 +3,6 @@
 // buysValue → ріжуть шорти → ціна зростає → LONG
 // sellsValue → ріжуть лонги → ціна падає → SHORT
 
-import { log } from 'console';
 import { loadDocs } from '../../storage/storage.js';
 
 export async function analyzeLiquidations(symbol = 'ETHUSDT', window = 5) {

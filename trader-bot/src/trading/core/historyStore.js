@@ -262,8 +262,6 @@ export async function updateStopPrice(symbol, price, reason) {
 }
 
 export async function updateTakeProfits(symbol, tps, baseEntry, reason) {
-  console.log('TP_UPDATE');
-
   const pos = await getOpenPosition(symbol);
   if (!pos) return null;
 
