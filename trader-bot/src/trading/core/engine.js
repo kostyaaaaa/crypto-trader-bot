@@ -177,7 +177,8 @@ export async function tradingEngine(symbol, config) {
       console.log(
         `⚠️ ${symbol}: higherTrend.signal !== majority, risk reduced`,
       );
-      capital.riskPerTradePct = capital.riskPerTradePct / 2;
+      // capital.riskPerTradePct = capital.riskPerTradePct / 2;
+      // return;
     }
 
     if (higherVol.signal === 'NONE' && higherVol.meta?.regime === 'DEAD') {
