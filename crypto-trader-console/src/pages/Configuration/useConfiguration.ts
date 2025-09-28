@@ -1,6 +1,7 @@
 import { notifications } from '@mantine/notifications';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { QueryKeys, deleteCoinConfig, getAllCoinConfigs } from '../../api';
+import { updateCoinConfig } from '../../api/coinConfig/updateCoinConfig';
 
 const useConfiguration = () => {
   const { data, refetch } = useQuery({
@@ -35,7 +36,18 @@ const useConfiguration = () => {
     },
   });
 
-  return { configs: data?.data, deleteCoinConfigMutate };
+  const { mutate: updateCoinConfigMutate } = useMutation({
+    mutationFn: updateCoinConfig,
+    onError: (error) => {
+      console.error('error:', error);
+    },
+  });
+
+  return {
+    configs: data?.data,
+    deleteCoinConfigMutate,
+    updateCoinConfigMutate,
+  };
 };
 
 export default useConfiguration;

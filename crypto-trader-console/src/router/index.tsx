@@ -1,6 +1,12 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { CoinConfig, Configuration, CreateConfig, Dashboard } from '../pages';
 import { MainLayout } from '../layout';
+import {
+  CoinConfig,
+  Configuration,
+  CreateConfig,
+  Dashboard,
+  PositionsPage,
+} from '../pages';
 import { ROUTERS_PATH } from './constants';
 
 export const router = createBrowserRouter([
@@ -12,6 +18,7 @@ export const router = createBrowserRouter([
       { path: ROUTERS_PATH.configuration, element: <Configuration /> },
       { path: ROUTERS_PATH.createConfig, element: <CreateConfig /> },
       { path: ROUTERS_PATH.coinConfigIdPattern, element: <CoinConfig /> },
+      { path: ROUTERS_PATH.positions, element: <PositionsPage /> },
     ],
   },
 ]);

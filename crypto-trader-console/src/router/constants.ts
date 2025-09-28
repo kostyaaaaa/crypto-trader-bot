@@ -4,4 +4,5 @@ export const ROUTERS_PATH = {
   createConfig: '/config/create',
   coinConfigIdPattern: '/config/create/:symbol',
   coinConfigId: (symbol: string) => `/config/create/${symbol}`,
+  positions: '/positions',
 } as const;

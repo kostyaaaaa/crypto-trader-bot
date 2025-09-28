@@ -7,7 +7,8 @@ import styles from './Configuration.module.scss';
 import useConfiguration from './useConfiguration';
 
 const Configuration: FC = () => {
-  const { configs, deleteCoinConfigMutate } = useConfiguration();
+  const { configs, deleteCoinConfigMutate, updateCoinConfigMutate } =
+    useConfiguration();
 
   const [scrolled, setScrolled] = useState<boolean>(false);
 
@@ -25,12 +26,21 @@ const Configuration: FC = () => {
       </Table.Td>
       <Table.Td>{row.strategy.capital.account}</Table.Td>
       <Table.Td>{formatDate(row.updatedAt)}</Table.Td>
-      <Table.Td>
+      <Table.Td>{row.isActive ? 'Active' : 'Disable'}</Table.Td>
+      <Table.Td className={styles.actions}>
         <Button
           variant="light"
           onClick={() => deleteCoinConfigMutate(row.symbol)}
         >
           Delete
+        </Button>
+        <Button
+          variant="light"
+          onClick={() =>
+            updateCoinConfigMutate({ ...row, isActive: !row.isActive })
+          }
+        >
+          {row.isActive ? 'Deactivate' : 'Activate'}
         </Button>
       </Table.Td>
     </Table.Tr>
@@ -47,32 +57,25 @@ const Configuration: FC = () => {
         + Add new config
       </Button>
 
-      <div>
-        {!configs?.length ? (
-          'any configs'
-        ) : (
-          <div className={styles.tableContainer}>
-            <ScrollArea
-              onScrollPositionChange={({ y }) => setScrolled(y !== 0)}
+      <div className={styles.tableContainer}>
+        <ScrollArea onScrollPositionChange={({ y }) => setScrolled(y !== 0)}>
+          <Table miw={700}>
+            <Table.Thead
+              className={clsx(styles.header, {
+                [styles.scrolled]: scrolled,
+              })}
             >
-              <Table miw={700}>
-                <Table.Thead
-                  className={clsx(styles.header, {
-                    [styles.scrolled]: scrolled,
-                  })}
-                >
-                  <Table.Tr>
-                    <Table.Th>Symbol</Table.Th>
-                    <Table.Th>strategy capital account</Table.Th>
-                    <Table.Th>Last updated</Table.Th>
-                    <Table.Th></Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>{rows}</Table.Tbody>
-              </Table>
-            </ScrollArea>
-          </div>
-        )}
+              <Table.Tr>
+                <Table.Th>Symbol</Table.Th>
+                <Table.Th>strategy capital account</Table.Th>
+                <Table.Th>Last updated</Table.Th>
+                <Table.Th>Status</Table.Th>
+                <Table.Th></Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>{rows}</Table.Tbody>
+          </Table>
+        </ScrollArea>
       </div>
     </div>
   );

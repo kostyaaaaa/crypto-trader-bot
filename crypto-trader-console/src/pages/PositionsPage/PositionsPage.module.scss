@@ -1,0 +1,26 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 24px;
+
+  &__red {
+    background-color: #ffc1c1;
+  }
+
+  &__green {
+    background-color: #c1ffc1;
+  }
+
+  &__table {
+    margin-top: 36px;
+  }
+
+  &__long {
+    color: green;
+  }
+
+  &__short {
+    color: red;
+  }
+}
