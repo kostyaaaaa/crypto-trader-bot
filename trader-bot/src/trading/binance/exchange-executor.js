@@ -1,18 +1,18 @@
 // trading/executeTrade.js
 import {
+  adjustPrice,
+  adjustQuantity,
+  cancelAllOrders,
+  getPosition,
+  getSymbolFilters,
   openMarketOrder,
   placeStopLoss,
   placeTakeProfit,
-  cancelAllOrders,
-  getSymbolFilters,
-  adjustQuantity,
-  adjustPrice,
-  getPosition,
   setLeverage,
 } from './binance.js';
 
-import { preparePosition } from '../core/prepare.js';
 import { updateStopPrice, updateTakeProfits } from '../core/historyStore.js';
+import { preparePosition } from '../core/prepare.js';
 
 const TRADE_MODE = process.env.TRADE_MODE || 'paper';
 
@@ -79,7 +79,6 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
   // 1) Плече перед входом
   try {
     await setLeverage(symbol, leverage);
-    console.log(`⚙️ Set leverage ${leverage}x for ${symbol}`);
     pos.leverage = leverage;
   } catch (err) {
     console.error(
