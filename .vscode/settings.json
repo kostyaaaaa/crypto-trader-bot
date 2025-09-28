@@ -7,5 +7,11 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit"
   },
-  "conventionalCommits.scopes": ["trader-bot"]
+  "conventionalCommits.scopes": [
+    "trader-bot",
+    "console",
+    "server",
+    "packages",
+    "app"
+  ]
 }
