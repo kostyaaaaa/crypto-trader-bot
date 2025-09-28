@@ -8,6 +8,7 @@
 ## 1) Що робить модуль
 
 Модуль обчислює:
+
 - **EMA(9)** і **EMA(21)** за масивом цін закриття (close),
 - **RSI(14)** за тим самим масивом,
 - далі формує дві оцінки **`longScore`** і **`shortScore`** (0–100),
@@ -29,6 +30,7 @@
   - **RSI > 70** (перекупленість) підсилює шортовий сценарій.
 
 На виході стратегія може:
+
 - **фільтрувати входи** (наприклад, не шортити проти сильного ап-тренду),
 - **модулювати розмір/дозвіл угоди** (наприклад, торгувати тільки якщо `strength ≥ 60`).
 
@@ -45,40 +47,51 @@
 ## 4) Покроково: як працює код
 
 1. **Перевірка вхідних даних**
+
    ```js
    if (!candles || candles.length < 21) return null;
    ```
+
    Потрібно щонайменше 21 свічка, щоб коректно порахувати EMA(21) та RSI(14).
 
 2. **Підготовка рядів даних**
+
    ```js
    const closes = candles.map((c) => c.close);
    ```
+
    Беремо масив цін закриття — він є базою для EMA та RSI.
 
 3. **Обчислення EMA**
+
    ```js
    const emaFast = EMA(closes, 9);
    const emaSlow = EMA(closes, 21);
    const emaGapPct = ((emaFast - emaSlow) / emaSlow) * 100;
    ```
+
    - `emaFast` = EMA(9), `emaSlow` = EMA(21).
    - `emaGapPct` — **процентний розрив** між швидкою та повільною EMA. Позитивне значення → ап-тренд; негативне → даун-тренд.
 
 4. **Обчислення RSI**
+
    ```js
    const rsi = RSI(closes, 14);
    ```
+
    Значення від 0 до 100. Типові зони: `<30` — перепроданість, `>70` — перекупленість.
 
 5. **Початкові бали сили**
+
    ```js
    let longScore = 50;
    let shortScore = 50;
    ```
+
    Стартуємо з нейтральної точки 50/50.
 
 6. **Вплив EMA-розриву**
+
    ```js
    if (emaGapPct > 0) {
      longScore += Math.min(30, Math.abs(emaGapPct) * 5);
@@ -88,10 +101,12 @@
      longScore -= Math.min(30, Math.abs(emaGapPct) * 5);
    }
    ```
+
    - Чим більший за модулем розрив EMA, тим сильніший трендовий сигнал.
    - Коефіцієнт підсилення — `* 5`, але **обмежений «стелею» у 30 пунктів**.
 
 7. **Вплив RSI-зон**
+
    ```js
    if (rsi < 30) {
      longScore += 20;
@@ -101,30 +116,36 @@
      longScore -= 20;
    }
    ```
+
    - Зони перепроданості/перекупленості додають **фіксовані ±20 пунктів**.
    - В середині діапазону 30–70 RSI не впливає на бали.
 
 8. **Обмеження діапазону 0–100**
+
    ```js
    longScore = Math.max(0, Math.min(100, longScore));
    shortScore = Math.max(0, Math.min(100, shortScore));
    ```
+
    Це захищає від виходу за межі шкали.
 
 9. **Фінальний сигнал**
+
    ```js
    let signal = 'NEUTRAL';
    if (longScore > shortScore) signal = 'LONG';
    else if (shortScore > longScore) signal = 'SHORT';
    ```
+
    Переможець між `longScore` і `shortScore` визначає напрямок.
 
 10. **Повернений об’єкт**
+
     ```js
     return {
       module: 'trend',
       symbol,
-      signal,                     // LONG | SHORT | NEUTRAL
+      signal, // LONG | SHORT | NEUTRAL
       strength: Math.max(longScore, shortScore),
       meta: {
         LONG: longScore,
@@ -136,6 +157,7 @@
       },
     };
     ```
+
     - `module` — ідентифікатор (щоб інші частини системи знали джерело сигналу).
     - `strength` — «наскільки ми впевнені» у поточному напрямку.
     - `meta` — числа, корисні для логів/дашборду.
@@ -145,6 +167,7 @@
 ## 5) Вхідні та вихідні дані
 
 ### Вхід
+
 ```ts
 symbol?: string        // тикер, напр. 'ETHUSDT' (не обов’язковий)
 candles: Array<{       // обов’язково ≥ 21 елемент
@@ -154,21 +177,23 @@ candles: Array<{       // обов’язково ≥ 21 елемент
 ```
 
 ### Вихід
+
 ```ts
-null | {
-  module: 'trend',
-  symbol: string,
-  signal: 'LONG' | 'SHORT' | 'NEUTRAL',
-  strength: number,  // 0..100
-  meta: {
-    LONG: number,
-    SHORT: number,
-    emaFast: number,
-    emaSlow: number,
-    emaGapPct: number,
-    rsi: number,
-  }
-}
+null |
+  {
+    module: 'trend',
+    symbol: string,
+    signal: 'LONG' | 'SHORT' | 'NEUTRAL',
+    strength: number, // 0..100
+    meta: {
+      LONG: number,
+      SHORT: number,
+      emaFast: number,
+      emaSlow: number,
+      emaGapPct: number,
+      rsi: number,
+    },
+  };
 ```
 
 ---
@@ -185,8 +210,8 @@ null | {
     "LONG": 74,
     "SHORT": 26,
     "emaFast": 3567.12,
-    "emaSlow": 3521.40,
-    "emaGapPct": 1.30,
+    "emaSlow": 3521.4,
+    "emaGapPct": 1.3,
     "rsi": 55.42
   }
 }
@@ -202,7 +227,7 @@ null | {
 - **Ваги/стелі:**
   - множник для EMA-розриву: `* 5`, **стеля 30**;
   - поправка від RSI: **±20** в крайніх зонах.
-  За потреби можна ослабити/підсилити, але важливо **не допустити** ситуації, коли один фактор повністю «затирає» інший.
+    За потреби можна ослабити/підсилити, але важливо **не допустити** ситуації, коли один фактор повністю «затирає» інший.
 - **Пороги RSI:** класика 30/70 підходить більшості інструментів; для дуже волатильних можна розширити до 25/75.
 
 ---
