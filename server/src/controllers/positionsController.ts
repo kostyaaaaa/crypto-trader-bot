@@ -20,16 +20,16 @@ const getPositionsByDateRangeAndSymbol = async (
   try {
     const { symbol, dateFrom, dateTo } = req.query;
 
-    if (!symbol || !dateFrom || !dateTo) {
+    if (!dateFrom || !dateTo) {
       res.status(400).json({
         error: 'Missing parameters',
-        message: 'symbol, dateFrom, and dateTo query parameters are required',
+        message: 'dateFrom and dateTo query parameters are required',
       });
       return;
     }
 
     logger.info(
-      `Fetching closed positions history for symbol: ${symbol} between ${dateFrom} and ${dateTo}`,
+      `Fetching closed positions history for symbol: ${symbol || 'all'} between ${dateFrom} and ${dateTo}`,
     );
 
     const startDate = new Date(dateFrom as string);
@@ -52,27 +52,33 @@ const getPositionsByDateRangeAndSymbol = async (
       return;
     }
 
-    // Find closed positions data for the symbol within the timestamp range
-    const positionsData = await PositionModel.find({
-      symbol,
+    // Find closed positions data within the timestamp range
+    const query: any = {
       status: 'CLOSED',
       openedAt: { $gte: startDate, $lte: endDate },
-    }).sort({ openedAt: 1 });
+    };
+
+    // Only add symbol filter if provided
+    if (symbol) {
+      query.symbol = symbol;
+    }
+
+    const positionsData = await PositionModel.find(query).sort({ openedAt: 1 });
 
     logger.success(
-      `Successfully fetched ${positionsData.length} closed position records for symbol: ${symbol} between ${dateFrom} and ${dateTo}`,
+      `Successfully fetched ${positionsData.length} closed position records for symbol: ${symbol || 'all'} between ${dateFrom} and ${dateTo}`,
     );
 
     res.json({
       success: true,
-      message: `Closed positions history for ${symbol} between ${dateFrom} and ${dateTo} retrieved successfully`,
+      message: `Closed positions history for symbol: ${symbol || 'all'} between ${dateFrom} and ${dateTo} retrieved successfully`,
       data: positionsData,
       count: positionsData.length,
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
     logger.error(
-      `Error fetching closed positions history by date range and symbol for: ${req.query.symbol}`,
+      `Error fetching closed positions history by date range and symbol for: ${req.query.symbol || 'all'}`,
       {
         message: error.message,
         stack: error.stack,
