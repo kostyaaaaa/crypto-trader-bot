@@ -1,10 +1,10 @@
 import { Burger, Container, Drawer, Group } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { type FC } from 'react';
-import styles from './Header.module.scss';
-import { ROUTERS_PATH } from '../../router/constants';
 import { Link, useLocation } from 'react-router-dom';
 import logo from '../../assets/logo.jpg';
+import { ROUTERS_PATH } from '../../router/constants';
+import styles from './Header.module.scss';
 
 const Header: FC = () => {
   const [opened, { toggle }] = useDisclosure(false);
@@ -65,4 +65,5 @@ interface ILink {
 const links: ILink[] = [
   { link: ROUTERS_PATH.dashboard, label: 'Dashboard' },
   { link: ROUTERS_PATH.configuration, label: 'Configuration' },
+  { link: ROUTERS_PATH.positions, label: 'Positions' },
 ];

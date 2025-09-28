@@ -35,3 +35,8 @@
     max-width: calc(100vw - 24px);
   }
 }
+
+.actions {
+  display: flex;
+  gap: 12px;
+}

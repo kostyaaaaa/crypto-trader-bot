@@ -5,4 +5,5 @@ export const QueryKeys = {
   AllSpotPrices: 'AllSpotPrices',
   AllCoinConfigs: 'AllCoinConfigs',
   GetCoinConfig: 'GetCoinConfig',
+  GetPositions: 'GetPositions',
 } as const;
