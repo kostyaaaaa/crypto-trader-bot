@@ -1,6 +1,13 @@
+import {
+  Autocomplete,
+  Checkbox,
+  NumberInput,
+  Select,
+  Tabs,
+  TagsInput,
+  TextInput,
+} from '@mantine/core';
 import { type FC } from 'react';
-import styles from './CoinConfigTemplate.module.scss';
-import { Autocomplete, Tabs } from '@mantine/core';
 import {
   Controller,
   type Control,
@@ -8,8 +15,8 @@ import {
   type UseFormRegister,
 } from 'react-hook-form';
 import type { TCoinConfig } from '../../types';
+import styles from './CoinConfigTemplate.module.scss';
 import { tabs } from './config';
-import { TextInput, Checkbox } from '@mantine/core';
 import useCoinConfigTemplate from './useCoinConfigTemplate';
 
 const FormField = ({
@@ -17,13 +24,17 @@ const FormField = ({
   label,
   type,
   register,
+  control,
   disabledSymbol,
+  options,
 }: {
   name: Path<TCoinConfig>;
   label: string;
-  type: 'string' | 'number' | 'boolean';
+  type: 'string' | 'number' | 'boolean' | 'select' | 'array';
   register: UseFormRegister<TCoinConfig>;
+  control: Control<TCoinConfig>;
   disabledSymbol?: boolean;
+  options?: string[];
 }) => {
   if (type === 'boolean') {
     return (
@@ -38,13 +49,73 @@ const FormField = ({
 
   if (type === 'number') {
     return (
-      <TextInput
-        className={styles.wrapper__input}
-        type="number"
-        label={label}
-        {...register(name, { valueAsNumber: true })}
-        onKeyDown={(e) => {
-          if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+      <Controller
+        name={name}
+        control={control}
+        render={({ field }) => (
+          <NumberInput
+            className={styles.wrapper__input}
+            label={label}
+            value={field.value as number}
+            onChange={(value) => field.onChange(value)}
+            onBlur={field.onBlur}
+            disabled={disabledSymbol}
+          />
+        )}
+      />
+    );
+  }
+
+  if (type === 'select' && options) {
+    return (
+      <Controller
+        name={name}
+        control={control}
+        render={({ field }) => (
+          <Select
+            className={styles.wrapper__input}
+            label={label}
+            data={options}
+            value={field.value as string}
+            onChange={(value) => field.onChange(value)}
+            onBlur={field.onBlur}
+            disabled={disabledSymbol}
+          />
+        )}
+      />
+    );
+  }
+
+  if (type === 'array') {
+    return (
+      <Controller
+        name={name}
+        control={control}
+        render={({ field }) => {
+          const arrayValue = field.value as number[] | string[];
+          const stringValue = Array.isArray(arrayValue)
+            ? arrayValue.join(', ')
+            : '';
+
+          return (
+            <TagsInput
+              className={styles.wrapper__input}
+              label={label}
+              value={stringValue ? stringValue.split(', ') : []}
+              onChange={(tags) => {
+                // Convert string tags to numbers if they're numeric
+                const convertedValues = tags.map((tag) => {
+                  const num = parseFloat(tag.trim());
+                  return isNaN(num) ? tag.trim() : num;
+                });
+                field.onChange(convertedValues);
+              }}
+              onBlur={field.onBlur}
+              disabled={disabledSymbol}
+              placeholder="Enter values separated by commas"
+              splitChars={[',', ' ']}
+            />
+          );
         }}
       />
     );
@@ -113,48 +184,56 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
               label="Candle Timeframe"
               type="string"
               register={register}
+              control={control}
             />
             <FormField
               name="analysisConfig.oiWindow"
               label="OI Window"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="analysisConfig.liqWindow"
               label="Liq Window"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="analysisConfig.liqSentWindow"
               label="Liq Sent Window"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="analysisConfig.fundingWindow"
               label="Funding Window"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="analysisConfig.volWindow"
               label="Vol Window"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="analysisConfig.corrWindow"
               label="Corr Window"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="analysisConfig.longShortWindow"
               label="LongShort Window"
               type="number"
               register={register}
+              control={control}
             />
           </div>
         </Tabs.Panel>
@@ -168,6 +247,7 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
                 label={key}
                 type="number"
                 register={register}
+                control={control}
               />
             ))}
           </div>
@@ -183,6 +263,7 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
                 label={key}
                 type="number"
                 register={register}
+                control={control}
               />
             ))}
           </div>
@@ -196,54 +277,63 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
               label="Entry MinScore LONG"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.entry.minScore.SHORT"
               label="Entry MinScore SHORT"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.entry.minModules"
               label="Min Modules"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
-              name="strategy.entry.requiredModules.0"
-              label="Required Modules (comma separated)"
-              type="string"
+              name="strategy.entry.requiredModules"
+              label="Required Modules"
+              type="array"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.entry.maxSpreadPct"
               label="Max Spread Pct"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.entry.cooldownMin"
               label="Cooldown Min"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.entry.sideBiasTolerance"
               label="Side Bias Tolerance"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.entry.avoidWhen.volatility"
               label="Avoid Volatility"
               type="string"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.entry.avoidWhen.fundingExtreme.absOver"
               label="Avoid FundingExtreme AbsOver"
               type="number"
               register={register}
+              control={control}
             />
           </div>
         </Tabs.Panel>
@@ -256,12 +346,14 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
               label="Dead Below"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.volatilityFilter.extremeAbove"
               label="Extreme Above"
               type="number"
               register={register}
+              control={control}
             />
           </div>
         </Tabs.Panel>
@@ -274,24 +366,28 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
               label="Account"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.capital.riskPerTradePct"
               label="Risk Per Trade %"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.capital.leverage"
               label="Leverage"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.capital.maxConcurrentPositions"
               label="Max Concurrent Positions"
               type="number"
               register={register}
+              control={control}
             />
           </div>
         </Tabs.Panel>
@@ -300,34 +396,25 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
         <Tabs.Panel value="strategy_sizing">
           <div className={styles['wrapper__form-list']}>
             <FormField
-              name="strategy.sizing.maxPositionUsd"
-              label="Max Position USD"
-              type="number"
-              register={register}
-            />
-            <FormField
               name="strategy.sizing.maxAdds"
               label="Max Adds"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.sizing.addOnAdverseMovePct"
               label="Add On Adverse Move %"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.sizing.addMultiplier"
               label="Add Multiplier"
               type="number"
               register={register}
-            />
-            <FormField
-              name="strategy.sizing.baseSizeUsd"
-              label="Base Size USD"
-              type="number"
-              register={register}
+              control={control}
             />
           </div>
         </Tabs.Panel>
@@ -340,30 +427,21 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
               label="Use TP"
               type="boolean"
               register={register}
+              control={control}
             />
             <FormField
-              name="strategy.exits.tp.tpGridPct.0"
-              label="TP Grid Pct[0]"
-              type="number"
+              name="strategy.exits.tp.tpGridPct"
+              label="TP Grid Percentages"
+              type="array"
               register={register}
+              control={control}
             />
             <FormField
-              name="strategy.exits.tp.tpGridPct.1"
-              label="TP Grid Pct[1]"
-              type="number"
+              name="strategy.exits.tp.tpGridSizePct"
+              label="TP Grid Size Percentages"
+              type="array"
               register={register}
-            />
-            <FormField
-              name="strategy.exits.tp.tpGridSizePct.0"
-              label="TP Grid Size Pct[0]"
-              type="number"
-              register={register}
-            />
-            <FormField
-              name="strategy.exits.tp.tpGridSizePct.1"
-              label="TP Grid Size Pct[1]"
-              type="number"
-              register={register}
+              control={control}
             />
           </div>
         </Tabs.Panel>
@@ -374,38 +452,45 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
             <FormField
               name="strategy.exits.sl.type"
               label="SL Type"
-              type="string"
+              type="select"
               register={register}
+              control={control}
+              options={['atr', 'hard']}
             />
             <FormField
               name="strategy.exits.sl.hardPct"
               label="SL Hard Pct"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.exits.sl.atrMult"
               label="SL ATR Mult"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.exits.sl.signalRules.flipIf.scoreGap"
               label="SL FlipIf ScoreGap"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.exits.sl.signalRules.flipIf.minOppScore"
               label="SL FlipIf MinOppScore"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
-              name="strategy.exits.sl.signalRules.moduleFail.required.0"
-              label="SL ModuleFail Required[0]"
-              type="string"
+              name="strategy.exits.sl.signalRules.moduleFail.required"
+              label="SL ModuleFail Required Modules"
+              type="array"
               register={register}
+              control={control}
             />
           </div>
         </Tabs.Panel>
@@ -418,12 +503,15 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
               label="Max Hold Min"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.exits.time.noPnLFallback"
               label="NoPnL Fallback"
-              type="string"
+              type="select"
               register={register}
+              control={control}
+              options={['none', 'breakeven', 'closeSmallLoss']}
             />
           </div>
         </Tabs.Panel>
@@ -436,18 +524,21 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
               label="Use Trailing"
               type="boolean"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.exits.trailing.startAfterPct"
               label="Start After Pct"
               type="number"
               register={register}
+              control={control}
             />
             <FormField
               name="strategy.exits.trailing.trailStepPct"
               label="Trail Step Pct"
               type="number"
               register={register}
+              control={control}
             />
           </div>
         </Tabs.Panel>
