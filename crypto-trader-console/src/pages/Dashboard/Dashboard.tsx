@@ -36,7 +36,7 @@ const Dashboard: FC = () => {
           x{row.leverage}, total = ($
           {(+row.positionInitialMargin * +row.leverage).toFixed(3)})
         </Table.Td>
-        <Table.Td>{row.unrealizedProfit}</Table.Td>
+        <Table.Td>{(+row.unrealizedProfit).toFixed(3)}</Table.Td>
       </Table.Tr>
     );
   });

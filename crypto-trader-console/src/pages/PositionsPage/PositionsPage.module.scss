@@ -23,4 +23,12 @@
   &__short {
     color: red;
   }
+
+  &__general {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+  }
 }

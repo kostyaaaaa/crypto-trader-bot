@@ -30,7 +30,8 @@ type SortField =
   | 'size'
   | 'leverage'
   | 'openedAt'
-  | 'closedAt';
+  | 'closedAt'
+  | 'symbol';
 type SortDirection = 'asc' | 'desc';
 
 const usePositionsPage = () => {
@@ -42,17 +43,17 @@ const usePositionsPage = () => {
   const { data: positionsData } = useQuery({
     queryKey: [QueryKeys.GetPositions, period, selectedCoin],
     queryFn: async () => {
-      if (selectedCoin && period[0] && period[1]) {
+      if (period[0] && period[1]) {
         const data = await getPositionsByTimeAndSymbol(
-          selectedCoin,
           new Date(period[0]).toISOString(),
           new Date(period[1]).toISOString(),
+          selectedCoin,
         );
 
         return data;
       }
     },
-    enabled: !!selectedCoin && !!period.every((item) => !!item),
+    enabled: !!period.every((item) => !!item),
     refetchOnWindowFocus: false,
   });
 
@@ -89,6 +90,7 @@ const usePositionsPage = () => {
           break;
         case 'side':
         case 'closedBy':
+        case 'symbol':
           aValue = a[sortField];
           bValue = b[sortField];
           break;

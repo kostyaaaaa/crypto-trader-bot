@@ -1,9 +1,9 @@
 import axiosInterceptor from '../../axiosClient';
 
 export const getPositionsByTimeAndSymbol = async (
-  symbol: string,
   dateFrom: string,
   dateTo: string,
+  symbol?: string | null,
 ): Promise<{
   count: number;
   data: IPositionProps[];
@@ -13,7 +13,7 @@ export const getPositionsByTimeAndSymbol = async (
 }> => {
   const queryParams = new URLSearchParams();
 
-  queryParams.append('symbol', symbol);
+  if (symbol) queryParams.append('symbol', symbol);
   queryParams.append('dateFrom', dateFrom);
   queryParams.append('dateTo', dateTo);
 
