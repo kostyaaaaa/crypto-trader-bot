@@ -140,6 +140,7 @@
    Переможець між `longScore` і `shortScore` визначає напрямок.
 
 10. **Повернений об’єкт**
+
     ```js
     return {
       module: 'trend',
