@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "prettier": "prettier --write .",
+    "lint": "npm run lint --workspace=crypto-trader-console && npm run lint --workspace=server && npm run lint --workspace=crypto-trader-db && npm run lint --workspace=trader-bot",
     "prepare": "husky || exit 0",
     "build:packages": "npm run build --workspace=crypto-trader-db",
     "build": "npm run build:packages && npm run build --workspace=server && npm run build --workspace=crypto-trader-console"
