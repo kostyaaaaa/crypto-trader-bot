@@ -1,3 +1,4 @@
+import { notifications } from '@mantine/notifications';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { QueryKeys, deleteCoinConfig, getAllCoinConfigs } from '../../api';
 import { updateCoinConfig } from '../../api/coinConfig/updateCoinConfig';
@@ -12,11 +13,26 @@ const useConfiguration = () => {
 
   const { mutate: deleteCoinConfigMutate } = useMutation({
     mutationFn: deleteCoinConfig,
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       refetch();
+      notifications.show({
+        title: 'Success!',
+        message: `Configuration for ${variables} deleted successfully`,
+        color: 'green',
+      });
     },
-    onError: (error) => {
+    onError: (
+      error: Error & { response?: { data?: { message?: string } } },
+      variables,
+    ) => {
       console.error('error:', error);
+      notifications.show({
+        title: 'Error',
+        message:
+          error?.response?.data?.message ||
+          `Failed to delete configuration for ${variables}`,
+        color: 'red',
+      });
     },
   });
 
