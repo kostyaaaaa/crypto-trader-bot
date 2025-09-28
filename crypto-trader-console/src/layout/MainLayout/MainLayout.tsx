@@ -4,7 +4,7 @@ import { Header } from '../../widgets';
 
 const MainLayout: FC = () => {
   return (
-    <div>
+    <div style={{ width: '100%', maxWidth: '100vw', overflowX: 'hidden' }}>
       <Header />
       <Outlet />
     </div>

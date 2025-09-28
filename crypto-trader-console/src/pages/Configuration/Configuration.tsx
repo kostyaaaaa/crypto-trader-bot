@@ -1,10 +1,10 @@
-import { useState, type FC } from 'react';
-import useConfiguration from './useConfiguration';
 import { Button, ScrollArea, Table } from '@mantine/core';
-import styles from './Configuration.module.scss';
-import { ROUTERS_PATH } from '../../router/constants';
 import clsx from 'clsx';
+import { useState, type FC } from 'react';
+import { ROUTERS_PATH } from '../../router/constants';
 import { formatDate } from '../../utils/formatDate';
+import styles from './Configuration.module.scss';
+import useConfiguration from './useConfiguration';
 
 const Configuration: FC = () => {
   const { configs, deleteCoinConfigMutate } = useConfiguration();
@@ -51,21 +51,27 @@ const Configuration: FC = () => {
         {!configs?.length ? (
           'any configs'
         ) : (
-          <ScrollArea onScrollPositionChange={({ y }) => setScrolled(y !== 0)}>
-            <Table miw={700}>
-              <Table.Thead
-                className={clsx(styles.header, { [styles.scrolled]: scrolled })}
-              >
-                <Table.Tr>
-                  <Table.Th>Symbol</Table.Th>
-                  <Table.Th>strategy capital account</Table.Th>
-                  <Table.Th>Last updated</Table.Th>
-                  <Table.Th></Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>{rows}</Table.Tbody>
-            </Table>
-          </ScrollArea>
+          <div className={styles.tableContainer}>
+            <ScrollArea
+              onScrollPositionChange={({ y }) => setScrolled(y !== 0)}
+            >
+              <Table miw={700}>
+                <Table.Thead
+                  className={clsx(styles.header, {
+                    [styles.scrolled]: scrolled,
+                  })}
+                >
+                  <Table.Tr>
+                    <Table.Th>Symbol</Table.Th>
+                    <Table.Th>strategy capital account</Table.Th>
+                    <Table.Th>Last updated</Table.Th>
+                    <Table.Th></Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>{rows}</Table.Tbody>
+              </Table>
+            </ScrollArea>
+          </div>
         )}
       </div>
     </div>
