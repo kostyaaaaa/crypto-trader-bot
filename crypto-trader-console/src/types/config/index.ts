@@ -93,7 +93,7 @@ type TAnalysisModule = {
 };
 
 export type TCoinConfigResponse = TCoinConfig & {
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
   _id: string;
 };

@@ -1,9 +1,9 @@
-import { useState, type FC } from 'react';
-import { CardWrapper } from '../../components';
-import useDashboard from './useDashboard';
 import { Button, ScrollArea, Table } from '@mantine/core';
 import clsx from 'clsx';
+import { useState, type FC } from 'react';
+import { CardWrapper } from '../../components';
 import styles from './Dashboard.module.scss';
+import useDashboard from './useDashboard';
 
 const Dashboard: FC = () => {
   const {
@@ -57,7 +57,7 @@ const Dashboard: FC = () => {
         <CardWrapper>
           PNL за сьогодні{' '}
           <span className={styles[isPlusPnl ? 'green' : 'red']}>
-            {(isPlusPnl ? '+' : '-') + currentPnl}$
+            {currentPnl}$
           </span>
         </CardWrapper>
       </div>
@@ -75,23 +75,29 @@ const Dashboard: FC = () => {
         </h5>
 
         {!!futuresPositions?.length && (
-          <ScrollArea onScrollPositionChange={({ y }) => setScrolled(y !== 0)}>
-            <Table miw={700}>
-              <Table.Thead
-                className={clsx(styles.header, { [styles.scrolled]: scrolled })}
-              >
-                <Table.Tr>
-                  <Table.Th>Symbol</Table.Th>
-                  <Table.Th>Position</Table.Th>
-                  <Table.Th>Entry Coin Price</Table.Th>
-                  <Table.Th>Initial Margin</Table.Th>
-                  <Table.Th>Leverage</Table.Th>
-                  <Table.Th>Unrealized Profit</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>{rows}</Table.Tbody>
-            </Table>
-          </ScrollArea>
+          <div className={styles.tableContainer}>
+            <ScrollArea
+              onScrollPositionChange={({ y }) => setScrolled(y !== 0)}
+            >
+              <Table miw={700}>
+                <Table.Thead
+                  className={clsx(styles.header, {
+                    [styles.scrolled]: scrolled,
+                  })}
+                >
+                  <Table.Tr>
+                    <Table.Th>Symbol</Table.Th>
+                    <Table.Th>Position</Table.Th>
+                    <Table.Th>Entry Coin Price</Table.Th>
+                    <Table.Th>Initial Margin</Table.Th>
+                    <Table.Th>Leverage</Table.Th>
+                    <Table.Th>Unrealized Profit</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>{rows}</Table.Tbody>
+              </Table>
+            </ScrollArea>
+          </div>
         )}
       </div>
 
