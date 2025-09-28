@@ -1,10 +1,11 @@
+import { notifications } from '@mantine/notifications';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { QueryKeys, getConfigBySymbol } from '../../api';
-import { useParams } from 'react-router-dom';
-import { updateCoinConfig } from '../../api/coinConfig/updateCoinConfig';
-import { useForm, type SubmitHandler } from 'react-hook-form';
-import type { TCoinConfig } from '../../types';
 import { useEffect } from 'react';
+import { useForm, type SubmitHandler } from 'react-hook-form';
+import { useParams } from 'react-router-dom';
+import { QueryKeys, getConfigBySymbol } from '../../api';
+import { updateCoinConfig } from '../../api/coinConfig/updateCoinConfig';
+import type { TCoinConfig } from '../../types';
 
 const useCoinConfig = () => {
   const { symbol } = useParams<{ symbol: string }>();
@@ -22,8 +23,23 @@ const useCoinConfig = () => {
 
   const { mutate: updateCoinConfigMutate } = useMutation({
     mutationFn: updateCoinConfig,
-    onError: (error) => {
+    onSuccess: (data) => {
+      notifications.show({
+        title: 'Success!',
+        message: `Configuration for ${data.data.symbol} updated successfully`,
+        color: 'green',
+      });
+    },
+    onError: (
+      error: Error & { response?: { data?: { message?: string } } },
+    ) => {
       console.error('error:', error);
+      notifications.show({
+        title: 'Error',
+        message:
+          error?.response?.data?.message || 'Failed to update configuration',
+        color: 'red',
+      });
     },
   });
 

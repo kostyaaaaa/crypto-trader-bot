@@ -62,11 +62,9 @@ export const mockCreateConfigData: TCoinConfig = {
       maxConcurrentPositions: 2,
     },
     sizing: {
-      maxPositionUsd: 10,
       maxAdds: 1,
       addOnAdverseMovePct: 1,
       addMultiplier: 1.0,
-      baseSizeUsd: 10,
     },
     exits: {
       tp: {

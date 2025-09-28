@@ -42,11 +42,9 @@ export type TCoinConfig = {
       maxConcurrentPositions: number;
     };
     sizing: {
-      maxPositionUsd: number;
       maxAdds: number;
       addOnAdverseMovePct: number;
       addMultiplier: number;
-      baseSizeUsd: number;
     };
     exits: {
       tp: {
