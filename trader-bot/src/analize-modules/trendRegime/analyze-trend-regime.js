@@ -2,7 +2,12 @@
 // --- Аналіз Trend Regime через ADX / DI ---
 // Використовує тільки свічки (high, low, close)
 
-export async function analyzeTrendRegime(symbol, candles, period = 14) {
+export async function analyzeTrendRegime(symbol, candles, options = 14) {
+  // options: number => period, or object => { period, adxSignalMin }
+  const period =
+    typeof options === 'number' ? options : (options?.period ?? 14);
+  const adxSignalMin =
+    typeof options === 'number' ? 20 : (options?.adxSignalMin ?? 20);
   if (!candles || candles.length < period + 2) {
     return null;
   }
@@ -62,23 +67,26 @@ export async function analyzeTrendRegime(symbol, candles, period = 14) {
   const lastAdx = adxArr.at(-1);
 
   // --- сигнал ---
+  // напрямок за DI визначаємо завжди; фінальний signal лише якщо ADX ≥ порогу
+  let dir = 'NEUTRAL';
+  if (lastPlus > lastMinus) dir = 'LONG';
+  else if (lastMinus > lastPlus) dir = 'SHORT';
+
   let signal = 'NEUTRAL';
-  if (lastAdx > 20) {
-    if (lastPlus > lastMinus) signal = 'LONG';
-    else if (lastMinus > lastPlus) signal = 'SHORT';
+  if (lastAdx >= adxSignalMin && dir !== 'NEUTRAL') {
+    signal = dir;
   }
 
   // strength = сам ADX, нормалізуємо до 0..100
   const strength = Math.min(100, Math.max(0, lastAdx));
-
   return {
     module: 'trendRegime',
     symbol,
     signal, // LONG / SHORT / NEUTRAL
     strength, // 0..100 (на основі ADX)
     meta: {
-      LONG: signal === 'LONG' ? strength : 0,
-      SHORT: signal === 'SHORT' ? strength : 0,
+      LONG: dir === 'LONG' ? strength : 0,
+      SHORT: dir === 'SHORT' ? strength : 0,
       ADX: Number(lastAdx.toFixed(2)),
       plusDI: Number(lastPlus.toFixed(2)),
       minusDI: Number(lastMinus.toFixed(2)),
