@@ -31,6 +31,7 @@ const PositionsPage: FC = () => {
       key={pos._id}
       className={styles[pos.finalPnl < 0 ? 'wrapper__red' : 'wrapper__green']}
     >
+      <Table.Td>{pos.symbol}</Table.Td>
       <Table.Td
         className={
           styles[pos.side === 'LONG' ? 'wrapper__long' : 'wrapper__short']
@@ -39,7 +40,7 @@ const PositionsPage: FC = () => {
         {pos.side}
       </Table.Td>
       <Table.Td>{pos.closedBy}</Table.Td>
-      <Table.Td>${pos.finalPnl}</Table.Td>
+      <Table.Td>${pos.finalPnl.toFixed(3)}</Table.Td>
       <Table.Td>{pos.size}</Table.Td>
       <Table.Td>
         <p>Long: {pos.analysisRef.scores.LONG}</p>
@@ -74,11 +75,52 @@ const PositionsPage: FC = () => {
         />
       </Group>
 
+      <div className={styles.wrapper__general}>
+        <h4>General info</h4>
+        <Text inline>
+          Win positions counter:{' '}
+          {positions.filter((item) => item.finalPnl > 0).length}
+        </Text>
+
+        <Text inline>
+          Lose positions counter:{' '}
+          {positions.filter((item) => item.finalPnl < 0).length}
+        </Text>
+
+        <Text inline>
+          Total PnL: $
+          {positions.reduce((sum, item) => sum + item.finalPnl, 0).toFixed(3)}
+        </Text>
+
+        <Text inline>
+          Closed by SL:{' '}
+          {positions.filter((item) => item.closedBy === 'SL').length}
+        </Text>
+
+        <Text inline>
+          Closed by TP:{' '}
+          {positions.filter((item) => item.closedBy === 'TP').length}
+        </Text>
+      </div>
+
       {!!positions?.length && (
         <>
           <Table className={styles.wrapper__table}>
             <Table.Thead>
               <Table.Tr>
+                <Table.Th>
+                  <UnstyledButton onClick={() => handleSort('symbol')}>
+                    <Text inline>
+                      Symbol{' '}
+                      {sortField === 'symbol'
+                        ? sortDirection === 'asc'
+                          ? '▲'
+                          : '▼'
+                        : ''}
+                    </Text>
+                  </UnstyledButton>
+                </Table.Th>
+
                 <Table.Th>
                   <UnstyledButton onClick={() => handleSort('side')}>
                     <Text inline>
