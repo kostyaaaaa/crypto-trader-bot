@@ -26,7 +26,7 @@ async function startConfig(config) {
   // 🔹 Моніторинг відкритих позицій раз на 15 секунд
   const monitorInterval = setInterval(async () => {
     await monitorPositions({ symbol, strategy });
-  }, 15 * 1000);
+  }, 10 * 1000);
 
   // зберігаємо, щоб мати змогу чистити при апдейті/видаленні
   activeIntervals[symbol] = {

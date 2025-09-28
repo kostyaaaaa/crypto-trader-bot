@@ -126,9 +126,9 @@ export async function tradingEngine(symbol, config) {
       console.log(`⏸️ ${symbol}: skip, volatility regime DEAD`);
       return;
     }
-    if (signal === 'NONE' && meta?.regime === 'EXTREME') {
-      capital.riskPerTradePct = capital.riskPerTradePct / 2;
-    }
+    // if (signal === 'NONE' && meta?.regime === 'EXTREME') {
+    //   capital.riskPerTradePct = capital.riskPerTradePct / 2;
+    // }
   }
 
   if (modules?.liquidity?.meta?.spreadPct > entry.maxSpreadPct) {
