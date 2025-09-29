@@ -47,6 +47,8 @@ export type TCoinConfig = {
       addMultiplier: number;
     };
     exits: {
+      oppositeCountExit?: number;
+
       tp: {
         use: boolean;
         tpGridPct: number[];
@@ -75,7 +77,6 @@ export type TCoinConfig = {
         startAfterPct: number;
         trailStepPct: number;
       };
-      oppositeCountExit: number;
     };
   };
 };
