@@ -10,8 +10,8 @@ export async function analyzeCandles(symbol = 'ETHUSDT', candles = []) {
 
   const closes = candles.map((c) => c.close);
 
-  const emaFast = EMA(closes, 9);
-  const emaSlow = EMA(closes, 21);
+  const emaFast = EMA(closes, 9, { seed: 'sma' });
+  const emaSlow = EMA(closes, 21, { seed: 'sma' });
   const emaGapPct = ((emaFast - emaSlow) / emaSlow) * 100;
 
   const rsi = RSI(closes, 14);

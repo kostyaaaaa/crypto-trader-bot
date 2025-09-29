@@ -269,6 +269,64 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
           </div>
         </Tabs.Panel>
 
+        {/* Module higherMA */}
+        <Tabs.Panel value="anal_module_higherMA">
+          <div className={styles['wrapper__form-list']}>
+            <FormField
+              name="analysisConfig.higherMA.timeframe"
+              label="HigherMA Timeframe"
+              type="select"
+              register={register}
+              control={control}
+              options={['1d', '4h', '1w', '1h']}
+            />
+            <FormField
+              name="analysisConfig.higherMA.maShort"
+              label="HigherMA Short Period"
+              type="number"
+              register={register}
+              control={control}
+            />
+            <FormField
+              name="analysisConfig.higherMA.maLong"
+              label="HigherMA Long Period"
+              type="number"
+              register={register}
+              control={control}
+            />
+            <FormField
+              name="analysisConfig.higherMA.type"
+              label="HigherMA Type"
+              type="select"
+              register={register}
+              control={control}
+              options={['SMA', 'EMA']}
+            />
+            <FormField
+              name="analysisConfig.higherMA.thresholdPct"
+              label="HigherMA Threshold %"
+              type="number"
+              register={register}
+              control={control}
+            />
+            <FormField
+              name="analysisConfig.higherMA.scale"
+              label="HigherMA Scale"
+              type="number"
+              register={register}
+              control={control}
+            />
+            <FormField
+              name="analysisConfig.higherMA.emaSeed"
+              label="EMA Seed"
+              type="select"
+              register={register}
+              control={control}
+              options={['sma', 'first']}
+            />
+          </div>
+        </Tabs.Panel>
+
         {/* Strategy Entry */}
         <Tabs.Panel value="strategy_entry">
           <div className={styles['wrapper__form-list']}>
@@ -577,4 +635,5 @@ const moduleKeys = [
   'openInterest',
   'correlation',
   'longShort',
+  'higherMA',
 ] as const;

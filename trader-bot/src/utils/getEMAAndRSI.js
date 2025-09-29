@@ -7,17 +7,30 @@
  * @param {number} period - період EMA (наприклад, 9 або 21)
  * @returns {number} останнє значення EMA
  */
-export function EMA(values, period) {
-  if (!values || values.length < period) return null;
+export function EMA(values, period, { seed = 'sma' } = {}) {
+  if (!Array.isArray(values) || values.length < period) return null;
+  const arr = values.map(Number).filter(Number.isFinite);
+  if (arr.length < period) return null;
 
-  const k = 2 / (period + 1); // множник згладжування
-  let ema = values[0]; // починаємо з першого значення
+  const k = 2 / (period + 1);
 
-  for (let i = 1; i < values.length; i++) {
-    ema = values[i] * k + ema * (1 - k);
+  let ema;
+  let startIdx;
+
+  if (seed === 'first') {
+    ema = arr[0]; // твій підхід
+    startIdx = 1;
+  } else {
+    // 'sma' — класичний
+    const sm = arr.slice(0, period).reduce((s, v) => s + v, 0) / period;
+    ema = sm;
+    startIdx = period;
   }
 
-  return ema;
+  for (let i = startIdx; i < arr.length; i++) {
+    ema = arr[i] * k + ema * (1 - k);
+  }
+  return ema; // остання EMA
 }
 
 /**
@@ -41,4 +54,10 @@ export function RSI(values, period = 14) {
 
   const rs = gains / (losses || 1); // щоб уникнути ділення на 0
   return 100 - 100 / (1 + rs); // формула RSI
+}
+
+export function SMA(values, p) {
+  if (!Array.isArray(values) || values.length < p) return null;
+  const sum = values.slice(-p).reduce((s, v) => s + v, 0);
+  return sum / p;
 }
