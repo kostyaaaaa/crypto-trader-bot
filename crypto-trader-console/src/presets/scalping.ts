@@ -1,0 +1,69 @@
+import type { TCoinConfig } from '../types';
+
+export const scalpingPreset: TCoinConfig = {
+  symbol: 'SCALPING',
+  isActive: true,
+  analysisConfig: {
+    candleTimeframe: '1m',
+    oiWindow: 10,
+    liqWindow: 10,
+    liqSentWindow: 3,
+    fundingWindow: 12,
+    volWindow: 8,
+    corrWindow: 5,
+    longShortWindow: 5,
+    weights: {
+      trend: 0.15,
+      trendRegime: 0.1,
+      liquidity: 0.3,
+      funding: 0.05,
+      liquidations: 0.25,
+      openInterest: 0.1,
+      correlation: 0.03,
+      longShort: 0.02,
+    },
+    moduleThresholds: {
+      trend: 15,
+      trendRegime: 10,
+      liquidity: 15,
+      funding: 10,
+      liquidations: 12,
+      openInterest: 10,
+      correlation: 8,
+      longShort: 8,
+    },
+  },
+  strategy: {
+    entry: {
+      minScore: { LONG: 35, SHORT: 35 },
+      minModules: 3,
+      requiredModules: ['liquidity', 'liquidations'],
+      maxSpreadPct: 0.02,
+      cooldownMin: 2,
+      avoidWhen: { volatility: 'DEAD', fundingExtreme: { absOver: 0.08 } },
+      sideBiasTolerance: 5,
+    },
+    volatilityFilter: { deadBelow: 0.3, extremeAbove: 3.0 },
+    capital: {
+      account: 100,
+      riskPerTradePct: 2,
+      leverage: 20,
+      maxConcurrentPositions: 3,
+    },
+    sizing: { maxAdds: 0, addOnAdverseMovePct: 0.3, addMultiplier: 1 },
+    exits: {
+      tp: { use: true, tpGridPct: [0.5, 1.0], tpGridSizePct: [70, 30] },
+      sl: {
+        type: 'hard',
+        hardPct: 0.7,
+        atrMult: 0.5,
+        signalRules: {
+          flipIf: { scoreGap: 15, minOppScore: 55 },
+          moduleFail: { required: ['liquidity'] },
+        },
+      },
+      time: { maxHoldMin: 5, noPnLFallback: 'closeSmallLoss' },
+      trailing: { use: false, startAfterPct: 0, trailStepPct: 0 },
+    },
+  },
+};

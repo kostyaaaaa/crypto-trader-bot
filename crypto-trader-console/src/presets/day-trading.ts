@@ -1,0 +1,69 @@
+import type { TCoinConfig } from '../types';
+
+export const dayTradingPreset: TCoinConfig = {
+  symbol: 'DAY TRADING',
+  isActive: true,
+  analysisConfig: {
+    candleTimeframe: '15m',
+    oiWindow: 20,
+    liqWindow: 20,
+    liqSentWindow: 5,
+    fundingWindow: 24,
+    volWindow: 14,
+    corrWindow: 8,
+    longShortWindow: 8,
+    weights: {
+      trend: 0.25,
+      trendRegime: 0.2,
+      liquidity: 0.2,
+      funding: 0.1,
+      liquidations: 0.1,
+      openInterest: 0.1,
+      correlation: 0.03,
+      longShort: 0.02,
+    },
+    moduleThresholds: {
+      trend: 20,
+      trendRegime: 15,
+      liquidity: 15,
+      funding: 12,
+      liquidations: 12,
+      openInterest: 10,
+      correlation: 8,
+      longShort: 8,
+    },
+  },
+  strategy: {
+    entry: {
+      minScore: { LONG: 40, SHORT: 40 },
+      minModules: 4,
+      requiredModules: ['trend'],
+      maxSpreadPct: 0.025,
+      cooldownMin: 10,
+      avoidWhen: { volatility: 'DEAD', fundingExtreme: { absOver: 0.06 } },
+      sideBiasTolerance: 7,
+    },
+    volatilityFilter: { deadBelow: 0.4, extremeAbove: 2.5 },
+    capital: {
+      account: 100,
+      riskPerTradePct: 5,
+      leverage: 10,
+      maxConcurrentPositions: 2,
+    },
+    sizing: { maxAdds: 1, addOnAdverseMovePct: 0.5, addMultiplier: 1.2 },
+    exits: {
+      tp: { use: true, tpGridPct: [2, 4, 6], tpGridSizePct: [50, 30, 20] },
+      sl: {
+        type: 'hard',
+        hardPct: 2,
+        atrMult: 0.8,
+        signalRules: {
+          flipIf: { scoreGap: 20, minOppScore: 60 },
+          moduleFail: { required: ['trend'] },
+        },
+      },
+      time: { maxHoldMin: 240, noPnLFallback: 'breakeven' },
+      trailing: { use: true, startAfterPct: 1.0, trailStepPct: 0.5 },
+    },
+  },
+};
