@@ -12,15 +12,25 @@ export const positionTradingPreset: TCoinConfig = {
     volWindow: 60,
     corrWindow: 30,
     longShortWindow: 30,
+    higherMA: {
+      timeframe: '1w',
+      maShort: 14,
+      maLong: 28,
+      type: 'EMA',
+      thresholdPct: 0.5,
+      scale: 20,
+      emaSeed: 'sma',
+    },
     weights: {
-      trend: 0.5,
-      trendRegime: 0.3,
+      trend: 0.4,
+      trendRegime: 0.25,
       liquidity: 0.1,
       funding: 0.05,
       liquidations: 0.02,
       openInterest: 0.02,
       correlation: 0.01,
       longShort: 0.0,
+      higherMA: 0.15,
     },
     moduleThresholds: {
       trend: 30,
@@ -31,6 +41,7 @@ export const positionTradingPreset: TCoinConfig = {
       openInterest: 10,
       correlation: 8,
       longShort: 8,
+      higherMA: 15,
     },
   },
   strategy: {
@@ -52,6 +63,7 @@ export const positionTradingPreset: TCoinConfig = {
     },
     sizing: { maxAdds: 0, addOnAdverseMovePct: 0, addMultiplier: 1 },
     exits: {
+      oppositeCountExit: 0,
       tp: { use: true, tpGridPct: [20, 50, 100], tpGridSizePct: [40, 30, 30] },
       sl: {
         type: 'hard',

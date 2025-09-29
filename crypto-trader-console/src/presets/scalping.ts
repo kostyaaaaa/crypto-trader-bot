@@ -12,6 +12,15 @@ export const scalpingPreset: TCoinConfig = {
     volWindow: 8,
     corrWindow: 5,
     longShortWindow: 5,
+    higherMA: {
+      timeframe: '15m',
+      maShort: 5,
+      maLong: 10,
+      type: 'EMA',
+      thresholdPct: 0.1,
+      scale: 8,
+      emaSeed: 'first',
+    },
     weights: {
       trend: 0.15,
       trendRegime: 0.1,
@@ -21,6 +30,7 @@ export const scalpingPreset: TCoinConfig = {
       openInterest: 0.1,
       correlation: 0.03,
       longShort: 0.02,
+      higherMA: 0.0,
     },
     moduleThresholds: {
       trend: 15,
@@ -31,6 +41,7 @@ export const scalpingPreset: TCoinConfig = {
       openInterest: 10,
       correlation: 8,
       longShort: 8,
+      higherMA: 5,
     },
   },
   strategy: {
@@ -52,6 +63,7 @@ export const scalpingPreset: TCoinConfig = {
     },
     sizing: { maxAdds: 0, addOnAdverseMovePct: 0.3, addMultiplier: 1 },
     exits: {
+      oppositeCountExit: 0,
       tp: { use: true, tpGridPct: [0.5, 1.0], tpGridSizePct: [70, 30] },
       sl: {
         type: 'hard',
