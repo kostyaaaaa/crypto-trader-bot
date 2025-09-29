@@ -51,7 +51,7 @@ export const positionTradingPreset: TCoinConfig = {
       requiredModules: ['trend', 'trendRegime'],
       maxSpreadPct: 0.05,
       cooldownMin: 1440,
-      avoidWhen: { volatility: 'DEAD', fundingExtreme: { absOver: 0.05 } },
+      avoidWhen: { volatility: 'DEAD', fundingExtreme: { absOver: 0.0008 } },
       sideBiasTolerance: 10,
     },
     volatilityFilter: { deadBelow: 0.8, extremeAbove: 6.0 },
@@ -64,11 +64,11 @@ export const positionTradingPreset: TCoinConfig = {
     sizing: { maxAdds: 0, addOnAdverseMovePct: 0, addMultiplier: 1 },
     exits: {
       oppositeCountExit: 0,
-      tp: { use: true, tpGridPct: [20, 50, 100], tpGridSizePct: [40, 30, 30] },
+      tp: { use: true, tpGridPct: [15, 35, 70], tpGridSizePct: [40, 35, 25] },
       sl: {
-        type: 'hard',
-        hardPct: 15,
-        atrMult: 2.0,
+        type: 'atr', // ATR-based stop for position entries
+        hardPct: 15, // fallback if ATR data is unavailable
+        atrMult: 2.2, // slightly wider for higher timeframe noise
         signalRules: {
           flipIf: { scoreGap: 30, minOppScore: 75 },
           moduleFail: { required: ['trend', 'trendRegime'] },
