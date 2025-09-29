@@ -1,4 +1,4 @@
-// trading/core/monitorPositions.js
+// trading/core/monitor.js
 import axios from 'axios';
 import { loadDocs } from '../../storage/storage.js';
 import {
@@ -55,16 +55,26 @@ export async function monitorPositions({ symbol, strategy }) {
   const price = await getMarkPrice(symbol);
   if (price == null) return;
 
-  const oppExitN = Number(strategy?.exits?.oppositeCountExit ?? 3);
+  // Правило виходу за N послідовних протилежних сигналів: 0 => вимкнено
+  const oppExitRaw = strategy?.exits?.oppositeCountExit;
+  const oppExitN = Number.isFinite(+oppExitRaw)
+    ? Math.max(0, Math.floor(+oppExitRaw))
+    : 0;
 
-  // Отримуємо останні аналізи (для перевірки протилежних сигналів)
+  // Отримуємо останні аналізи (для перевірки протилежних сигналів та інших фільтрів)
   let lastAnalysis = null;
   let recentAnalyses = [];
   try {
-    const analysisDocs = await loadDocs('analysis', symbol, oppExitN);
+    const docCount = oppExitN > 0 ? oppExitN : 1; // тягнемо щонайменше 1 аналіз
+    const analysisDocs = await loadDocs('analysis', symbol, docCount);
     if (Array.isArray(analysisDocs) && analysisDocs.length > 0) {
-      recentAnalyses = analysisDocs;
-      lastAnalysis = analysisDocs[0];
+      // ensure newest-first ordering by time/createdAt
+      recentAnalyses = [...analysisDocs].sort((a, b) => {
+        const at = new Date(a?.time || a?.createdAt || 0).getTime();
+        const bt = new Date(b?.time || b?.createdAt || 0).getTime();
+        return bt - at;
+      });
+      lastAnalysis = recentAnalyses[0];
     }
   } catch {}
 
@@ -73,38 +83,43 @@ export async function monitorPositions({ symbol, strategy }) {
     const dir = side === 'LONG' ? 1 : -1;
     const binanceSide = side === 'LONG' ? 'BUY' : 'SELL';
 
-    // === Exit on consecutive opposite signals ===
-    const anaSide = (a) => a?.bias || a?.signal || null;
-    const isOppositeToPos = (s) =>
-      side === 'LONG' ? s === 'SHORT' : s === 'LONG';
+    // === Exit on consecutive opposite signals (strict last-N) ===
+    if (oppExitN > 0) {
+      const anaSide = (a) => a?.bias || a?.signal || null;
+      const isOppositeToPos = (s) =>
+        side === 'LONG' ? s === 'SHORT' : s === 'LONG';
 
-    const oppositeCount = (recentAnalyses || [])
-      .map(anaSide)
-      .filter(Boolean)
-      .slice(0, oppExitN)
-      .reduce((acc, s) => acc + (isOppositeToPos(s) ? 1 : 0), 0);
+      const lastN = (recentAnalyses || []).slice(0, oppExitN);
+      const allOpposite =
+        lastN.length === oppExitN &&
+        lastN.every((a) => isOppositeToPos(anaSide(a)));
 
-    if (oppositeCount >= oppExitN) {
-      console.log(
-        `⏹️ ${symbol}: exit by opposite signals x${oppExitN} (pos=${side})`,
-      );
-      if (TRADE_MODE === 'live') {
+      if (allOpposite) {
+        console.log(
+          `⏹️ ${symbol}: exit by opposite signals x${oppExitN} (pos=${side})`,
+        );
+        if (TRADE_MODE === 'live') {
+          try {
+            await cancelStopOrders(symbol);
+          } catch {}
+          const closeSide = side === 'LONG' ? 'SELL' : 'BUY';
+          try {
+            await openMarketOrder(
+              symbol,
+              closeSide,
+              Number(liveQty).toFixed(3),
+            );
+          } catch {}
+        }
         try {
-          await cancelStopOrders(symbol);
+          await adjustPosition(symbol, {
+            type: 'EXIT_OPPOSITE',
+            price,
+            size: liveQty,
+          });
         } catch {}
-        const closeSide = side === 'LONG' ? 'SELL' : 'BUY';
-        try {
-          await openMarketOrder(symbol, closeSide, Number(liveQty).toFixed(3));
-        } catch {}
+        continue; // не виконуємо інший менеджмент на цій ітерації
       }
-      try {
-        await adjustPosition(symbol, {
-          type: 'EXIT_OPPOSITE',
-          price,
-          size: liveQty,
-        });
-      } catch {}
-      continue; // не виконуємо інший менеджмент на цій ітерації
     }
 
     const currentSL = Array.isArray(orders)
@@ -170,8 +185,8 @@ export async function monitorPositions({ symbol, strategy }) {
     }
 
     /* ===== 2) DCA / Adds ===== */
-    const { sizing } = strategy;
-    if (sizing && sizing.maxAdds > 0) {
+    const { sizing } = strategy || {};
+    if (sizing && sizing.maxAdds > 0 && entryPrice) {
       const movePct = (Number(sizing.addOnAdverseMovePct) || 0) / 100;
       const adversePrice =
         side === 'LONG'
@@ -181,6 +196,7 @@ export async function monitorPositions({ symbol, strategy }) {
       const condition =
         (side === 'LONG' && price <= adversePrice) ||
         (side === 'SHORT' && price >= adversePrice);
+
       // Перевірка сигналу аналізу: якщо є останній аналіз і сигнал протилежний позиції, не додаємо
       if (
         lastAnalysis &&

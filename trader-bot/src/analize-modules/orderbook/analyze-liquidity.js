@@ -1,5 +1,3 @@
-// modules/orderbook/analyze-liquidity.js
-import { log } from 'console';
 import { loadDocs } from '../../storage/storage.js';
 
 export async function analyzeLiquidity(
@@ -19,25 +17,24 @@ export async function analyzeLiquidity(
   const avgSpreadAbs =
     liq.reduce((s, d) => s + (Number(d.avgSpread) || 0), 0) / liq.length;
 
-  // Використовуємо передане значення, якщо є
   const spreadPct =
     lastPrice && lastPrice > 0 ? (avgSpreadAbs / lastPrice) * 100 : null;
 
-  const bias = (avgImbalance - 0.5) * 2;
-  const strength = Math.min(30, Math.abs(bias) * 400);
+  const clampedImb = Math.max(0, Math.min(1, avgImbalance));
+  const bias = (clampedImb - 0.5) * 2;
+
+  const strength = Math.min(100, Math.abs(bias) * 100);
 
   let signal = 'NEUTRAL';
   if (bias > 0.05) signal = 'LONG';
   else if (bias < -0.05) signal = 'SHORT';
 
-  let LONG = 50,
-    SHORT = 50;
+  let LONG = 0,
+    SHORT = 0;
   if (signal === 'LONG') {
-    LONG += strength;
-    SHORT -= strength;
+    LONG = strength;
   } else if (signal === 'SHORT') {
-    SHORT += strength;
-    LONG -= strength;
+    SHORT = strength;
   }
 
   return {

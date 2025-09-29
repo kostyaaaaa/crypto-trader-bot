@@ -420,6 +420,19 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
         </Tabs.Panel>
 
         {/* Strategy Exits Take Profit */}
+        <Tabs.Panel value="strategy_exits_oppositeCountExit">
+          <div className={styles['wrapper__form-list']}>
+            <FormField
+              name="strategy.exits.oppositeCountExit"
+              label="Opposite Count Exit"
+              type="number"
+              register={register}
+              control={control}
+            />
+          </div>
+        </Tabs.Panel>
+
+        {/* Strategy Exits Take Profit */}
         <Tabs.Panel value="strategy_exits_take_profit">
           <div className={styles['wrapper__form-list']}>
             <FormField

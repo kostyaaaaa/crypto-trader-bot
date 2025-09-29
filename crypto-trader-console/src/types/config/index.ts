@@ -75,6 +75,7 @@ export type TCoinConfig = {
         startAfterPct: number;
         trailStepPct: number;
       };
+      oppositeCountExit: number;
     };
   };
 };
