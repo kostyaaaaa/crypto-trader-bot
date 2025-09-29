@@ -5,11 +5,11 @@
   padding: 32px 24px;
 
   &__red {
-    background-color: #f6475d;
+    background-color: #f87171;
   }
 
   &__green {
-    background-color: #2dbd85;
+    background-color: #10b981;
   }
 
   &__table {
@@ -67,12 +67,12 @@
   }
 
   &__long {
-    color: #1a7a52;
+    color: #22c55e;
     font-weight: bold;
   }
 
   &__short {
-    color: #c91e36;
+    color: #ef4444;
     font-weight: bold;
   }
 
@@ -82,6 +82,16 @@
     width: 100%;
     justify-content: flex-start;
     gap: 8px;
+  }
+
+  &__pnlPositive {
+    color: #22c55e;
+    font-weight: bold;
+  }
+
+  &__pnlNegative {
+    color: #ef4444;
+    font-weight: bold;
   }
 }
 

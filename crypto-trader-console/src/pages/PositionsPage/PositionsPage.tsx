@@ -36,10 +36,7 @@ const PositionsPage: FC = () => {
   } = usePositionsPage();
 
   const rows = positions?.map((pos) => (
-    <Table.Tr
-      key={pos._id}
-      className={styles[pos.finalPnl < 0 ? 'wrapper__red' : 'wrapper__green']}
-    >
+    <Table.Tr key={pos._id}>
       <Table.Td>{pos.symbol}</Table.Td>
       <Table.Td
         className={
@@ -49,8 +46,20 @@ const PositionsPage: FC = () => {
         {pos.side}
       </Table.Td>
       <Table.Td>{pos.closedBy}</Table.Td>
-      <Table.Td>${pos.finalPnl.toFixed(3)}</Table.Td>
-      <Table.Td>{pos.size}</Table.Td>
+      <Table.Td>
+        <span
+          className={
+            styles[
+              pos.finalPnl >= 0
+                ? 'wrapper__pnlPositive'
+                : 'wrapper__pnlNegative'
+            ]
+          }
+        >
+          ${pos.finalPnl.toFixed(3)}
+        </span>
+      </Table.Td>
+      <Table.Td>{pos.size.toFixed(3)}</Table.Td>
       <Table.Td>
         <div className={styles.wrapper__scores}>
           <span>L: {pos.analysisRef.scores.LONG}</span>
@@ -96,8 +105,19 @@ const PositionsPage: FC = () => {
         </Text>
 
         <Text inline>
-          Total PnL: $
-          {positions.reduce((sum, item) => sum + item.finalPnl, 0).toFixed(3)}
+          Total PnL:
+          <span
+            className={
+              styles[
+                positions.reduce((sum, item) => sum + item.finalPnl, 0) >= 0
+                  ? 'wrapper__pnlPositive'
+                  : 'wrapper__pnlNegative'
+              ]
+            }
+          >
+            $
+            {positions.reduce((sum, item) => sum + item.finalPnl, 0).toFixed(3)}
+          </span>
         </Text>
 
         <Text inline>

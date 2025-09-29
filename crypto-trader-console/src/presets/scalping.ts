@@ -13,7 +13,7 @@ export const scalpingPreset: TCoinConfig = {
     corrWindow: 5,
     longShortWindow: 5,
     higherMA: {
-      timeframe: '15m',
+      timeframe: '4h',
       maShort: 5,
       maLong: 10,
       type: 'EMA',

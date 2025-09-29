@@ -114,6 +114,7 @@ const FormField = ({
               disabled={disabledSymbol}
               placeholder="Enter values separated by commas"
               splitChars={[',', ' ']}
+              data={options || []}
             />
           );
         }}
@@ -357,6 +358,7 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
               type="array"
               register={register}
               control={control}
+              options={[...moduleKeys]}
             />
             <FormField
               name="strategy.entry.maxSpreadPct"
@@ -562,6 +564,7 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
               type="array"
               register={register}
               control={control}
+              options={[...moduleKeys]}
             />
           </div>
         </Tabs.Panel>

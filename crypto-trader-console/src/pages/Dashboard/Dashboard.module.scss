@@ -12,12 +12,12 @@
 }
 
 .green {
-  color: #1a7a52;
+  color: #22c55e;
   font-weight: bold;
 }
 
 .red {
-  color: #c91e36;
+  color: #ef4444;
   font-weight: bold;
 }
 
@@ -45,11 +45,21 @@
 }
 
 .long {
-  background-color: #2dbd85 !important;
+  background-color: #10b981 !important;
 }
 
 .short {
-  background-color: #f6475d !important;
+  background-color: #f87171 !important;
+}
+
+.pnlPositive {
+  color: #22c55e;
+  font-weight: bold;
+}
+
+.pnlNegative {
+  color: #ef4444;
+  font-weight: bold;
 }
 
 /* Responsive table styles */
