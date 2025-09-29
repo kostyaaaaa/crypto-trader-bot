@@ -16,6 +16,11 @@ import {
 
 const TRADE_MODE = process.env.TRADE_MODE || 'paper';
 
+// Нормалізуємо сторону з аналізу: пріоритетно bias, інакше signal
+function getAnaSide(a) {
+  return (a && (a.bias ?? a.signal)) || null;
+}
+
 // === API Binance ===
 async function getMarkPrice(symbol) {
   try {
@@ -85,7 +90,7 @@ export async function monitorPositions({ symbol, strategy }) {
 
     // === Exit on consecutive opposite signals (strict last-N) ===
     if (oppExitN > 0) {
-      const anaSide = (a) => a?.bias || a?.signal || null;
+      const anaSide = getAnaSide;
       const isOppositeToPos = (s) =>
         side === 'LONG' ? s === 'SHORT' : s === 'LONG';
 
@@ -197,13 +202,14 @@ export async function monitorPositions({ symbol, strategy }) {
         (side === 'LONG' && price <= adversePrice) ||
         (side === 'SHORT' && price >= adversePrice);
 
-      // Перевірка сигналу аналізу: якщо є останній аналіз і сигнал протилежний позиції, не додаємо
+      // Перевірка аналізу: використовуємо bias (або signal як fallback), щоб було консистентно з рештою логіки
+      const ana = getAnaSide(lastAnalysis);
       if (
-        lastAnalysis &&
-        lastAnalysis.signal &&
-        ((side === 'LONG' && lastAnalysis.signal === 'SHORT') ||
-          (side === 'SHORT' && lastAnalysis.signal === 'LONG'))
+        ana &&
+        ((side === 'LONG' && ana === 'SHORT') ||
+          (side === 'SHORT' && ana === 'LONG'))
       ) {
+        // Останній аналіз протилежний поточній позиції — долив не робимо
         continue;
       }
 

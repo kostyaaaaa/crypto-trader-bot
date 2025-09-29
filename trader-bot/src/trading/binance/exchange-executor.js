@@ -16,8 +16,26 @@ import { preparePosition } from '../core/prepare.js';
 
 const TRADE_MODE = process.env.TRADE_MODE || 'paper';
 
-function isValidStop(side, lastPrice, stopPrice) {
-  return side === 'LONG' ? stopPrice < lastPrice : stopPrice > lastPrice;
+// Валідація стоп-лоса:
+//  - має бути по "збитковій" стороні відносно ціни входу (entryRef)
+//  - і (за наявності) не має бути по "прибутковій" стороні відносно поточної ціни (currentRef),
+//    щоб не спрацював одразу після виставлення
+function validateStop(side, entryRef, currentRef, stopPrice) {
+  if (!Number.isFinite(stopPrice) || !Number.isFinite(entryRef)) return false;
+
+  // умова збиткової сторони відносно ціни входу
+  const okVsEntry =
+    side === 'LONG' ? stopPrice < entryRef : stopPrice > entryRef;
+  if (!okVsEntry) return false;
+
+  // додаткова перевірка відносно поточної ціни, якщо передана
+  if (Number.isFinite(currentRef)) {
+    const okVsCurrent =
+      side === 'LONG' ? stopPrice < currentRef : stopPrice > currentRef;
+    if (!okVsCurrent) return false;
+  }
+
+  return true;
 }
 
 /**
@@ -151,7 +169,7 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
       side === 'LONG' ? entryPrice * 0.95 : entryPrice * 1.05;
   }
 
-  if (isValidStop(side, entryPrice, effectiveStopPrice)) {
+  if (validateStop(side, entryPrice, entryPrice, effectiveStopPrice)) {
     try {
       const stopPx = adjustPrice(filters, effectiveStopPrice);
       const slOrder = await placeStopLoss(symbol, side, stopPx, qty);
@@ -189,11 +207,12 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
         // сирий розрахунок
         const targetRaw = (totalQty * sizePct) / 100;
 
-        // для останнього TP – віддамо весь залишок (щоб сума дорівнювала totalQty)
+        // для останнього TP – віддамо весь залишок, але ОБОВʼЯЗКОВО квантуємо по stepSize
         let tpQty;
         if (i === takeProfits.length - 1) {
-          const remainder = Math.max(totalQty - allocated, 0);
-          tpQty = remainder;
+          const remainderRaw = Math.max(totalQty - allocated, 0);
+          const q = adjustQuantity(filters, remainderRaw);
+          tpQty = Number(q);
         } else {
           // квантуємо не останні
           const q = adjustQuantity(filters, targetRaw);
@@ -276,6 +295,118 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
       err?.message || err,
     );
     pos.orderIds = orderIds;
+  }
+
+  // 7.1) Якщо фактичний avgEntry суттєво відрізняється — перестворюємо SL/TP відносно avgEntry
+  try {
+    const live = await getPosition(symbol);
+    const avgEntry = Number(live?.entryPrice);
+    const liveQty = Math.abs(Number(live?.positionAmt || 0));
+
+    // Перевиставляємо ордери лише якщо є позиція та відхилення > 0.05%
+    const slippagePct =
+      Number.isFinite(avgEntry) && Number.isFinite(entryPrice) && entryPrice > 0
+        ? (Math.abs(avgEntry - entryPrice) / entryPrice) * 100
+        : 0;
+
+    if (liveQty > 0 && slippagePct > 0.05 && Array.isArray(pos.takeProfits)) {
+      console.log(
+        `♻️ Realign SL/TP to avgEntry (slippage=${slippagePct.toFixed(3)}%)...`,
+      );
+
+      // Скасовуємо попередні SL/TP і ставимо заново
+      try {
+        await cancelAllOrders(symbol);
+      } catch (err) {
+        console.warn(
+          `⚠️ Failed to cancel existing orders before realign for ${symbol}:`,
+          err?.message || err,
+        );
+      }
+
+      // 7.1.a) Переобчислюємо STOP з таким самим абсолютним відхиленням від entry
+      try {
+        if (Number.isFinite(pos.stopPrice)) {
+          const absDelta = Math.abs(Number(entryPrice) - Number(pos.stopPrice));
+          const newStop =
+            side === 'LONG' ? avgEntry - absDelta : avgEntry + absDelta;
+
+          if (validateStop(side, avgEntry, avgEntry, newStop)) {
+            const stopPx = adjustPrice(filters, newStop);
+            const slOrder = await placeStopLoss(symbol, side, stopPx, liveQty);
+            orderIds.stop = slOrder?.orderId || orderIds.stop;
+            await updateStopPrice(symbol, stopPx, 'OPEN_REALIGN');
+            console.log(`🛑 SL realigned @ ${stopPx} (absΔ=${absDelta})`);
+          }
+        }
+      } catch (err) {
+        console.warn(
+          `⚠️ Failed to realign SL for ${symbol}:`,
+          err?.message || err,
+        );
+      }
+
+      // 7.1.b) Переобчислюємо TP-ціни, зберігаючи відсотки від входу
+      try {
+        const totalQty = Number(liveQty);
+        let allocated = 0;
+        const tpPlan = [];
+
+        for (let i = 0; i < pos.takeProfits.length; i++) {
+          const { price: oldPrice, sizePct, pct } = pos.takeProfits[i];
+
+          // Визначаємо відсоткову дистанцію від старого entry, якщо pct не наданий
+          let distPct = Number(pct);
+          if (!Number.isFinite(distPct)) {
+            if (side === 'LONG')
+              distPct = ((oldPrice - entryPrice) / entryPrice) * 100;
+            else distPct = ((entryPrice - oldPrice) / entryPrice) * 100;
+          }
+
+          // Нова ціна відносно avgEntry
+          const targetPx =
+            side === 'LONG'
+              ? avgEntry * (1 + distPct / 100)
+              : avgEntry * (1 - distPct / 100);
+
+          // Кількість для TP
+          const targetRaw = (totalQty * Number(sizePct || 0)) / 100;
+          let tpQty;
+          if (i === pos.takeProfits.length - 1) {
+            const remainderRaw = Math.max(totalQty - allocated, 0);
+            tpQty = Number(adjustQuantity(filters, remainderRaw));
+          } else {
+            tpQty = Number(adjustQuantity(filters, targetRaw));
+          }
+
+          if (!Number.isFinite(tpQty) || tpQty <= 0) continue;
+          if (allocated + tpQty > totalQty)
+            tpQty = Math.max(totalQty - allocated, 0);
+          if (tpQty <= 0) continue;
+
+          const tpPx = adjustPrice(filters, targetPx);
+          const tpOrder = await placeTakeProfit(symbol, side, tpPx, tpQty);
+          if (tpOrder?.orderId) orderIds.takes.push(tpOrder.orderId);
+          allocated += tpQty;
+          tpPlan.push({ price: tpPx, sizePct });
+          console.log(
+            `🎯 TP(realigned)#${i + 1} @ ${tpPx} for qty=${tpQty} (${Number(sizePct).toFixed(2)}%)`,
+          );
+        }
+
+        await updateTakeProfits(symbol, tpPlan, avgEntry, 'OPEN_REALIGN');
+
+        const diff = totalQty - allocated;
+        if (diff > 0) console.log(`ℹ️ Unallocated qty after realign: ${diff}`);
+      } catch (err) {
+        console.warn(
+          `⚠️ Failed to realign TP grid for ${symbol}:`,
+          err?.message || err,
+        );
+      }
+    }
+  } catch (err) {
+    console.warn(`⚠️ Realign check failed for ${symbol}:`, err?.message || err);
   }
 
   return pos;

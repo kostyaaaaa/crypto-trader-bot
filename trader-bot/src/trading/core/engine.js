@@ -64,13 +64,32 @@ export async function tradingEngine(symbol, config) {
   const analysis = lastAnalyses.at(-1);
   const decisions = lastAnalyses.map((a) => a.bias);
 
-  const majority = decisions
-    .sort(
-      (a, b) =>
-        decisions.filter((v) => v === a).length -
-        decisions.filter((v) => v === b).length,
-    )
-    .pop();
+  // Majority vote with strict rule: need > floor(n/2), else NEUTRAL; tie-break by recency
+  function majorityVoteStrict(list) {
+    if (!Array.isArray(list) || list.length === 0) return 'NEUTRAL';
+    const counts = list.reduce((acc, v) => {
+      acc[v] = (acc[v] || 0) + 1;
+      return acc;
+    }, {});
+
+    let best = 'NEUTRAL';
+    let bestCount = 0;
+    for (const [k, c] of Object.entries(counts)) {
+      if (c > bestCount) {
+        best = k;
+        bestCount = c;
+      } else if (c === bestCount) {
+        // tie-breaker: prefer the most recent occurrence in list
+        if (list.lastIndexOf(k) > list.lastIndexOf(best)) {
+          best = k;
+        }
+      }
+    }
+
+    return bestCount > Math.floor(list.length / 2) ? best : 'NEUTRAL';
+  }
+
+  const majority = majorityVoteStrict(decisions);
 
   if (majority === 'NEUTRAL') {
     console.log(`⚠️ ${symbol}: skip, majority is NEUTRAL`);
@@ -131,7 +150,8 @@ export async function tradingEngine(symbol, config) {
       return;
     }
     if (signal === 'NONE' && meta?.regime === 'EXTREME') {
-      riskFactor *= 0.5; // soften risk locally when volatility regime is EXTREME
+      // do not compound risk cuts; apply the strongest single cut
+      riskFactor = Math.min(riskFactor, 0.5);
     }
   }
 
@@ -181,7 +201,8 @@ export async function tradingEngine(symbol, config) {
       console.log(
         `⚠️ ${symbol}: higherTrend.signal !== majority, risk reduced`,
       );
-      riskFactor *= 0.5; // reduce risk for this attempt, but do NOT mutate config or abort
+      // do not let multiple cuts compound (e.g., EXTREME + mismatch)
+      riskFactor = Math.min(riskFactor, 0.5);
     }
 
     if (higherVol.signal === 'NONE' && higherVol.meta?.regime === 'DEAD') {
