@@ -12,6 +12,15 @@ export const mockCreateConfigData: TCoinConfig = {
     volWindow: 14,
     corrWindow: 10,
     longShortWindow: 10,
+    higherMA: {
+      timeframe: '1d',
+      maShort: 7,
+      maLong: 14,
+      type: 'SMA',
+      thresholdPct: 0.2,
+      scale: 12,
+      emaSeed: 'sma',
+    },
     weights: {
       trend: 0.3,
       trendRegime: 0.15,
@@ -21,6 +30,7 @@ export const mockCreateConfigData: TCoinConfig = {
       openInterest: 0.15,
       correlation: 0.03,
       longShort: 0.02,
+      higherMA: 0.08,
     },
     moduleThresholds: {
       trend: 50,
@@ -31,6 +41,7 @@ export const mockCreateConfigData: TCoinConfig = {
       openInterest: 25,
       correlation: 12,
       longShort: 12,
+      higherMA: 7,
     },
   },
   strategy: {

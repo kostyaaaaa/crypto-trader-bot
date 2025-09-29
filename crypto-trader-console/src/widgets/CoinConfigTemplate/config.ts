@@ -11,7 +11,10 @@ export const tabs = [
     value: 'anal_module_thresholds',
     label: 'Analysis Module Thresholds',
   },
-
+  {
+    value: 'anal_module_higherMA',
+    label: 'Analysis Higher MA',
+  },
   {
     value: 'strategy_entry',
     label: 'Strategy Entry',
