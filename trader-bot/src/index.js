@@ -9,6 +9,7 @@ import { tradingEngine } from './trading/core/engine.js';
 import { monitorPositions } from './trading/core/monitor.js';
 import { finalAnalyzer } from './utils/final-analyzer.js';
 const activeIntervals = {};
+const idToSymbol = {};
 const isBotActive = process.env.IS_BOT_ACTIVE === 'true';
 async function startConfig(config) {
   const { symbol, isActive, analysisConfig, strategy } = config;
@@ -35,6 +36,11 @@ async function startConfig(config) {
     stopOB,
     stopLiq,
   };
+
+  // тримаємо мапу _id → symbol, щоб коректно зупиняти сервіси при delete
+  if (config && config._id) {
+    idToSymbol[String(config._id)] = symbol;
+  }
 }
 
 function stopConfig(symbol) {
@@ -45,6 +51,9 @@ function stopConfig(symbol) {
   if (svc.stopOB) svc.stopOB();
   if (svc.stopLiq) svc.stopLiq();
   delete activeIntervals[symbol];
+  for (const [id, sym] of Object.entries(idToSymbol)) {
+    if (sym === symbol) delete idToSymbol[id];
+  }
   console.log(`🛑 Stopped services for ${symbol}`);
 }
 
@@ -78,8 +87,18 @@ export async function subscribeCoinConfigs() {
     }
 
     if (change.operationType === 'delete') {
-      const symbol = change.documentKey._id; // треба буде зв'язати id → symbol
-      stopConfig(symbol);
+      const id = change?.documentKey?._id
+        ? String(change.documentKey._id)
+        : null;
+      const symbol = id ? idToSymbol[id] : null;
+      if (symbol) {
+        stopConfig(symbol);
+      } else {
+        console.warn(
+          '⚠️ Delete event for unknown _id (no active mapping):',
+          id,
+        );
+      }
     }
   });
 
