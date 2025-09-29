@@ -31,6 +31,10 @@ export const tabs = [
   },
 
   {
+    value: 'strategy_exits_oppositeCountExit',
+    label: 'Opposite Count Exit',
+  },
+  {
     value: 'strategy_exits_take_profit',
     label: 'Strategy Exits Take Profit',
   },
