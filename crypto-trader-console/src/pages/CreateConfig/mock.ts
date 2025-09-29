@@ -67,6 +67,7 @@ export const mockCreateConfigData: TCoinConfig = {
       addMultiplier: 1.0,
     },
     exits: {
+      oppositeCountExit: 0,
       tp: {
         use: true,
         tpGridPct: [5, 10],

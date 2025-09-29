@@ -111,6 +111,7 @@ export interface IExitsConfig {
   sl: ISlConfig;
   time: ITimeConfig;
   trailing: ITrailingConfig;
+  oppositeCountExit: number;
 }
 
 export interface IStrategyConfig {
@@ -300,6 +301,7 @@ const exitsConfigSchema = new Schema(
     sl: { type: slConfigSchema, required: true },
     time: { type: timeConfigSchema, required: true },
     trailing: { type: trailingConfigSchema, required: true },
+    oppositeCountExit: { type: Number, required: true },
   },
   { _id: false },
 );

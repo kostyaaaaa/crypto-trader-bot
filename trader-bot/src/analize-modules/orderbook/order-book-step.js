@@ -57,14 +57,12 @@ export function OrderBookStepWS(symbol = 'BTCUSDT') {
     const liquidityCandle = {
       symbol,
       time: new Date().toISOString(),
-      avgImbalance: parseFloat(avgImbalance.toFixed(3)),
-      avgSpread: parseFloat(avgSpread.toFixed(2)),
+      avgImbalance: Number(avgImbalance.toFixed(5)),
+      avgSpread: Number(avgSpread.toFixed(6)),
     };
 
-    // зберігаємо у storage
     await saveDoc('liquidity', liquidityCandle);
 
-    // чистимо буфери
     imbalances = [];
     spreads = [];
   }, 60_000);

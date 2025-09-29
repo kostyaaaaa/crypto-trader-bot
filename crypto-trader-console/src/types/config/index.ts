@@ -47,6 +47,8 @@ export type TCoinConfig = {
       addMultiplier: number;
     };
     exits: {
+      oppositeCountExit?: number;
+
       tp: {
         use: boolean;
         tpGridPct: number[];
