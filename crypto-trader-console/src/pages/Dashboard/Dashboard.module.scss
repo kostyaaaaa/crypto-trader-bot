@@ -12,11 +12,13 @@
 }
 
 .green {
-  color: green;
+  color: #1a7a52;
+  font-weight: bold;
 }
 
 .red {
-  color: red;
+  color: #c91e36;
+  font-weight: bold;
 }
 
 .dashboard-list {
@@ -39,14 +41,15 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  gap: 8px;
 }
 
 .long {
-  background-color: #c1ffc1 !important;
+  background-color: #2dbd85 !important;
 }
 
 .short {
-  background-color: #ffc1c1 !important;
+  background-color: #f6475d !important;
 }
 
 /* Responsive table styles */

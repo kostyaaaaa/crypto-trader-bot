@@ -7,8 +7,14 @@ import { ROUTERS_PATH } from '../../router/constants';
 import styles from './Header.module.scss';
 
 const Header: FC = () => {
-  const [opened, { toggle }] = useDisclosure(false);
+  const [opened, { toggle, close }] = useDisclosure(false);
   const location = useLocation();
+
+  const handleLinkClick = () => {
+    if (opened) {
+      close();
+    }
+  };
 
   return (
     <header className={styles.header}>
@@ -35,7 +41,7 @@ const Header: FC = () => {
 
         <Burger opened={opened} onClick={toggle} hiddenFrom="xs" size="sm" />
 
-        <Drawer opened={opened} onClose={toggle} size="100%" padding="md">
+        <Drawer opened={opened} onClose={close} size="100%" padding="md">
           {links.map((link: ILink) => {
             const isActive = location.pathname === link.link;
             return (
@@ -44,6 +50,7 @@ const Header: FC = () => {
                 to={link.link}
                 className={styles.link}
                 data-active={isActive || undefined}
+                onClick={handleLinkClick}
               >
                 {link.label}
               </Link>
