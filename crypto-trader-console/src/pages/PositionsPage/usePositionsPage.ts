@@ -37,7 +37,7 @@ type SortDirection = 'asc' | 'desc';
 const usePositionsPage = () => {
   const [period, setPeriod] = useState<DatesRangeValue<string>>(defaultPeriod);
   const [selectedCoin, setSelectedCoin] = useState<string | null>(null);
-  const [sortField, setSortField] = useState<SortField>('finalPnl');
+  const [sortField, setSortField] = useState<SortField>('closedAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const { data: positionsData } = useQuery({

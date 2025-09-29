@@ -1,7 +1,7 @@
-import type { TCoinConfig } from '../../types';
+import type { TCoinConfig } from '../types';
 
-export const mockCreateConfigData: TCoinConfig = {
-  symbol: '',
+export const defaultPreset: TCoinConfig = {
+  symbol: 'DEFAULT',
   isActive: true,
   analysisConfig: {
     candleTimeframe: '15m',

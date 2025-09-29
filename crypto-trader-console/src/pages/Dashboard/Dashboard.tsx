@@ -28,11 +28,9 @@ const Dashboard: FC = () => {
 
   const rows = futuresPositions?.map((row) => {
     const isLong = parseFloat(row.positionAmt) > 0;
+    const unrealizedProfit = +row.unrealizedProfit;
     return (
-      <Table.Tr
-        key={row.symbol}
-        className={styles[+row.unrealizedProfit > 0 ? 'long' : 'short']}
-      >
+      <Table.Tr key={row.symbol}>
         <Table.Td>{row.symbol}</Table.Td>
         <Table.Td className={styles[isLong ? 'green' : 'red']}>
           {isLong ? 'LONG' : 'SHORT'}
@@ -43,7 +41,15 @@ const Dashboard: FC = () => {
           x{row.leverage}, total = ($
           {(+row.positionInitialMargin * +row.leverage).toFixed(2)})
         </Table.Td>
-        <Table.Td>${(+row.unrealizedProfit).toFixed(2)}</Table.Td>
+        <Table.Td>
+          <span
+            className={
+              styles[unrealizedProfit > 0 ? 'pnlPositive' : 'pnlNegative']
+            }
+          >
+            ${unrealizedProfit.toFixed(2)}
+          </span>
+        </Table.Td>
         <Table.Td>
           ${calcCommission(Math.abs(+row.notional)).toFixed(2)}
         </Table.Td>

@@ -55,7 +55,7 @@ const getPositionsByDateRangeAndSymbol = async (
     // Find closed positions data within the timestamp range
     const query: any = {
       status: 'CLOSED',
-      openedAt: { $gte: startDate, $lte: endDate },
+      closedAt: { $gte: startDate, $lte: endDate },
     };
 
     // Only add symbol filter if provided
@@ -63,7 +63,9 @@ const getPositionsByDateRangeAndSymbol = async (
       query.symbol = symbol;
     }
 
-    const positionsData = await PositionModel.find(query).sort({ openedAt: 1 });
+    const positionsData = await PositionModel.find(query).sort({
+      closedAt: -1,
+    });
 
     logger.success(
       `Successfully fetched ${positionsData.length} closed position records for symbol: ${symbol || 'all'} between ${dateFrom} and ${dateTo}`,
