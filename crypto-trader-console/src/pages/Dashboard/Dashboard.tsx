@@ -5,6 +5,13 @@ import { CardWrapper } from '../../components';
 import styles from './Dashboard.module.scss';
 import useDashboard from './useDashboard';
 
+function calcCommission(notional: number): number {
+  const feeRate = 0.0004;
+  let commission = Math.abs(notional) * feeRate;
+  commission *= 2; // вход + выход
+  return commission;
+}
+
 const Dashboard: FC = () => {
   const {
     spotUSDBalance,
@@ -31,12 +38,15 @@ const Dashboard: FC = () => {
           {isLong ? 'LONG' : 'SHORT'}
         </Table.Td>
         <Table.Td>{parseFloat(row.entryPrice)}</Table.Td>
-        <Table.Td>${parseFloat(row.positionInitialMargin).toFixed(3)}</Table.Td>
+        <Table.Td>${parseFloat(row.positionInitialMargin).toFixed(2)}</Table.Td>
         <Table.Td>
           x{row.leverage}, total = ($
-          {(+row.positionInitialMargin * +row.leverage).toFixed(3)})
+          {(+row.positionInitialMargin * +row.leverage).toFixed(2)})
         </Table.Td>
-        <Table.Td>{(+row.unrealizedProfit).toFixed(3)}</Table.Td>
+        <Table.Td>${(+row.unrealizedProfit).toFixed(2)}</Table.Td>
+        <Table.Td>
+          ${calcCommission(Math.abs(+row.notional)).toFixed(2)}
+        </Table.Td>
       </Table.Tr>
     );
   });
@@ -92,6 +102,7 @@ const Dashboard: FC = () => {
                     <Table.Th>Initial Margin</Table.Th>
                     <Table.Th>Leverage</Table.Th>
                     <Table.Th>Unrealized Profit</Table.Th>
+                    <Table.Th>Tax fee</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>{rows}</Table.Tbody>
