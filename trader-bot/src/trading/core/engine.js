@@ -83,6 +83,10 @@ export async function tradingEngine(symbol, config) {
   }
 
   const { entry, capital } = config.strategy;
+  // ---- risk handling: do not mutate global config ----
+  const baseRiskPct = Number(config?.strategy?.capital?.riskPerTradePct ?? 0);
+  let riskFactor = 1; // will be adjusted by higherTF / volatility gates
+
   const { scores, modules, coverage } = analysis;
 
   const minScore = entry.minScore[majority];
@@ -126,9 +130,9 @@ export async function tradingEngine(symbol, config) {
       console.log(`⏸️ ${symbol}: skip, volatility regime DEAD`);
       return;
     }
-    // if (signal === 'NONE' && meta?.regime === 'EXTREME') {
-    //   capital.riskPerTradePct = capital.riskPerTradePct / 2;
-    // }
+    if (signal === 'NONE' && meta?.regime === 'EXTREME') {
+      riskFactor *= 0.5; // soften risk locally when volatility regime is EXTREME
+    }
   }
 
   if (modules?.liquidity?.meta?.spreadPct > entry.maxSpreadPct) {
@@ -177,7 +181,7 @@ export async function tradingEngine(symbol, config) {
       console.log(
         `⚠️ ${symbol}: higherTrend.signal !== majority, risk reduced`,
       );
-      capital.riskPerTradePct = capital.riskPerTradePct / 2;
+      riskFactor *= 0.5; // reduce risk for this attempt, but do NOT mutate config or abort
     }
 
     if (higherVol.signal === 'NONE' && higherVol.meta?.regime === 'DEAD') {
@@ -192,11 +196,19 @@ export async function tradingEngine(symbol, config) {
   );
   const entryPrice = parseFloat(lastPriceRes.data.price);
 
+  // Build a per-trade config without mutating the original
+  const runConfig = JSON.parse(JSON.stringify(config));
+  runConfig.strategy.capital.riskPerTradePct = baseRiskPct * riskFactor;
+  console.log(
+    `[RISK] ${symbol} base=${baseRiskPct}% × factor=${riskFactor} → effective=${runConfig.strategy.capital.riskPerTradePct}%`,
+  );
+
   let position;
+
   if (TRADE_MODE === 'live') {
     position = await executeTrade(
       symbol,
-      config,
+      runConfig,
       analysis,
       majority,
       entryPrice,
@@ -211,12 +223,12 @@ export async function tradingEngine(symbol, config) {
         size: position.size,
         stopLoss: position.stop,
         takeProfits: position.takeProfits,
-        trailingCfg: config.strategy?.exits?.trailing,
+        trailingCfg: runConfig.strategy?.exits?.trailing,
         analysis,
         strategyMeta: {
-          leverage: config.strategy.capital?.leverage,
-          riskPct: config.strategy.capital?.riskPerTradePct,
-          strategyName: config.strategy.name || null,
+          leverage: runConfig.strategy.capital?.leverage,
+          riskPct: runConfig.strategy.capital?.riskPerTradePct,
+          strategyName: runConfig.strategy.name || null,
         },
         orderIds: {
           entry: position.orderId,
@@ -228,7 +240,7 @@ export async function tradingEngine(symbol, config) {
   } else {
     position = await preparePosition(
       symbol,
-      config,
+      runConfig,
       analysis,
       majority,
       entryPrice,
@@ -241,12 +253,12 @@ export async function tradingEngine(symbol, config) {
       size: position.size,
       stopLoss: position.stopLoss,
       takeProfits: position.takeProfits,
-      trailingCfg: config.strategy?.exits?.trailing,
+      trailingCfg: runConfig.strategy?.exits?.trailing,
       analysis,
       strategyMeta: {
-        leverage: config.strategy.capital?.leverage,
-        riskPct: config.strategy.capital?.riskPerTradePct,
-        strategyName: config.strategy.name || null,
+        leverage: runConfig.strategy.capital?.leverage,
+        riskPct: runConfig.strategy.capital?.riskPerTradePct,
+        strategyName: runConfig.strategy.name || null,
       },
       orderIds: {
         entry: position.orderId,

@@ -55,11 +55,15 @@ export async function monitorPositions({ symbol, strategy }) {
   const price = await getMarkPrice(symbol);
   if (price == null) return;
 
-  // Отримуємо останній аналіз
+  const oppExitN = Number(strategy?.exits?.oppositeCountExit ?? 3);
+
+  // Отримуємо останні аналізи (для перевірки протилежних сигналів)
   let lastAnalysis = null;
+  let recentAnalyses = [];
   try {
-    const analysisDocs = await loadDocs('analysis', symbol, 1);
+    const analysisDocs = await loadDocs('analysis', symbol, oppExitN);
     if (Array.isArray(analysisDocs) && analysisDocs.length > 0) {
+      recentAnalyses = analysisDocs;
       lastAnalysis = analysisDocs[0];
     }
   } catch {}
@@ -68,6 +72,40 @@ export async function monitorPositions({ symbol, strategy }) {
     const { side, entryPrice, size: liveQty, orders } = pos;
     const dir = side === 'LONG' ? 1 : -1;
     const binanceSide = side === 'LONG' ? 'BUY' : 'SELL';
+
+    // === Exit on consecutive opposite signals ===
+    const anaSide = (a) => a?.bias || a?.signal || null;
+    const isOppositeToPos = (s) =>
+      side === 'LONG' ? s === 'SHORT' : s === 'LONG';
+
+    const oppositeCount = (recentAnalyses || [])
+      .map(anaSide)
+      .filter(Boolean)
+      .slice(0, oppExitN)
+      .reduce((acc, s) => acc + (isOppositeToPos(s) ? 1 : 0), 0);
+
+    if (oppositeCount >= oppExitN) {
+      console.log(
+        `⏹️ ${symbol}: exit by opposite signals x${oppExitN} (pos=${side})`,
+      );
+      if (TRADE_MODE === 'live') {
+        try {
+          await cancelStopOrders(symbol);
+        } catch {}
+        const closeSide = side === 'LONG' ? 'SELL' : 'BUY';
+        try {
+          await openMarketOrder(symbol, closeSide, Number(liveQty).toFixed(3));
+        } catch {}
+      }
+      try {
+        await adjustPosition(symbol, {
+          type: 'EXIT_OPPOSITE',
+          price,
+          size: liveQty,
+        });
+      } catch {}
+      continue; // не виконуємо інший менеджмент на цій ітерації
+    }
 
     const currentSL = Array.isArray(orders)
       ? (orders.find((o) => o.type === 'SL')?.price ?? null)

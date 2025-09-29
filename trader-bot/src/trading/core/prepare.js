@@ -4,12 +4,7 @@ import { autoTakeProfits } from './calculate-auto-take-profits.js';
 
 export async function preparePosition(symbol, cfg, analysis, side, entryPrice) {
   const { capital, exits } = cfg.strategy;
-  console.log('[CAPITAL]', symbol, cfg?.strategy?.capital);
-  console.log('[SIZE-CALC]', {
-    account: cfg.strategy.capital.account,
-    riskPerTradePct: cfg.strategy.capital.riskPerTradePct,
-    leverage: cfg.strategy.capital.leverage,
-  });
+
   if (!Number.isFinite(entryPrice) || entryPrice <= 0) {
     throw new Error(`Invalid entry price for ${symbol}: ${entryPrice}`);
   }
