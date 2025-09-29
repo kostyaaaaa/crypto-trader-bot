@@ -29,7 +29,10 @@ export const tabs = [
     value: 'strategy_sizing',
     label: 'Strategy Sizing',
   },
-
+  {
+    value: 'strategy_exits_opposite_count_exit',
+    label: 'Opposite Count Exit',
+  },
   {
     value: 'strategy_exits_take_profit',
     label: 'Strategy Exits Take Profit',
