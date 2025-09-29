@@ -19,6 +19,7 @@ export interface IAnalysisConfig {
     openInterest: number;
     correlation: number;
     longShort: number;
+    higherMA: number;
   };
   moduleThresholds: {
     trend: number;
@@ -29,7 +30,19 @@ export interface IAnalysisConfig {
     openInterest: number;
     correlation: number;
     longShort: number;
+    higherMA: number;
   };
+  higherMA: IHigherMAConfig;
+}
+
+export interface IHigherMAConfig {
+  timeframe: string;
+  maShort: number;
+  maLong: number;
+  type: 'SMA' | 'EMA';
+  thresholdPct: number;
+  scale: number;
+  emaSeed: 'sma' | 'first';
 }
 
 // Strategy configuration interfaces
@@ -143,6 +156,7 @@ const weightsSchema = new Schema(
     openInterest: { type: Number, required: true },
     correlation: { type: Number, required: true },
     longShort: { type: Number, required: true },
+    higherMA: { type: Number, required: true },
   },
   { _id: false },
 );
@@ -157,6 +171,20 @@ const moduleThresholdsSchema = new Schema(
     openInterest: { type: Number, required: true },
     correlation: { type: Number, required: true },
     longShort: { type: Number, required: true },
+    higherMA: { type: Number, required: true },
+  },
+  { _id: false },
+);
+
+const higherMASchema = new Schema(
+  {
+    timeframe: { type: String, required: true },
+    maShort: { type: Number, required: true },
+    maLong: { type: Number, required: true },
+    type: { type: String, enum: ['SMA', 'EMA'], required: true },
+    thresholdPct: { type: Number, required: true },
+    scale: { type: Number, required: true },
+    emaSeed: { type: String, enum: ['sma', 'first'], required: true },
   },
   { _id: false },
 );
@@ -173,6 +201,7 @@ const analysisConfigSchema = new Schema(
     longShortWindow: { type: Number, required: true },
     weights: { type: weightsSchema, required: true },
     moduleThresholds: { type: moduleThresholdsSchema, required: true },
+    higherMA: { type: higherMASchema, required: true },
   },
   { _id: false },
 );

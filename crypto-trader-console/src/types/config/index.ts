@@ -1,3 +1,13 @@
+export type THigherMAConfig = {
+  timeframe: string; // e.g. '1d', '4h'
+  maShort: number; // e.g. 7
+  maLong: number; // e.g. 14
+  type: 'SMA' | 'EMA'; // moving average type
+  thresholdPct: number; // noise threshold in percent
+  scale: number; // linear scale for strength (strength = min(100, |deltaPct| * scale))
+  emaSeed: 'sma' | 'first'; // EMA seed method
+};
+
 export type TCoinConfig = {
   symbol: string;
   isActive: boolean;
@@ -10,6 +20,7 @@ export type TCoinConfig = {
     volWindow: number;
     corrWindow: number;
     longShortWindow: number;
+    higherMA: THigherMAConfig;
     weights: TAnalysisModule;
     moduleThresholds: TAnalysisModule;
   };
@@ -90,6 +101,7 @@ type TAnalysisModule = {
   openInterest: number;
   correlation: number;
   longShort: number;
+  higherMA: number;
 };
 
 export type TCoinConfigResponse = TCoinConfig & {

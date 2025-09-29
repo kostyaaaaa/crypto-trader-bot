@@ -1,13 +1,11 @@
 // src/storage/storage.js
-import fs from 'fs';
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
 import { LiquidationsModel, LiquidityModel } from 'crypto-trader-db';
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 
 dotenv.config();
 
-const FILE_MAX = 1000;
-const DB_MAX = 10000;
+const DB_MAX = 1000000;
 
 function getModel(collection) {
   switch (collection) {

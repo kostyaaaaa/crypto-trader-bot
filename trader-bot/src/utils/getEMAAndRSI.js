@@ -56,7 +56,7 @@ export function RSI(values, period = 14) {
   return 100 - 100 / (1 + rs); // формула RSI
 }
 
-function SMA(values, p) {
+export function SMA(values, p) {
   if (!Array.isArray(values) || values.length < p) return null;
   const sum = values.slice(-p).reduce((s, v) => s + v, 0);
   return sum / p;

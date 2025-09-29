@@ -76,6 +76,23 @@ export interface ILongShortMeta {
   avgShort: number;
 }
 
+export interface IHigherMAMeta {
+  LONG: number;
+  SHORT: number;
+  timeframe: string;
+  type: string; // 'SMA' | 'EMA'
+  maShort: number;
+  maLong: number;
+  maShortVal: number;
+  maLongVal: number;
+  deltaPct: number;
+  priceVsLongPct: number;
+  closesUsed: number;
+  thresholdPct: number;
+  scale: number;
+  emaSeed: string; // 'sma' | 'first'
+}
+
 // Module interfaces
 export interface IModuleBase {
   module: string;
@@ -129,6 +146,10 @@ export interface ILongShortModule extends IModuleBase {
   meta: ILongShortMeta;
 }
 
+export interface IHigherMAModule extends IModuleBase {
+  meta: IHigherMAMeta;
+}
+
 // Analysis modules container
 export interface IAnalysisModules {
   trend: ITrendModule;
@@ -140,6 +161,7 @@ export interface IAnalysisModules {
   openInterest: IOpenInterestModule;
   correlation: ICorrelationModule;
   longShort: ILongShortModule;
+  higherMA: IHigherMAModule;
 }
 
 // Scores interface
@@ -267,6 +289,26 @@ const longShortMetaSchema = new Schema(
   { _id: false },
 );
 
+const higherMAMetaSchema = new Schema(
+  {
+    LONG: { type: Number, required: true },
+    SHORT: { type: Number, required: true },
+    timeframe: { type: String, required: true },
+    type: { type: String, required: true },
+    maShort: { type: Number, required: true },
+    maLong: { type: Number, required: true },
+    maShortVal: { type: Number, required: true },
+    maLongVal: { type: Number, required: true },
+    deltaPct: { type: Number, required: true },
+    priceVsLongPct: { type: Number, required: true },
+    closesUsed: { type: Number, required: true },
+    thresholdPct: { type: Number, required: true },
+    scale: { type: Number, required: true },
+    emaSeed: { type: String, required: true },
+  },
+  { _id: false },
+);
+
 // Module schemas
 const trendModuleSchema = new Schema(
   {
@@ -372,6 +414,17 @@ const longShortModuleSchema = new Schema(
   { _id: false },
 );
 
+const higherMAModuleSchema = new Schema(
+  {
+    module: { type: String, required: true },
+    symbol: { type: String, required: true },
+    signal: { type: String, required: true },
+    strength: { type: Number, required: true },
+    meta: { type: higherMAMetaSchema, required: true },
+  },
+  { _id: false },
+);
+
 const analysisModulesSchema = new Schema(
   {
     trend: { type: trendModuleSchema, required: true },
@@ -383,6 +436,7 @@ const analysisModulesSchema = new Schema(
     openInterest: { type: openInterestModuleSchema, required: true },
     correlation: { type: correlationModuleSchema, required: true },
     longShort: { type: longShortModuleSchema, required: true },
+    higherMA: { type: higherMAModuleSchema, required: true },
   },
   { _id: false },
 );

@@ -2,6 +2,7 @@ import axios from 'axios';
 import { analyzeCandles } from '../analize-modules/candles/analyze-сandles.js';
 import { analyzeCorrelation } from '../analize-modules/correlation/analyze-correlation.js';
 import { analyzeFunding } from '../analize-modules/funding/analyze-funding.js';
+import { analyzeHigherMA } from '../analize-modules/higherMA/analyze-higher-ma.js';
 import { analyzeLiquidations } from '../analize-modules/liquidations/analyze-liquidations.js';
 import { analyzeLongShort } from '../analize-modules/longshort/analyze-longshort.js';
 import { analyzeOpenInterest } from '../analize-modules/openinterest/analyze-openinterest.js';
@@ -74,6 +75,19 @@ export async function finalAnalyzer({
   modules.openInterest = await analyzeOpenInterest(symbol, oiWindow);
   modules.correlation = await analyzeCorrelation(symbol, corrWindow);
   modules.longShort = await analyzeLongShort(symbol, longShortWindow);
+
+  modules.higherMA = await analyzeHigherMA(
+    symbol,
+    analysisConfig.higherMA || {
+      timeframe: '1d',
+      maShort: 7,
+      maLong: 14,
+      type: 'SMA',
+      thresholdPct: 0.2,
+      scale: 12,
+      emaSeed: 'sma',
+    },
+  );
 
   // --- скоринг ---
   function weightedScore(side) {
