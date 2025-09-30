@@ -17,10 +17,14 @@ import {
   Title,
 } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
+import type { ApexOptions } from 'apexcharts';
 import { useEffect, useMemo, useState, type FC } from 'react';
+import ReactApexChart from 'react-apexcharts';
 import { getAllCoinConfigs, getAnalysisByDateRangeAndSymbol } from '../../api';
 import type { IAnalysis, TCoinConfigResponse } from '../../types';
 import styles from './Analysis.module.scss';
+
+type AxisSeries = Array<{ name: string; data: { x: number; y: number }[] }>;
 
 // ---- Light typings to keep TS happy ----
 
@@ -38,40 +42,7 @@ const timeHHMM = (iso: string, timeZone?: string) => {
   });
 };
 
-function ScoreSparkline({
-  series,
-  color = 'var(--mantine-color-blue-6)',
-}: {
-  series: number[];
-  color?: string;
-}) {
-  const w = 240;
-  const h = 56;
-  const max = 100;
-  const min = 0;
-  const n = Math.max(series.length, 2);
-  const step = w / (n - 1);
-  const pts = series.map((v, i) => {
-    const x = i * step;
-    const y = h - ((Math.min(max, Math.max(min, v)) - min) / (max - min)) * h;
-    return `${x},${y}`;
-  });
-  return (
-    <svg width={w} height={h} style={{ display: 'block' }}>
-      <polyline
-        points={pts.join(' ')}
-        fill="none"
-        stroke={color}
-        strokeWidth={2}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
 const Analysis: FC = () => {
-  // how many last points to show
   const [historyN, setHistoryN] = useState<number>(10);
 
   // Active coins from backend configs
@@ -167,8 +138,68 @@ const Analysis: FC = () => {
     });
   }, [selected]);
 
-  const longSeries = rows.map((r) => r.scores.LONG);
-  const shortSeries = rows.map((r) => r.scores.SHORT);
+  const apexSeries = useMemo<AxisSeries>(
+    () => [
+      {
+        name: 'LONG',
+        data: rows.map((r) => ({
+          x: new Date(r.time).getTime(),
+          y: Number(r.scores.LONG || 0),
+        })),
+      },
+      {
+        name: 'SHORT',
+        data: rows.map((r) => ({
+          x: new Date(r.time).getTime(),
+          y: Number(r.scores.SHORT || 0),
+        })),
+      },
+    ],
+    [rows],
+  );
+
+  const apexOptions: ApexOptions = useMemo(
+    () => ({
+      chart: {
+        id: 'analysis-scores',
+        type: 'line',
+        toolbar: { show: false },
+        animations: { enabled: true, easing: 'easeinout', speed: 400 },
+        events: {
+          dataPointSelection: (_e, _ctx, cfg) => {
+            if (typeof cfg?.dataPointIndex === 'number') {
+              setSelectedIdx(cfg.dataPointIndex);
+            }
+          },
+        },
+      },
+      stroke: { width: 2, curve: 'smooth' },
+      colors: ['#22c55e', '#ef4444'], // green for LONG, red for SHORT
+      xaxis: {
+        type: 'datetime',
+        labels: { datetimeUTC: tzMode === 'utc' },
+      },
+      yaxis: {
+        min: 0,
+        max: 100,
+        tickAmount: 5,
+        labels: { formatter: (v) => `${Math.round(v)}` },
+      },
+      grid: { strokeDashArray: 3 },
+      markers: { size: 0, hover: { sizeOffset: 3 } },
+      legend: { position: 'top', horizontalAlign: 'left' },
+      tooltip: {
+        shared: true,
+        intersect: false,
+        x: { format: 'dd MMM HH:mm' },
+        y: {
+          formatter: (val: number) =>
+            Number.isFinite(val) ? val.toFixed(1) : '-',
+        },
+      },
+    }),
+    [tzMode],
+  );
 
   if (isLoading) {
     return (
@@ -269,86 +300,52 @@ const Analysis: FC = () => {
         </Group>
       </Stack>
 
-      {/* Scores over time */}
-      <Group align="stretch" wrap="wrap" gap="md" mb="md">
-        <Card withBorder padding="md" style={{ flex: 1 }}>
-          <Group justify="space-between" mb="xs">
-            <Text fw={600}>Scores — LONG</Text>
+      {/* Scores over time (combined) */}
+      <Card withBorder padding="md" mb="md">
+        <Group justify="space-between" mb="xs">
+          <Text fw={600}>Scores — LONG vs SHORT</Text>
+          <Group gap={12}>
             <Text c="dimmed" size="sm">
-              Selected: {fmt(selected.scores.LONG, 1)}
+              Selected L: {fmt(selected.scores.LONG, 1)}
+            </Text>
+            <Text c="dimmed" size="sm">
+              Selected S: {fmt(selected.scores.SHORT, 1)}
             </Text>
           </Group>
-          <ScoreSparkline
-            series={longSeries}
-            color="var(--mantine-color-green-6)"
-          />
-          <Group gap={6} mt="xs" key={`long-times-${selectedIdx}`}>
-            {rows.map((r, i) => (
-              <Badge
-                key={r.time.toString()}
-                size="xs"
-                variant={i === selectedIdx ? 'filled' : 'outline'}
-                color={i === selectedIdx ? 'blue' : 'gray'}
-                onClick={() => setSelectedIdx(i)}
-                style={{ cursor: 'pointer' }}
-                title={
-                  new Date(r.time).toLocaleString('en-GB', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false,
-                    timeZone: activeTz,
-                  }) + ` ${tzBadgeLabel}`
-                }
-              >
-                {timeHHMM(r.time.toString(), activeTz)}
-              </Badge>
-            ))}
-          </Group>
-        </Card>
-
-        <Card withBorder padding="md" style={{ flex: 1 }}>
-          <Group justify="space-between" mb="xs">
-            <Text fw={600}>Scores — SHORT</Text>
-            <Text c="dimmed" size="sm">
-              selected: {fmt(selected.scores.SHORT, 1)}
-            </Text>
-          </Group>
-          <ScoreSparkline
-            series={shortSeries}
-            color="var(--mantine-color-red-6)"
-          />
-          <Group gap={6} mt="xs" key={`short-times-${selectedIdx}`}>
-            {rows.map((r, i) => (
-              <Badge
-                key={r.time.toString()}
-                size="xs"
-                variant={i === selectedIdx ? 'filled' : 'outline'}
-                color={i === selectedIdx ? 'blue' : 'gray'}
-                onClick={() => setSelectedIdx(i)}
-                style={{ cursor: 'pointer' }}
-                title={
-                  new Date(r.time).toLocaleString('en-GB', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false,
-                    timeZone: activeTz,
-                  }) + ` ${tzBadgeLabel}`
-                }
-              >
-                {timeHHMM(r.time.toString(), activeTz)}
-              </Badge>
-            ))}
-          </Group>
-        </Card>
-      </Group>
+        </Group>
+        <ReactApexChart
+          options={apexOptions}
+          series={apexSeries}
+          type="line"
+          height={260}
+        />
+        <Group gap={6} mt="xs" key={`times-${selectedIdx}`} wrap="wrap">
+          {rows.map((r, i) => (
+            <Badge
+              key={r.time.toString()}
+              size="xs"
+              variant={i === selectedIdx ? 'filled' : 'outline'}
+              color={i === selectedIdx ? 'blue' : 'gray'}
+              onClick={() => setSelectedIdx(i)}
+              style={{ cursor: 'pointer' }}
+              title={
+                new Date(r.time).toLocaleString('en-GB', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: false,
+                  timeZone: activeTz,
+                }) + ` ${tzBadgeLabel}`
+              }
+            >
+              {timeHHMM(r.time.toString(), activeTz)}
+            </Badge>
+          ))}
+        </Group>
+      </Card>
 
       {/* Module scoreboard */}
       <Paper withBorder p="md" key={`table-${selectedIdx}`}>
