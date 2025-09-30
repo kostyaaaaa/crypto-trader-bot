@@ -41,22 +41,36 @@ export async function analyzeFunding(symbol = 'ETHUSDT', window = 60) {
     const avgFunding =
       candles.reduce((s, c) => s + (c.fundingRate || 0), 0) / candles.length;
 
+    // Small dead-band around zero so tiny positive/negative values are treated as neutral
+    // 1 bp = 0.0001, here EPS = 0.00002 (0.002%)
+    const EPS = 0.00002;
+
     let signal = 'NEUTRAL';
     let longScore = 50;
     let shortScore = 50;
 
-    if (avgFunding > 0) {
-      signal = 'SHORT';
-      shortScore = Math.min(100, 50 + avgFunding * 1000);
-      longScore = 100 - shortScore;
-    } else if (avgFunding < 0) {
-      signal = 'LONG';
-      longScore = Math.min(100, 50 + Math.abs(avgFunding) * 1000);
-      shortScore = 100 - longScore;
+    if (Math.abs(avgFunding) > EPS) {
+      if (avgFunding > 0) {
+        // Positive funding → longs pay shorts → bearish tilt
+        signal = 'SHORT';
+        shortScore = Math.min(100, 50 + avgFunding * 1000);
+        longScore = 100 - shortScore;
+      } else {
+        // Negative funding → shorts pay longs → bullish tilt
+        signal = 'LONG';
+        longScore = Math.min(100, 50 + Math.abs(avgFunding) * 1000);
+        shortScore = 100 - longScore;
+      }
     }
 
     const roundedLong = Math.round(longScore);
     const roundedShort = Math.round(shortScore);
+
+    if (roundedLong === roundedShort) {
+      signal = 'NEUTRAL';
+    } else {
+      signal = roundedLong > roundedShort ? 'LONG' : 'SHORT';
+    }
 
     return {
       module: 'funding',
