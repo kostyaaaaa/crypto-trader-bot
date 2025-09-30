@@ -191,7 +191,12 @@ export async function tradingEngine(symbol, config) {
     }));
 
     const higherTrend = await analyzeCandles(symbol, candles);
-    const higherVol = await analyzeVolatility(symbol, candles, 14);
+    const higherVol = await analyzeVolatility(
+      symbol,
+      candles,
+      14,
+      config.strategy.volatilityFilter || { deadBelow: 0.2, extremeAbove: 2.5 },
+    );
 
     if (!higherTrend || !higherVol) {
       return;
