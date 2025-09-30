@@ -162,43 +162,53 @@ export async function monitorPositions({ symbol, strategy }) {
       try {
         let trailingState = openDoc?.trailing || null;
 
-        const startAfterPct = Math.max(
+        // Значення у конфізі задаються у ROI% (PnL%)
+        const lev = Math.max(1, Number(strategy?.capital?.leverage) || 1);
+        const startAfterRoiPct = Math.max(
           0,
           Number(trailingCfg.startAfterPct) || 0,
-        );
-        const trailStepPct = Math.max(0, Number(trailingCfg.trailStepPct) || 0);
+        ); // ROI%
+        const gapRoiPct = Math.max(0, Number(trailingCfg.trailStepPct) || 0); // ROI%
 
-        // Поточний PnL% у напрямку позиції
-        const pnlPct = ((price - entryPrice) / entryPrice) * 100 * dir;
+        // Поточний рух ціни (% від entry) та відповідний ROI%
+        const priceMovePct = ((price - entryPrice) / entryPrice) * 100 * dir;
+        const pnlRoiPct = priceMovePct * lev;
 
-        // 1) Активуємо трейл один раз, коли досягли порогу PnL
-        if (!trailingState?.active && pnlPct >= startAfterPct) {
+        // 1) Активуємо трейл один раз, коли ROI% досяг порогу
+        if (!trailingState?.active && pnlRoiPct >= startAfterRoiPct) {
           trailingState = {
             active: true,
-            startAfterPct, // зберігаємо вже як PnL-поріг
-            trailStepPct, // крок у PnL%
-            anchorPnlPct: pnlPct, // найкращий PnL% після активації
+            // зберігаємо у ROI%-термінах
+            startAfterPct: startAfterRoiPct,
+            trailStepPct: gapRoiPct,
+            anchorRoiPct: pnlRoiPct, // найкращий ROI% після активації
+            lev,
           };
         }
 
-        // 2) Тягнемо SL за максимумом PnL у наш бік
+        // 2) Тягнемо SL за максимумом ROI у наш бік
         if (trailingState?.active) {
-          // оновлюємо максимум PnL тільки у наш бік
-          if (pnlPct > (trailingState.anchorPnlPct ?? -Infinity)) {
-            trailingState.anchorPnlPct = pnlPct;
+          // оновлюємо максимум ROI тільки у наш бік
+          if (pnlRoiPct > (trailingState.anchorRoiPct ?? -Infinity)) {
+            trailingState.anchorRoiPct = pnlRoiPct;
           }
 
-          // Цільовий PnL для стопа = (max PnL) - (крок)
-          const targetStopPnlPct = Math.max(
+          // Цільовий ROI для стопа = (max ROI) - (крок)
+          const targetStopRoiPct = Math.max(
             0,
-            trailingState.anchorPnlPct - trailingState.trailStepPct,
+            (trailingState.anchorRoiPct ?? 0) -
+              (trailingState.trailStepPct ?? 0),
           );
 
-          // Конвертуємо PnL% у стоп-ціну від entry
+          // Конвертуємо ROI% у "% руху ціни" через плече
+          const useLev = Math.max(1, Number(trailingState.lev || lev) || 1);
+          const targetStopPriceMovePct = targetStopRoiPct / useLev;
+
+          // Переводимо у стоп-ціну від entry
           const newStop =
             side === 'LONG'
-              ? entryPrice * (1 + targetStopPnlPct / 100)
-              : entryPrice * (1 - targetStopPnlPct / 100);
+              ? entryPrice * (1 + targetStopPriceMovePct / 100)
+              : entryPrice * (1 - targetStopPriceMovePct / 100);
 
           const needUpdate =
             (side === 'LONG' && (!currentSL || newStop > currentSL)) ||
