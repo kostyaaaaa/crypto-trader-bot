@@ -41,6 +41,14 @@ const useConfiguration = () => {
     onError: (error) => {
       console.error('error:', error);
     },
+    onSuccess: (data) => {
+      notifications.show({
+        title: 'Success!',
+        message: `Configuration for ${data.data.symbol} updated successfully`,
+        color: 'green',
+      });
+      refetch();
+    },
   });
 
   return {
