@@ -34,7 +34,7 @@ export const scalpingPreset: TCoinConfig = {
     },
     moduleThresholds: {
       trend: 25,
-      trendRegime: 20,
+      trendRegime: 12,
       liquidity: 5,
       funding: 10,
       liquidations: 5,
@@ -46,7 +46,7 @@ export const scalpingPreset: TCoinConfig = {
   },
   strategy: {
     entry: {
-      minScore: { LONG: 30, SHORT: 30 },
+      minScore: { LONG: 50, SHORT: 50 },
       minModules: 2,
       requiredModules: ['liquidity', 'openInterest'],
       maxSpreadPct: 0.02,
