@@ -1,6 +1,8 @@
 import axios from 'axios';
 import crypto from 'crypto';
-import { PnLSummaryResponse, PnLIncomeItem } from './pnl.type';
+import { PnLIncomeItem, PnLSummaryResponse } from './pnl.type';
+
+const MAX_LIMIT = 999;
 
 export const getPnL = async (
   daysBack: number = 1,
@@ -13,9 +15,12 @@ export const getPnL = async (
     }
 
     const now = Date.now();
-    const startTime = now - daysBack * 24 * 60 * 60 * 1000;
+    // Start of today in UTC
+    const startOfDay = new Date();
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const startTime = startOfDay.getTime();
 
-    const query = `startTime=${startTime}&endTime=${now}&incomeType=REALIZED_PNL&timestamp=${now}&recvWindow=5000`;
+    const query = `startTime=${startTime}&endTime=${now}&limit=${MAX_LIMIT}&timestamp=${now}&recvWindow=5000`;
     const signature = crypto
       .createHmac('sha256', BINANCE_ACCOUNT_SECRET_KEY)
       .update(query)
@@ -27,9 +32,10 @@ export const getPnL = async (
       headers: { 'X-MBX-APIKEY': BINANCE_API_KEY },
     });
 
-    const pnl = res.data
-      .filter((i: PnLIncomeItem) => i.incomeType === 'REALIZED_PNL')
-      .reduce((sum: number, i: PnLIncomeItem) => sum + parseFloat(i.income), 0);
+    const pnl = res.data.reduce(
+      (sum: number, i: PnLIncomeItem) => sum + parseFloat(i.income),
+      0,
+    );
 
     return {
       daysBack,
