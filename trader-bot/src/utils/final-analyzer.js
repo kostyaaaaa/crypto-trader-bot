@@ -1,14 +1,16 @@
 import axios from 'axios';
-import { analyzeCandles } from '../analize-modules/candles/analyze-сandles.js';
-import { analyzeCorrelation } from '../analize-modules/correlation/analyze-correlation.js';
-import { analyzeFunding } from '../analize-modules/funding/analyze-funding.js';
-import { analyzeHigherMA } from '../analize-modules/higherMA/analyze-higher-ma.js';
-import { analyzeLiquidations } from '../analize-modules/liquidations/analyze-liquidations.js';
-import { analyzeLongShort } from '../analize-modules/longshort/analyze-longshort.js';
-import { analyzeOpenInterest } from '../analize-modules/openinterest/analyze-openinterest.js';
-import { analyzeLiquidity } from '../analize-modules/orderbook/analyze-liquidity.js';
-import { analyzeTrendRegime } from '../analize-modules/trendRegime/analyze-trend-regime.js';
-import { analyzeVolatility } from '../analize-modules/volatility/analyze-volatility.js';
+import {
+  analyzeCandles,
+  analyzeCorrelation,
+  analyzeFunding,
+  analyzeHigherMA,
+  analyzeLiquidations,
+  analyzeLiquidity,
+  analyzeLongShort,
+  analyzeOpenInterest,
+  analyzeTrendRegime,
+  analyzeVolatility,
+} from '../analize-modules/index.js';
 import { saveDoc } from '../storage/storage.js';
 
 export async function finalAnalyzer({
@@ -81,7 +83,6 @@ export async function finalAnalyzer({
   modules.openInterest = await analyzeOpenInterest(symbol, oiWindow);
   modules.correlation = await analyzeCorrelation(symbol, corrWindow);
   modules.longShort = await analyzeLongShort(symbol, longShortWindow);
-
   modules.higherMA = await analyzeHigherMA(
     symbol,
     analysisConfig.higherMA || {
@@ -109,11 +110,17 @@ export async function finalAnalyzer({
   const scoreLONG = weightedScore('LONG');
   const scoreSHORT = weightedScore('SHORT');
 
+  const gap = Math.abs(scoreLONG - scoreSHORT);
+  const biasTolerance = Number(strategy?.entry?.sideBiasTolerance ?? 0);
+
+  const dominantSide = scoreLONG >= scoreSHORT ? 'LONG' : 'SHORT';
+  const bestScore = Math.max(scoreLONG, scoreSHORT);
+
   let decision = 'NO TRADE';
-  if (scoreLONG > 65) decision = 'STRONG LONG';
-  else if (scoreLONG > 50) decision = 'WEAK LONG';
-  else if (scoreSHORT > 65) decision = 'STRONG SHORT';
-  else if (scoreSHORT > 50) decision = 'WEAK SHORT';
+  if (gap >= biasTolerance && bestScore >= 50) {
+    const label = bestScore >= 65 ? 'STRONG' : 'WEAK';
+    decision = `${label} ${dominantSide}`;
+  }
 
   const bias =
     scoreLONG > scoreSHORT
@@ -121,7 +128,6 @@ export async function finalAnalyzer({
       : scoreSHORT > scoreLONG
         ? 'SHORT'
         : 'NEUTRAL';
-
   const filledModules = Object.values(modules).filter(
     (m) => m && (m.meta?.LONG ?? 0) + (m.meta?.SHORT ?? 0) > 0,
   ).length;

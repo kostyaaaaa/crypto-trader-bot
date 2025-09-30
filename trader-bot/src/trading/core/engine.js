@@ -1,6 +1,6 @@
 // trading/core/engine.js
 import axios from 'axios';
-import { analyzeCandles } from '../../analize-modules/candles/analyze-сandles.js';
+import { analyzeCandles } from '../../analize-modules/candles/analyze-candles.js';
 import { analyzeVolatility } from '../../analize-modules/volatility/analyze-volatility.js';
 import { loadDocs } from '../../storage/storage.js';
 import { notifyTrade } from '../../utils/notify.js';
