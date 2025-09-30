@@ -1,5 +1,6 @@
 import {
   Badge,
+  Button,
   Card,
   Center,
   Container,
@@ -16,7 +17,7 @@ import {
   Title,
 } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
-import { type FC, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FC } from 'react';
 import { getAllCoinConfigs, getAnalysisByDateRangeAndSymbol } from '../../api';
 import type { IAnalysis, TCoinConfigResponse } from '../../types';
 import styles from './Analysis.module.scss';
@@ -73,16 +74,6 @@ const Analysis: FC = () => {
   // how many last points to show
   const [historyN, setHistoryN] = useState<number>(10);
 
-  // Effective fetch window derived from desired historyN
-  // Heuristic: ~5 minutes per point (keeps payload small even for 1m data)
-  const rangeDates = useMemo(() => {
-    const to = new Date();
-    const minutesPerPoint = 5; // hardcoded "smaller timeframe" window
-    const minutes = Math.max(historyN * minutesPerPoint, 60); // at least 60m
-    const from = new Date(to.getTime() - minutes * 60 * 1000);
-    return { from, to };
-  }, [historyN]);
-
   // Active coins from backend configs
   const { data: coinConfigs } = useQuery({
     queryKey: ['all-coin-configs'],
@@ -96,11 +87,17 @@ const Analysis: FC = () => {
     [coinConfigs],
   );
 
+  const coinLocalStorageKey = 'anal_coin';
   // Selected symbol (fallback to SOLUSDT until configs arrive)
   const [selectedCoin, setSelectedCoin] = useState<string>('SOLUSDT');
   useEffect(() => {
-    if (symbols.length && !symbols.includes(selectedCoin)) {
-      setSelectedCoin(symbols[0]);
+    if (symbols.length) {
+      const localStorageItem = localStorage.getItem(coinLocalStorageKey);
+      if (localStorageItem && symbols.includes(localStorageItem)) {
+        setSelectedCoin(localStorageItem);
+      } else if (!symbols.includes(selectedCoin)) {
+        setSelectedCoin(symbols[0]);
+      }
     }
   }, [symbols.length]);
 
@@ -115,14 +112,28 @@ const Analysis: FC = () => {
   const activeTz: string | undefined = tzMode === 'utc' ? 'UTC' : undefined; // undefined => Local
   const tzBadgeLabel = tzMode === 'utc' ? 'UTC' : localTz;
 
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['analysis', { ...rangeDates, symbol, historyN }],
-    queryFn: async () =>
-      getAnalysisByDateRangeAndSymbol(
-        rangeDates.from.toISOString(),
-        rangeDates.to.toISOString(),
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch: getAnalysisRefetch,
+  } = useQuery({
+    queryKey: ['analysis', { symbol, historyN }],
+
+    queryFn: async () => {
+      const to = new Date();
+      const minutesPerPoint = 5;
+      const minutes = Math.max(historyN * minutesPerPoint, 60);
+      const from = new Date(to.getTime() - minutes * 60 * 1000);
+      // need here for correct refetch work
+      return getAnalysisByDateRangeAndSymbol(
+        from.toISOString(),
+        to.toISOString(),
         symbol,
-      ),
+      );
+    },
+
     refetchOnWindowFocus: false,
   });
 
@@ -218,7 +229,11 @@ const Analysis: FC = () => {
             placeholder="Select"
             data={symbols}
             value={selectedCoin}
-            onChange={(v) => setSelectedCoin(v || (symbols[0] ?? 'SOLUSDT'))}
+            onChange={(v) => {
+              const newCoin = v || (symbols[0] ?? 'SOLUSDT');
+              localStorage.setItem(coinLocalStorageKey, newCoin);
+              setSelectedCoin(newCoin);
+            }}
             searchable
             nothingFoundMessage="No coins"
             maw={200}
@@ -247,6 +262,10 @@ const Analysis: FC = () => {
               { label: 'UTC', value: 'utc' },
             ]}
           />
+
+          <Button onClick={() => getAnalysisRefetch()} disabled={isLoading}>
+            Refetch
+          </Button>
         </Group>
       </Stack>
 
