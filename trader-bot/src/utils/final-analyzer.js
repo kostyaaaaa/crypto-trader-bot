@@ -14,6 +14,7 @@ import { saveDoc } from '../storage/storage.js';
 export async function finalAnalyzer({
   symbol = 'ETHUSDT',
   analysisConfig = {},
+  strategy = {},
 } = {}) {
   const {
     candleTimeframe = '1m',
@@ -63,7 +64,12 @@ export async function finalAnalyzer({
   // --- модулі ---
   const modules = {};
   modules.trend = await analyzeCandles(symbol, candles);
-  modules.volatility = await analyzeVolatility(symbol, candles, volWindow);
+  modules.volatility = await analyzeVolatility(
+    symbol,
+    candles,
+    volWindow,
+    strategy.volatilityFilter || { deadBelow: 0.2, extremeAbove: 2.5 },
+  );
   modules.trendRegime = await analyzeTrendRegime(symbol, candles, {
     period: 14,
     adxSignalMin: moduleThresholds.trendRegime ?? 20,

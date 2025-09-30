@@ -20,7 +20,7 @@ async function startConfig(config) {
 
   // 🔹 Фінальний аналіз + запуск двигуна раз на хвилину
   const analysisInterval = setInterval(async () => {
-    await finalAnalyzer({ symbol, analysisConfig });
+    await finalAnalyzer({ symbol, analysisConfig, strategy });
     await tradingEngine(symbol, { analysisConfig, strategy });
   }, 60 * 1000);
 
