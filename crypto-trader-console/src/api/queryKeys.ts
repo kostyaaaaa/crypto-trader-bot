@@ -6,4 +6,5 @@ export const QueryKeys = {
   AllCoinConfigs: 'AllCoinConfigs',
   GetCoinConfig: 'GetCoinConfig',
   GetPositions: 'GetPositions',
+  GetAnalysis: 'GetAnalysis',
 } as const;
