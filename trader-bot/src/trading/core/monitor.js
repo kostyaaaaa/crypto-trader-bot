@@ -46,6 +46,24 @@ async function getOpenHistoryDoc(symbol) {
   }
 }
 
+// Обчислюємо один референсний TP у % (беремо перший або зважений середній)
+// Використовується для простого "TP-anchored trailing"
+function getTpReferencePct(tpCfg) {
+  if (!tpCfg || !tpCfg.use) return null;
+  const arr = Array.isArray(tpCfg.tpGridPct) ? tpCfg.tpGridPct : [];
+  if (!arr.length) return null;
+
+  const sizes = Array.isArray(tpCfg.tpGridSizePct) ? tpCfg.tpGridSizePct : null;
+  if (sizes && sizes.length === arr.length) {
+    const wSum = sizes.reduce((s, v) => s + Number(v || 0), 0) || 1;
+    return arr.reduce(
+      (acc, p, i) => acc + Number(p || 0) * (Number(sizes[i] || 0) / wSum),
+      0,
+    );
+  }
+  return Number(arr[0] || 0);
+}
+
 // === Основний моніторинг ===
 export async function monitorPositions({ symbol, strategy }) {
   let positions = [];
@@ -134,26 +152,50 @@ export async function monitorPositions({ symbol, strategy }) {
     const openDoc = await getOpenHistoryDoc(symbol);
     const addsCount = openDoc?.adds?.length || 0;
 
-    /* ===== 1) TRAILING ===== */
+    /* ===== 1) TRAILING (TP-anchored) ===== */
     const trailingCfg = strategy?.exits?.trailing;
 
-    // зберігаємо стейт трелінгу в оперативці на об'єкті pos (можемо винести у БД пізніше)
+    // Єдиний простий режим (з БЕЗ зміни назв у конфізі):
+    // - startAfterPct: коли увімкнути трейл (як частка від TP, %)
+    // - trailStepPct: відстань стопа від "якоря" (як частка від TP, %)
+    // Якщо TP не заданий — обидва трактуємо як % від entry (фолбек).
+
     if (trailingCfg?.use && entryPrice) {
       try {
         let trailingState = openDoc?.trailing || null;
 
+        // 1) Визначаємо референсний TP (% від entry)
+        const tpRefPct = getTpReferencePct(strategy?.exits?.tp);
+
+        // 2) Зчитуємо ПОЛЯ зі старими назвами (але інтерпретуємо відносно TP)
+        const startAfterPct = Number(trailingCfg.startAfterPct ?? 0);
+        const trailStepPct = Number(trailingCfg.trailStepPct ?? 0);
+
+        // 3) Перекладаємо у "відсотки від entry" (якщо TP не заданий — вже у від entry)
+        const startAfterEntryPct = tpRefPct
+          ? tpRefPct * (startAfterPct / 100)
+          : startAfterPct;
+        const gapEntryPct = tpRefPct
+          ? tpRefPct * (trailStepPct / 100)
+          : trailStepPct;
+
+        // напрямок позиції
         const movePct = ((price - entryPrice) / entryPrice) * 100 * dir;
 
-        if (!trailingState?.active && movePct >= trailingCfg.startAfterPct) {
+        // 4) Активація трейла один раз при досягненні порогу
+        if (!trailingState?.active && movePct >= startAfterEntryPct) {
           trailingState = {
             active: true,
-            startAfterPct: trailingCfg.startAfterPct,
-            trailStepPct: trailingCfg.trailStepPct,
+            // зберігаємо вже в перерахованих у % від entry значеннях
+            startAfterPct: startAfterEntryPct,
+            trailStepPct: gapEntryPct, // лишаємо назву як у конфізі
             anchor: price,
           };
         }
 
+        // 5) Підтягування стопа за "якорем"
         if (trailingState?.active) {
+          // оновлюємо anchor лише у бік прибутку
           if (side === 'LONG' && price > (trailingState.anchor || 0)) {
             trailingState.anchor = price;
           }
@@ -161,10 +203,11 @@ export async function monitorPositions({ symbol, strategy }) {
             trailingState.anchor = price;
           }
 
+          // стоп = anchor ± gapEntryPct
           const newStop =
             side === 'LONG'
-              ? trailingState.anchor * (1 - trailingCfg.trailStepPct / 100)
-              : trailingState.anchor * (1 + trailingCfg.trailStepPct / 100);
+              ? trailingState.anchor * (1 - trailingState.trailStepPct / 100)
+              : trailingState.anchor * (1 + trailingState.trailStepPct / 100);
 
           const needUpdate =
             (side === 'LONG' && (!currentSL || newStop > currentSL)) ||
