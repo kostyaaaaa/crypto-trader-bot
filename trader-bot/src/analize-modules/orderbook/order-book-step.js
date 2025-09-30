@@ -14,7 +14,6 @@ export function OrderBookStepWS(symbol = 'BTCUSDT') {
   const ws = new WebSocket(
     `wss://fstream.binance.com/ws/${symbol.toLowerCase()}@depth10@100ms`,
   );
-
   let imbalances = [];
   let spreads = [];
   let interval;
@@ -23,6 +22,7 @@ export function OrderBookStepWS(symbol = 'BTCUSDT') {
   ws.on('message', (msg) => {
     const data = JSON.parse(msg.toString());
     if (!data.b || !data.a) return;
+    // console.log(data);
 
     const bids = data.b;
     const asks = data.a;

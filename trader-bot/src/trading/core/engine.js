@@ -1,6 +1,6 @@
 // trading/core/engine.js
 import axios from 'axios';
-import { analyzeCandles } from '../../analize-modules/candles/analyze-сandles.js';
+import { analyzeCandles } from '../../analize-modules/candles/analyze-candles.js';
 import { analyzeVolatility } from '../../analize-modules/volatility/analyze-volatility.js';
 import { loadDocs } from '../../storage/storage.js';
 import { notifyTrade } from '../../utils/notify.js';
@@ -151,7 +151,7 @@ export async function tradingEngine(symbol, config) {
     }
     if (signal === 'NONE' && meta?.regime === 'EXTREME') {
       // do not compound risk cuts; apply the strongest single cut
-      riskFactor = Math.min(riskFactor, 0.5);
+      return;
     }
   }
 
@@ -206,8 +206,7 @@ export async function tradingEngine(symbol, config) {
       console.log(
         `⚠️ ${symbol}: higherTrend.signal !== majority, risk reduced`,
       );
-      // do not let multiple cuts compound (e.g., EXTREME + mismatch)
-      riskFactor = Math.min(riskFactor, 0.5);
+      return;
     }
 
     if (higherVol.signal === 'NONE' && higherVol.meta?.regime === 'DEAD') {

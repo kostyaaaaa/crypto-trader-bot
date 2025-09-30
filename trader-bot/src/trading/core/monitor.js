@@ -46,6 +46,24 @@ async function getOpenHistoryDoc(symbol) {
   }
 }
 
+// Обчислюємо один референсний TP у % (беремо перший або зважений середній)
+// Використовується для простого "TP-anchored trailing"
+function getTpReferencePct(tpCfg) {
+  if (!tpCfg || !tpCfg.use) return null;
+  const arr = Array.isArray(tpCfg.tpGridPct) ? tpCfg.tpGridPct : [];
+  if (!arr.length) return null;
+
+  const sizes = Array.isArray(tpCfg.tpGridSizePct) ? tpCfg.tpGridSizePct : null;
+  if (sizes && sizes.length === arr.length) {
+    const wSum = sizes.reduce((s, v) => s + Number(v || 0), 0) || 1;
+    return arr.reduce(
+      (acc, p, i) => acc + Number(p || 0) * (Number(sizes[i] || 0) / wSum),
+      0,
+    );
+  }
+  return Number(arr[0] || 0);
+}
+
 // === Основний моніторинг ===
 export async function monitorPositions({ symbol, strategy }) {
   let positions = [];
@@ -134,37 +152,53 @@ export async function monitorPositions({ symbol, strategy }) {
     const openDoc = await getOpenHistoryDoc(symbol);
     const addsCount = openDoc?.adds?.length || 0;
 
-    /* ===== 1) TRAILING ===== */
+    /* ===== 1) TRAILING (PnL-anchored) ===== */
     const trailingCfg = strategy?.exits?.trailing;
 
-    // зберігаємо стейт трелінгу в оперативці на об'єкті pos (можемо винести у БД пізніше)
+    // Єдиний режим:
+    // - startAfterPct: PnL% від entry, з якого активуємо трейл
+    // - trailStepPct: PnL% від entry, на якій відстані від max PnL тримаємо SL
     if (trailingCfg?.use && entryPrice) {
       try {
         let trailingState = openDoc?.trailing || null;
 
-        const movePct = ((price - entryPrice) / entryPrice) * 100 * dir;
+        const startAfterPct = Math.max(
+          0,
+          Number(trailingCfg.startAfterPct) || 0,
+        );
+        const trailStepPct = Math.max(0, Number(trailingCfg.trailStepPct) || 0);
 
-        if (!trailingState?.active && movePct >= trailingCfg.startAfterPct) {
+        // Поточний PnL% у напрямку позиції
+        const pnlPct = ((price - entryPrice) / entryPrice) * 100 * dir;
+
+        // 1) Активуємо трейл один раз, коли досягли порогу PnL
+        if (!trailingState?.active && pnlPct >= startAfterPct) {
           trailingState = {
             active: true,
-            startAfterPct: trailingCfg.startAfterPct,
-            trailStepPct: trailingCfg.trailStepPct,
-            anchor: price,
+            startAfterPct, // зберігаємо вже як PnL-поріг
+            trailStepPct, // крок у PnL%
+            anchorPnlPct: pnlPct, // найкращий PnL% після активації
           };
         }
 
+        // 2) Тягнемо SL за максимумом PnL у наш бік
         if (trailingState?.active) {
-          if (side === 'LONG' && price > (trailingState.anchor || 0)) {
-            trailingState.anchor = price;
-          }
-          if (side === 'SHORT' && price < (trailingState.anchor || Infinity)) {
-            trailingState.anchor = price;
+          // оновлюємо максимум PnL тільки у наш бік
+          if (pnlPct > (trailingState.anchorPnlPct ?? -Infinity)) {
+            trailingState.anchorPnlPct = pnlPct;
           }
 
+          // Цільовий PnL для стопа = (max PnL) - (крок)
+          const targetStopPnlPct = Math.max(
+            0,
+            trailingState.anchorPnlPct - trailingState.trailStepPct,
+          );
+
+          // Конвертуємо PnL% у стоп-ціну від entry
           const newStop =
             side === 'LONG'
-              ? trailingState.anchor * (1 - trailingCfg.trailStepPct / 100)
-              : trailingState.anchor * (1 + trailingCfg.trailStepPct / 100);
+              ? entryPrice * (1 + targetStopPnlPct / 100)
+              : entryPrice * (1 - targetStopPnlPct / 100);
 
           const needUpdate =
             (side === 'LONG' && (!currentSL || newStop > currentSL)) ||
@@ -172,23 +206,20 @@ export async function monitorPositions({ symbol, strategy }) {
 
           if (needUpdate) {
             if (TRADE_MODE === 'live') {
-              await cancelStopOrders(symbol, { onlySL: true }); // ❗️TP не чіпаємо
-              await placeStopLoss(symbol, side, newStop, liveQty); // qty = liveQty (монети)
+              await cancelStopOrders(symbol, { onlySL: true }); // TP не чіпаємо
+              await placeStopLoss(symbol, side, newStop, liveQty);
             }
 
-            // лог у історію
             await adjustPosition(symbol, {
               type: 'SL',
               price: newStop,
               size: liveQty,
             });
-
             await updateStopPrice(symbol, newStop, 'TRAIL', trailingState);
           }
         }
       } catch {}
     }
-
     /* ===== 2) DCA / Adds ===== */
     const { sizing } = strategy || {};
     if (sizing && sizing.maxAdds > 0 && entryPrice) {
