@@ -36,11 +36,15 @@ export async function analyzeLongShort(symbol = 'ETHUSDT', window = 5) {
     const longPct = total > 0 ? (avgLong / total) * 100 : 50;
     const shortPct = total > 0 ? (avgShort / total) * 100 : 50;
 
+    // визначаємо сигнал із "мертвою зоною" 5 п.п. і силу як переважаючу сторону
+    const diff = Math.abs(longPct - shortPct);
     let signal = 'NEUTRAL';
-    if (longPct > shortPct + 5) signal = 'LONG';
-    else if (shortPct > longPct + 5) signal = 'SHORT';
+    if (diff > 5) {
+      signal = longPct > shortPct ? 'LONG' : 'SHORT';
+    }
 
-    const strength = Math.min(100, Math.abs(longPct - shortPct));
+    // 👉 сила модуля = переважаюча сторона (0..100), щоб бути консистентними з іншими модулями
+    const strength = Math.max(longPct, shortPct);
 
     // розрахунок періоду, який покриває вікно
     const minutesCovered = window * 5;
@@ -52,8 +56,8 @@ export async function analyzeLongShort(symbol = 'ETHUSDT', window = 5) {
       signal,
       strength,
       meta: {
-        LONG: Number(longPct.toFixed(2)),
-        SHORT: Number(shortPct.toFixed(2)),
+        LONG: Number(longPct.toFixed(3)),
+        SHORT: Number(shortPct.toFixed(3)),
         candlesUsed: data.length,
         avgLong: Number(avgLong.toFixed(2)),
         avgShort: Number(avgShort.toFixed(2)),

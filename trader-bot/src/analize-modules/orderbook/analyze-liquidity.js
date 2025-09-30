@@ -20,22 +20,28 @@ export async function analyzeLiquidity(
   const spreadPct =
     lastPrice && lastPrice > 0 ? (avgSpreadAbs / lastPrice) * 100 : null;
 
-  const clampedImb = Math.max(0, Math.min(1, avgImbalance));
-  const bias = (clampedImb - 0.5) * 2;
+  // Нормалізуємо imbalance: 0..1, де 0.5 = баланс попиту/пропозиції
+  const clampedImb = Math.max(
+    0,
+    Math.min(1, Number.isFinite(avgImbalance) ? avgImbalance : 0.5),
+  );
 
-  const strength = Math.min(100, Math.abs(bias) * 100);
+  // Переводимо у симетричні бали 0..100 по кожній стороні (сума ≈ 100)
+  // 0.5 => LONG=50, SHORT=50; 0.6 => LONG=60, SHORT=40; 0.4 => LONG=40, SHORT=60
+  const LONG = Number((clampedImb * 100).toFixed(3));
+  const SHORT = Number(((1 - clampedImb) * 100).toFixed(3));
+
+  // Дедзона навколо 50% (2%): не даємо фліпитись на шумі
+  const deadZone = 0.02;
+  const diff = Math.abs(clampedImb - 0.5);
 
   let signal = 'NEUTRAL';
-  if (bias > 0.05) signal = 'LONG';
-  else if (bias < -0.05) signal = 'SHORT';
-
-  let LONG = 0,
-    SHORT = 0;
-  if (signal === 'LONG') {
-    LONG = strength;
-  } else if (signal === 'SHORT') {
-    SHORT = strength;
+  if (diff > deadZone) {
+    signal = clampedImb > 0.5 ? 'LONG' : 'SHORT';
   }
+
+  // strength — сила переважаючої сторони
+  const strength = Math.max(LONG, SHORT);
 
   return {
     module: 'liquidity',
