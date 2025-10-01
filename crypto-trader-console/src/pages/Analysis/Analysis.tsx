@@ -95,7 +95,7 @@ const Analysis: FC = () => {
 
     queryFn: async () => {
       const to = new Date();
-      const minutesPerPoint = 5;
+      const minutesPerPoint = 2;
       const minutes = Math.max(historyN * minutesPerPoint, 60);
       const from = new Date(to.getTime() - minutes * 60 * 1000);
       // need here for correct refetch work
@@ -341,10 +341,10 @@ const Analysis: FC = () => {
             size="xs"
             label="Last"
             data={[
-              { value: '10', label: '10' },
-              { value: '20', label: '20' },
-              { value: '30', label: '30' },
-              { value: '50', label: '50' },
+              { value: '10', label: 'Last 10' },
+              { value: '15', label: '15m' },
+              { value: '30', label: '30m' },
+              { value: '60', label: '1h' },
             ]}
             value={String(historyN)}
             onChange={(v) => setHistoryN(Number(v || 10))}
@@ -427,7 +427,7 @@ const Analysis: FC = () => {
               options={apexOptions}
               series={apexSeries}
               type="line"
-              height={260}
+              height={200}
             />
           </Tabs.Panel>
 

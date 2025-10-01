@@ -10,6 +10,7 @@ import { DatePickerInput } from '@mantine/dates';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
 import { useState, type FC } from 'react';
+import CoinIcon from '../../components/SymbolIcon';
 import styles from './PositionsPage.module.scss';
 import usePositionsPage from './usePositionsPage';
 
@@ -29,7 +30,11 @@ const PositionsPage: FC = () => {
 
   const rows = positions?.map((pos) => (
     <Table.Tr key={pos._id}>
-      <Table.Td>{pos.symbol}</Table.Td>
+      <Table.Td className={styles.wrapper__symbol_icon}>
+        {' '}
+        <CoinIcon symbol={pos.symbol} size={16} />
+        {pos.symbol}
+      </Table.Td>
       <Table.Td>
         {(() => {
           const pnl = Number(pos.finalPnl ?? 0);

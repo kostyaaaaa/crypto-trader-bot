@@ -12,6 +12,7 @@
     align-items: center;
     flex-direction: column;
     padding: 36px 24px;
+    padding-top: 0;
     width: 100%;
   }
 
@@ -43,4 +44,11 @@
 .presetSelector {
   max-width: 400px;
   width: 100%;
+}
+
+.back_btn {
+  width: 100%;
+  display: flex;
+  justify-content: start;
+  padding: 10px 0 0 10px;
 }

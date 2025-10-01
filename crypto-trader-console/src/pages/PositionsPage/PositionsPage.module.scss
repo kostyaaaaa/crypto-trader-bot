@@ -36,7 +36,10 @@
       line-height: 1.2;
     }
   }
-
+  &__symbol_icon {
+    display: flex;
+    column-gap: 10px;
+  }
   &__scores {
     display: flex;
     flex-direction: column;
