@@ -102,7 +102,6 @@ type TAnalysisModule = {
   correlation: number;
   longShort: number;
   higherMA: number;
-  genyaAnal: number;
 };
 
 export type TCoinConfigResponse = TCoinConfig & {

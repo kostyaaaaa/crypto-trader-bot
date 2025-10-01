@@ -31,7 +31,6 @@ export const scalpingPreset: TCoinConfig = {
       correlation: 0.012,
       longShort: 0.006,
       higherMA: 0.0,
-      genyaAnal: 0,
     },
     moduleThresholds: {
       trend: 25,
@@ -43,7 +42,6 @@ export const scalpingPreset: TCoinConfig = {
       correlation: 15,
       longShort: 15,
       higherMA: 5,
-      genyaAnal: 0,
     },
   },
   strategy: {

@@ -639,5 +639,4 @@ const moduleKeys = [
   'correlation',
   'longShort',
   'higherMA',
-  'genyaAnal',
 ] as const;
