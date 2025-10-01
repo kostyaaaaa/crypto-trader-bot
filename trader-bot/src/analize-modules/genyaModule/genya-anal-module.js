@@ -97,7 +97,6 @@ export async function genyaTrendModule(symbol = 'ETHUSDT', candles = []) {
       LONG: parseFloat(longScore.toFixed(1)),
       SHORT: parseFloat(shortScore.toFixed(1)),
       closesCandlesCounter: closes.length,
-      lastCandle: lastCandle,
       emaFast: parseFloat(emaFast.toFixed(6)),
       emaSlow: parseFloat(emaSlow.toFixed(6)),
       rsi: parseFloat(rsi.toFixed(2)),
