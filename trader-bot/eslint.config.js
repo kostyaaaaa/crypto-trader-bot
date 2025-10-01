@@ -17,7 +17,7 @@ export default [
       // Customize rules for JavaScript
       'no-unused-vars': 'warn',
       'no-console': 'off', // Allow console.log in this project
-      'no-undef': 'warn', // Make undefined variables warnings instead of errors
+      'no-undef': 'error', // Make undefined variables warnings instead of errors
     },
   },
   {
