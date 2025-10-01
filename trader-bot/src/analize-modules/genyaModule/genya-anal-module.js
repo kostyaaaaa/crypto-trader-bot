@@ -8,9 +8,9 @@ export async function genyaTrendModule(symbol = 'ETHUSDT', candles = []) {
     return null;
   }
 
-  const closes = lastCandles.map((c) => c.close);
+  const closes = candles.map((c) => c.close);
   const lastCandle = candles[candles.length - 1];
-  const volumes = lastCandles.map((c) => Number(c.volume ?? 0));
+  const volumes = candles.map((c) => Number(c.volume ?? 0));
 
   // 📊 Індикатори
   const emaFast = EMA(closes, 7, { seed: 'sma' });
@@ -93,10 +93,10 @@ export async function genyaTrendModule(symbol = 'ETHUSDT', candles = []) {
     strength: trendUp
       ? parseFloat(longScore.toFixed(1))
       : parseFloat(shortScore.toFixed(1)), // 30 → 52.5 якщо є всі 3 параметра
+    lastCandle,
     meta: {
       LONG: parseFloat(longScore.toFixed(1)),
       SHORT: parseFloat(shortScore.toFixed(1)),
-      closesCandlesCounter: closes.length,
       emaFast: parseFloat(emaFast.toFixed(6)),
       emaSlow: parseFloat(emaSlow.toFixed(6)),
       rsi: parseFloat(rsi.toFixed(2)),
