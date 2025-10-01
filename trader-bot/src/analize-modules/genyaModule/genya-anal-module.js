@@ -28,12 +28,19 @@ export async function genyaTrendModule(symbol = 'ETHUSDT', candles = []) {
 
   // 🔹 Розрахунок "сили" сигналу
 
-  let strength = 0; // базове значення
-  if (trendUp || trendDown) strength += 10; // тренд
-  if (strongVolume) strength += 20; // об’єм
+  // базове значення
+  let longScore = 0;
+  let shortScore = 0;
+  if (trendUp) longScore += 10; // тренд
+  if (trendDown) shortScore += 10; // тренд
+
+  if (strongVolume) {
+    longScore += 20; // об’єм
+    shortScore += 20; // об’єм
+  }
 
   // RSI для лонгу
-  if (trendUp && rsi > 55) strength += (rsi - 55) * 1.5;
+  if (trendUp && rsi > 55) longScore += (rsi - 55) * 1.5;
   // Умова: RSI більший за 55 → ринок трохи перекуплений і лонг більш сильний.
   // Вираховуємо: (rsi - 55) → наскільки RSI перевищує 55.
   // Наприклад, якщо RSI = 65 → 65 − 55 = 10
@@ -42,7 +49,7 @@ export async function genyaTrendModule(symbol = 'ETHUSDT', candles = []) {
   // Результат: strength збільшується на 5, тобто сигнал стає сильнішим завдяки високому RSI.
 
   // RSI для шорту
-  if (rsi < 45 && trendDown) strength += (45 - rsi) * 1.5;
+  if (rsi < 45 && trendDown) shortScore += (45 - rsi) * 1.5;
   // Умова: RSI менший за 45 → ринок трохи перепроданий і шорт більш сильний.
   // Вираховуємо: (45 - rsi) → наскільки RSI менший за 45.
   // Наприклад, якщо RSI = 35 → 45 − 35 = 10
@@ -57,11 +64,13 @@ export async function genyaTrendModule(symbol = 'ETHUSDT', candles = []) {
   if (rsi > 70) {
     signal = 'OVERBOUGHT';
     reason = 'RSI > 70, ринок перегрітий, лонг небезпечний';
-    strength = 0;
+    longScore = 0;
+    shortScore = 0;
   } else if (rsi < 30) {
     signal = 'OVERSOLD';
     reason = 'RSI < 30, ринок перепроданий, шорт небезпечний';
-    strength = 0;
+    longScore = 0;
+    shortScore = 0;
   } else {
     // 🔹 Основна логіка (EMA + RSI 45/55 + об’єм)
     if (trendUp && rsi > 55) {
@@ -82,8 +91,13 @@ export async function genyaTrendModule(symbol = 'ETHUSDT', candles = []) {
     symbol,
     signal,
     reason,
-    strength: parseFloat(strength.toFixed(1)),
+    strength: trendUp
+      ? parseFloat(longScore.toFixed(1))
+      : parseFloat(shortScore.toFixed(1)),
     meta: {
+      LONG: parseFloat(longScore.toFixed(1)),
+      SHORT: parseFloat(shortScore.toFixed(1)),
+
       emaFast: parseFloat(emaFast.toFixed(2)),
       emaSlow: parseFloat(emaSlow.toFixed(2)),
       rsi: parseFloat(rsi.toFixed(2)),
