@@ -8,15 +8,14 @@ export async function genyaTrendModule(symbol = 'ETHUSDT', candles = []) {
     return null;
   }
 
-  const lastCandles = candles.slice(-21);
-
   const closes = lastCandles.map((c) => c.close);
+  const lastCandle = candles[candles.length - 1];
   const volumes = lastCandles.map((c) => Number(c.volume ?? 0));
 
   // 📊 Індикатори
-  const emaFast = EMA(closes, 9, { seed: 'sma' });
-  const emaSlow = EMA(closes, 21, { seed: 'sma' });
-  const rsi = RSI(closes, 14);
+  const emaFast = EMA(closes, 7, { seed: 'sma' });
+  const emaSlow = EMA(closes, 25, { seed: 'sma' });
+  const rsi = RSI(closes, 100);
 
   const avgVolume = volumes.reduce((sum, num) => sum + num, 0) / volumes.length;
   const lastVolume = volumes[volumes.length - 1];
@@ -93,11 +92,12 @@ export async function genyaTrendModule(symbol = 'ETHUSDT', candles = []) {
     reason,
     strength: trendUp
       ? parseFloat(longScore.toFixed(1))
-      : parseFloat(shortScore.toFixed(1)),
+      : parseFloat(shortScore.toFixed(1)), // 30 → 52.5 якщо є всі 3 параметра
     meta: {
       LONG: parseFloat(longScore.toFixed(1)),
       SHORT: parseFloat(shortScore.toFixed(1)),
-
+      closesCandlesCounter: closes.length,
+      lastCandle: lastCandle,
       emaFast: parseFloat(emaFast.toFixed(6)),
       emaSlow: parseFloat(emaSlow.toFixed(6)),
       rsi: parseFloat(rsi.toFixed(2)),
