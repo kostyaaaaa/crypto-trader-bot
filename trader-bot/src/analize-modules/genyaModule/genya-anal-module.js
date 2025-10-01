@@ -26,31 +26,6 @@ export async function genyaTrendModule(symbol = 'ETHUSDT', candles = []) {
   const trendDown = emaFast < emaSlow;
   const strongVolume = lastVolume > avgVolume;
 
-  let signal = 'NEUTRAL';
-  let reason = 'Немає чіткого тренду';
-
-  // 🔹 Фільтр по RSI
-  if (rsi > 70) {
-    signal = 'OVERBOUGHT';
-    reason = 'RSI > 70, ринок перегрітий, лонг небезпечний';
-  } else if (rsi < 30) {
-    signal = 'OVERSOLD';
-    reason = 'RSI < 30, ринок перепроданий, шорт небезпечний';
-  } else {
-    // 🔹 Основна логіка (EMA + RSI 45/55 + об’єм)
-    if (trendUp && rsi > 55) {
-      signal = strongVolume ? 'STRONG_LONG' : 'WEAK_LONG';
-      reason = strongVolume
-        ? 'EMA9 > EMA21, RSI > 55 та об’єм вище середнього'
-        : 'EMA9 > EMA21 та RSI > 55, але об’єм слабкий';
-    } else if (trendDown && rsi < 45) {
-      signal = strongVolume ? 'STRONG_SHORT' : 'WEAK_SHORT';
-      reason = strongVolume
-        ? 'EMA9 < EMA21, RSI < 45 та об’єм вище середнього'
-        : 'EMA9 < EMA21 та RSI < 45, але об’єм слабкий';
-    }
-  }
-
   // 🔹 Розрахунок "сили" сигналу
 
   let strength = 0; // базове значення
@@ -74,6 +49,33 @@ export async function genyaTrendModule(symbol = 'ETHUSDT', candles = []) {
   // Множимо на 0.5: (45 - rsi) * 0.5 → теж масштабування.
   // Продовжуючи приклад: 10 * 0.5 = +5
   // Результат: strength збільшується на 5, сигнал шорту стає сильнішим.
+
+  let signal = 'NEUTRAL';
+  let reason = 'Немає чіткого тренду';
+
+  // 🔹 Фільтр по RSI
+  if (rsi > 70) {
+    signal = 'OVERBOUGHT';
+    reason = 'RSI > 70, ринок перегрітий, лонг небезпечний';
+    strength = 0;
+  } else if (rsi < 30) {
+    signal = 'OVERSOLD';
+    reason = 'RSI < 30, ринок перепроданий, шорт небезпечний';
+    strength = 0;
+  } else {
+    // 🔹 Основна логіка (EMA + RSI 45/55 + об’єм)
+    if (trendUp && rsi > 55) {
+      signal = strongVolume ? 'STRONG_LONG' : 'WEAK_LONG';
+      reason = strongVolume
+        ? 'EMA9 > EMA21, RSI > 55 та об’єм вище середнього'
+        : 'EMA9 > EMA21 та RSI > 55, але об’єм слабкий';
+    } else if (trendDown && rsi < 45) {
+      signal = strongVolume ? 'STRONG_SHORT' : 'WEAK_SHORT';
+      reason = strongVolume
+        ? 'EMA9 < EMA21, RSI < 45 та об’єм вище середнього'
+        : 'EMA9 < EMA21 та RSI < 45, але об’єм слабкий';
+    }
+  }
 
   return {
     module: 'trend',
