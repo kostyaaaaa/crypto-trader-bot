@@ -1,4 +1,4 @@
-import type { TCoinConfig } from '../types';
+import type { TCoinConfig } from '../../types';
 
 export const dayTradingPreset: TCoinConfig = {
   symbol: 'DAY TRADING',
