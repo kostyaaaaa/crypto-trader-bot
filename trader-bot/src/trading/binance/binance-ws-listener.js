@@ -242,7 +242,6 @@ async function handleEvent(msg) {
           let matched = null;
           for (const tp of updatedTps) {
             const tpPrice = Number(tp.price);
-            const alreadyFilled = Boolean(tp.filled);
             // Дозволяємо дописувати часткові філи (кілька подій на один TP)
             const priceMatch =
               Number.isFinite(tpPrice) &&

@@ -1,14 +1,13 @@
 import {
-  getLiveState,
-  getOpenPositions,
+  adjustPrice,
+  adjustQuantity,
   closePosition as binanceClosePosition,
+  cancelAllOrders,
+  getLiveState,
+  getSymbolFilters,
   openMarketOrder,
   placeStopLoss,
   placeTakeProfit,
-  cancelAllOrders,
-  getSymbolFilters,
-  adjustQuantity,
-  adjustPrice,
 } from '../binance/binance.js';
 
 function oppositeSide(side) {

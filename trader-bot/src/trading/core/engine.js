@@ -101,7 +101,7 @@ export async function tradingEngine(symbol, config) {
     return;
   }
 
-  const { entry, capital } = config.strategy;
+  const { entry } = config.strategy;
   // ---- risk handling: do not mutate global config ----
   const baseRiskPct = Number(config?.strategy?.capital?.riskPerTradePct ?? 0);
   let riskFactor = 1; // will be adjusted by higherTF / volatility gates

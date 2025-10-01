@@ -36,15 +36,6 @@ function fmtPrice(v) {
 }
 
 /**
- * Формат кількості / розміру
- */
-function fmtSize(v) {
-  if (v == null) return '—';
-  if (typeof v === 'number') return v.toFixed(4);
-  return String(v);
-}
-
-/**
  * notifyTrade(position, action)
  * - position: об'єкт позиції / закритої позиції (повинен містити symbol, side, entryPrice, size, leverage, stopLoss, takeProfits, closedBy, finalPnl, openedAt, closedAt)
  * - action: 'CLOSED' | 'OPEN' | 'UPDATE' (за замовчуванням 'UPDATE')
