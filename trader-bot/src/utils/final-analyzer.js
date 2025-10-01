@@ -10,6 +10,7 @@ import {
   analyzeOpenInterest,
   analyzeTrendRegime,
   analyzeVolatility,
+  genyaTrendModule,
 } from '../analize-modules/index.js';
 import { saveDoc } from '../storage/storage.js';
 
@@ -95,6 +96,9 @@ export async function finalAnalyzer({
       emaSeed: 'sma',
     },
   );
+
+  // rename module name коли зрозумію що він аналізує))))
+  modules.genyaAnal = await genyaTrendModule(symbol, candles);
 
   // --- скоринг ---
   function weightedScore(side) {
