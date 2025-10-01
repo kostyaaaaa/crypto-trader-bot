@@ -8,11 +8,10 @@ import {
   Loader,
   Paper,
   Progress,
-  ScrollArea,
-  SegmentedControl,
   Select,
   Stack,
   Table,
+  Tabs,
   Text,
   Title,
 } from '@mantine/core';
@@ -26,12 +25,15 @@ import styles from './Analysis.module.scss';
 
 type AxisSeries = Array<{ name: string; data: { x: number; y: number }[] }>;
 
-// ---- Light typings to keep TS happy ----
+type ModuleMeta = { LONG?: number; SHORT?: number };
+type ModuleShape = { signal?: string; strength?: number; meta?: ModuleMeta };
+type ModulesMap = Record<string, ModuleShape>;
+
+const OVERALL_TAB = 'overall';
 
 const fmt = (n: number, d = 2) =>
   Number.isFinite(n) ? Number(n).toFixed(d) : '-';
 
-// формат часу з урахуванням обраної TZ (undefined => Local)
 const timeHHMM = (iso: string, timeZone?: string) => {
   const dt = new Date(iso);
   return dt.toLocaleTimeString('en-GB', {
@@ -45,7 +47,6 @@ const timeHHMM = (iso: string, timeZone?: string) => {
 const Analysis: FC = () => {
   const [historyN, setHistoryN] = useState<number>(10);
 
-  // Active coins from backend configs
   const { data: coinConfigs } = useQuery({
     queryKey: ['all-coin-configs'],
     queryFn: getAllCoinConfigs,
@@ -59,7 +60,7 @@ const Analysis: FC = () => {
   );
 
   const coinLocalStorageKey = 'anal_coin';
-  // Selected symbol (fallback to SOLUSDT until configs arrive)
+
   const [selectedCoin, setSelectedCoin] = useState<string>('SOLUSDT');
   useEffect(() => {
     if (symbols.length) {
@@ -70,17 +71,17 @@ const Analysis: FC = () => {
         setSelectedCoin(symbols[0]);
       }
     }
-  }, [symbols.length]);
+  }, [symbols.length]); // eslint-disable-line
 
   const symbol = selectedCoin;
 
   // TZ toggle (Local / UTC)
-  const [tzMode, setTzMode] = useState<'local' | 'utc'>('local');
+  const [tzMode] = useState<'local' | 'utc'>('local');
   const localTz = useMemo(
     () => Intl.DateTimeFormat().resolvedOptions().timeZone,
     [],
   );
-  const activeTz: string | undefined = tzMode === 'utc' ? 'UTC' : undefined; // undefined => Local
+  const activeTz: string | undefined = tzMode === 'utc' ? 'UTC' : undefined;
   const tzBadgeLabel = tzMode === 'utc' ? 'UTC' : localTz;
 
   const {
@@ -94,7 +95,7 @@ const Analysis: FC = () => {
 
     queryFn: async () => {
       const to = new Date();
-      const minutesPerPoint = 5;
+      const minutesPerPoint = 2;
       const minutes = Math.max(historyN * minutesPerPoint, 60);
       const from = new Date(to.getTime() - minutes * 60 * 1000);
       // need here for correct refetch work
@@ -118,7 +119,6 @@ const Analysis: FC = () => {
     Math.max(0, rows.length - 1),
   );
   useEffect(() => {
-    // whenever rows length changes, snap selection to the latest item
     setSelectedIdx(Math.max(0, (rows.length || 1) - 1));
   }, [rows.length]);
 
@@ -201,6 +201,73 @@ const Analysis: FC = () => {
     [tzMode],
   );
 
+  // Collect all module keys across fetched rows
+  const allModuleKeys = useMemo(() => {
+    const s = new Set<string>();
+    rows.forEach((r) => {
+      const mods = (r.modules ?? {}) as unknown as ModulesMap;
+      Object.keys(mods).forEach((k) => s.add(k));
+    });
+    return Array.from(s).sort();
+  }, [rows]);
+
+  // Active module tab
+  const [activeModule, setActiveModule] = useState<string>(OVERALL_TAB);
+  useEffect(() => {
+    if (allModuleKeys.length) {
+      setActiveModule((prev) =>
+        prev && (prev === OVERALL_TAB || allModuleKeys.includes(prev))
+          ? prev
+          : OVERALL_TAB,
+      );
+    } else {
+      setActiveModule(OVERALL_TAB);
+    }
+  }, [allModuleKeys.length]);
+
+  const moduleOptions: ApexOptions = useMemo(
+    () => ({
+      chart: {
+        id: `module-${activeModule}`,
+        type: 'line',
+        toolbar: { show: false },
+        animations: { enabled: true, easing: 'easeinout', speed: 400 },
+        events: {
+          dataPointSelection: (_e, _ctx, cfg) => {
+            if (typeof cfg?.dataPointIndex === 'number') {
+              setSelectedIdx(cfg.dataPointIndex);
+            }
+          },
+        },
+      },
+      stroke: { width: 2, curve: 'smooth' },
+      colors: ['#22c55e', '#ef4444'],
+      xaxis: {
+        type: 'datetime',
+        labels: { datetimeUTC: tzMode === 'utc' },
+      },
+      yaxis: {
+        min: 0,
+        max: 100,
+        tickAmount: 5,
+        labels: { formatter: (v) => `${Math.round(v)}` },
+      },
+      grid: { strokeDashArray: 3 },
+      markers: { size: 0, hover: { sizeOffset: 3 } },
+      legend: { position: 'top', horizontalAlign: 'left' },
+      tooltip: {
+        shared: true,
+        intersect: false,
+        x: { format: 'dd MMM HH:mm' },
+        y: {
+          formatter: (val: number) =>
+            Number.isFinite(val) ? val.toFixed(3) : '-',
+        },
+      },
+    }),
+    [activeModule, tzMode],
+  );
+
   if (isLoading) {
     return (
       <div className={styles.loaderOverlay}>
@@ -253,7 +320,7 @@ const Analysis: FC = () => {
           </Group>
         </Group>
 
-        <Group justify="center" align="center" wrap="wrap" gap="xs">
+        <Group justify="center" align="end" wrap="wrap" gap="xs">
           <Select
             size="xs"
             label="Pick coin"
@@ -274,24 +341,14 @@ const Analysis: FC = () => {
             size="xs"
             label="Last"
             data={[
-              { value: '10', label: '10' },
-              { value: '20', label: '20' },
-              { value: '30', label: '30' },
-              { value: '50', label: '50' },
+              { value: '10', label: 'Last 10' },
+              { value: '15', label: '15m' },
+              { value: '30', label: '30m' },
+              { value: '60', label: '1h' },
             ]}
             value={String(historyN)}
             onChange={(v) => setHistoryN(Number(v || 10))}
             maw={100}
-          />
-
-          <SegmentedControl
-            size="xs"
-            value={tzMode}
-            onChange={(v) => setTzMode(v as 'local' | 'utc')}
-            data={[
-              { label: 'Local', value: 'local' },
-              { label: 'UTC', value: 'utc' },
-            ]}
           />
 
           <Button onClick={() => getAnalysisRefetch()} disabled={isLoading}>
@@ -301,24 +358,111 @@ const Analysis: FC = () => {
       </Stack>
 
       {/* Scores over time (combined) */}
-      <Card withBorder padding="md" mb="md">
+
+      {/* Per-module strength over time */}
+      <Card withBorder padding="md" mb="md" w={'100%'}>
         <Group justify="space-between" mb="xs">
-          <Text fw={600}>Scores — LONG vs SHORT</Text>
-          <Group gap={12}>
-            <Text c="dimmed" size="sm">
-              Selected L: {fmt(selected.scores.LONG, 1)}
-            </Text>
-            <Text c="dimmed" size="sm">
-              Selected S: {fmt(selected.scores.SHORT, 1)}
-            </Text>
-          </Group>
+          <Text fw={600}>Scores &amp; Modules — LONG vs SHORT</Text>
+          {activeModule === OVERALL_TAB ? (
+            <Group gap={12} key={`overall-head-${selectedIdx}`}>
+              <Text c="dimmed" size="sm">
+                Selected L: {fmt(selected.scores.LONG, 1)}
+              </Text>
+              <Text c="dimmed" size="sm">
+                Selected S: {fmt(selected.scores.SHORT, 1)}
+              </Text>
+            </Group>
+          ) : (
+            activeModule && (
+              <Group gap={12} key={`mod-head-${selectedIdx}-${activeModule}`}>
+                <Badge variant="light">{activeModule}</Badge>
+                <Text c="dimmed" size="sm">
+                  Selected L:{' '}
+                  {fmt(
+                    Number(
+                      (selected.modules as unknown as ModulesMap)?.[
+                        activeModule
+                      ]?.meta?.LONG ?? 0,
+                    ),
+                    3,
+                  )}
+                </Text>
+                <Text c="dimmed" size="sm">
+                  Selected S:{' '}
+                  {fmt(
+                    Number(
+                      (selected.modules as unknown as ModulesMap)?.[
+                        activeModule
+                      ]?.meta?.SHORT ?? 0,
+                    ),
+                    3,
+                  )}
+                </Text>
+                <Text c="dimmed" size="sm">
+                  Signal:{' '}
+                  {String(
+                    (selected.modules as unknown as ModulesMap)?.[activeModule]
+                      ?.signal ?? '-',
+                  )}
+                </Text>
+              </Group>
+            )
+          )}
         </Group>
-        <ReactApexChart
-          options={apexOptions}
-          series={apexSeries}
-          type="line"
-          height={260}
-        />
+
+        <Tabs value={activeModule} onChange={(v) => setActiveModule(v || '')}>
+          <Tabs.List>
+            <Tabs.Tab key={OVERALL_TAB} value={OVERALL_TAB}>
+              overall
+            </Tabs.Tab>
+            {allModuleKeys.map((m) => (
+              <Tabs.Tab key={m} value={m}>
+                {m}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+
+          <Tabs.Panel value={OVERALL_TAB} pt="sm">
+            <ReactApexChart
+              options={apexOptions}
+              series={apexSeries}
+              type="line"
+              height={200}
+            />
+          </Tabs.Panel>
+
+          {allModuleKeys.map((m) => (
+            <Tabs.Panel key={`panel-${m}`} value={m} pt="sm">
+              <ReactApexChart
+                options={moduleOptions}
+                series={[
+                  {
+                    name: 'LONG',
+                    data: rows.map((r) => ({
+                      x: new Date(r.time).getTime(),
+                      y: Number(
+                        ((r.modules as unknown as ModulesMap) ?? {})[m]?.meta
+                          ?.LONG ?? 0,
+                      ),
+                    })),
+                  },
+                  {
+                    name: 'SHORT',
+                    data: rows.map((r) => ({
+                      x: new Date(r.time).getTime(),
+                      y: Number(
+                        ((r.modules as unknown as ModulesMap) ?? {})[m]?.meta
+                          ?.SHORT ?? 0,
+                      ),
+                    })),
+                  },
+                ]}
+                type="line"
+                height={220}
+              />
+            </Tabs.Panel>
+          ))}
+        </Tabs>
         <Group gap={6} mt="xs" key={`times-${selectedIdx}`} wrap="wrap">
           {rows.map((r, i) => (
             <Badge
@@ -348,7 +492,7 @@ const Analysis: FC = () => {
       </Card>
 
       {/* Module scoreboard */}
-      <Paper withBorder p="md" key={`table-${selectedIdx}`}>
+      <Paper withBorder p="md" key={`table-${selectedIdx}`} w={'100%'}>
         <Group justify="space-between" mb="sm">
           <Text fw={600}>Latest module breakdown</Text>
           <Text c="dimmed" size="sm">
@@ -365,70 +509,68 @@ const Analysis: FC = () => {
             {tzBadgeLabel}
           </Text>
         </Group>
-        <ScrollArea h={420} offsetScrollbars>
-          <Table
-            highlightOnHover
-            withRowBorders={false}
-            verticalSpacing="xs"
-            style={{ width: '100%' }}
-          >
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Module</Table.Th>
-                <Table.Th>Signal</Table.Th>
-                <Table.Th style={{ width: 120 }}>Strength</Table.Th>
-                <Table.Th style={{ width: 260 }}>LONG / SHORT</Table.Th>
-                <Table.Th style={{ width: 80 }} ta="right">
-                  L
-                </Table.Th>
-                <Table.Th style={{ width: 80 }} ta="right">
-                  S
-                </Table.Th>
+        <Table
+          highlightOnHover
+          withRowBorders={false}
+          verticalSpacing="xs"
+          style={{ width: '100%' }}
+        >
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Module</Table.Th>
+              <Table.Th>Signal</Table.Th>
+              <Table.Th style={{ width: 120 }}>Strength</Table.Th>
+              <Table.Th style={{ width: 260 }}>LONG / SHORT</Table.Th>
+              <Table.Th style={{ width: 80 }} ta="right">
+                L
+              </Table.Th>
+              <Table.Th style={{ width: 80 }} ta="right">
+                S
+              </Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {moduleRows.map((r) => (
+              <Table.Tr key={r.key}>
+                <Table.Td>{r.key}</Table.Td>
+                <Table.Td>
+                  <Badge
+                    color={
+                      r.signal === 'LONG'
+                        ? 'green'
+                        : r.signal === 'SHORT'
+                          ? 'red'
+                          : 'gray'
+                    }
+                  >
+                    {r.signal}
+                  </Badge>
+                </Table.Td>
+                <Table.Td>
+                  <Text size="sm" ta="right">
+                    {fmt(r.strength, 3)}
+                  </Text>
+                </Table.Td>
+                <Table.Td>
+                  <Group gap="xs">
+                    <Progress
+                      value={Math.max(0, Math.min(100, r.long))}
+                      color="green"
+                      style={{ flex: 1 }}
+                    />
+                    <Progress
+                      value={Math.max(0, Math.min(100, r.short))}
+                      color="red"
+                      style={{ flex: 1 }}
+                    />
+                  </Group>
+                </Table.Td>
+                <Table.Td ta="right">{fmt(r.long, 3)}</Table.Td>
+                <Table.Td ta="right">{fmt(r.short, 3)}</Table.Td>
               </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {moduleRows.map((r) => (
-                <Table.Tr key={r.key}>
-                  <Table.Td>{r.key}</Table.Td>
-                  <Table.Td>
-                    <Badge
-                      color={
-                        r.signal === 'LONG'
-                          ? 'green'
-                          : r.signal === 'SHORT'
-                            ? 'red'
-                            : 'gray'
-                      }
-                    >
-                      {r.signal}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm" ta="right">
-                      {fmt(r.strength, 3)}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <Progress
-                        value={Math.max(0, Math.min(100, r.long))}
-                        color="green"
-                        style={{ flex: 1 }}
-                      />
-                      <Progress
-                        value={Math.max(0, Math.min(100, r.short))}
-                        color="red"
-                        style={{ flex: 1 }}
-                      />
-                    </Group>
-                  </Table.Td>
-                  <Table.Td ta="right">{fmt(r.long, 3)}</Table.Td>
-                  <Table.Td ta="right">{fmt(r.short, 3)}</Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        </ScrollArea>
+            ))}
+          </Table.Tbody>
+        </Table>
       </Paper>
     </Container>
   );

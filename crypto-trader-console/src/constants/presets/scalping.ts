@@ -1,4 +1,4 @@
-import type { TCoinConfig } from '../types';
+import type { TCoinConfig } from '../../types';
 
 export const scalpingPreset: TCoinConfig = {
   symbol: 'SCALPING',
@@ -46,7 +46,7 @@ export const scalpingPreset: TCoinConfig = {
   },
   strategy: {
     entry: {
-      minScore: { LONG: 50, SHORT: 50 },
+      minScore: { LONG: 43, SHORT: 43 },
       minModules: 2,
       requiredModules: ['liquidity', 'openInterest'],
       maxSpreadPct: 0.02,
@@ -59,12 +59,12 @@ export const scalpingPreset: TCoinConfig = {
       account: 100,
       riskPerTradePct: 5,
       leverage: 10,
-      maxConcurrentPositions: 2,
+      maxConcurrentPositions: 1,
     },
     sizing: { maxAdds: 0, addOnAdverseMovePct: 0.3, addMultiplier: 1 },
     exits: {
       oppositeCountExit: 0,
-      tp: { use: true, tpGridPct: [1.5, 3], tpGridSizePct: [80, 20] },
+      tp: { use: true, tpGridPct: [2], tpGridSizePct: [100] },
       sl: {
         type: 'hard',
         hardPct: 3,

@@ -1,14 +1,20 @@
 import { notifications } from '@mantine/notifications';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
-import { QueryKeys, getConfigBySymbol } from '../../api';
+import {
+  QueryKeys,
+  binanceCoinsConfig,
+  getConfigBySymbol,
+  type IBinanceCoinsConfigResponse,
+} from '../../api';
 import { updateCoinConfig } from '../../api/coinConfig/updateCoinConfig';
 import type { TCoinConfig } from '../../types';
 
 const useCoinConfig = () => {
   const { symbol } = useParams<{ symbol: string }>();
+  const [symbolList, setSymbolList] = useState<string[]>([]);
 
   const { data: coinConfigData, isLoading } = useQuery({
     queryKey: [QueryKeys.GetCoinConfig],
@@ -56,7 +62,16 @@ const useCoinConfig = () => {
   const onSubmit: SubmitHandler<TCoinConfig> = (data) => {
     updateCoinConfigMutate(data);
   };
-
+  useQuery<IBinanceCoinsConfigResponse, Error>({
+    queryKey: [QueryKeys.SpotBalance],
+    queryFn: async () => {
+      const data = await binanceCoinsConfig();
+      const updateSymbolList = data.symbols.map((s) => s.symbol);
+      setSymbolList(updateSymbolList);
+      return data;
+    },
+    refetchOnWindowFocus: false,
+  });
   return {
     isLoading,
     register,
@@ -64,6 +79,7 @@ const useCoinConfig = () => {
     onSubmit,
     symbol,
     control,
+    symbolList,
   };
 };
 

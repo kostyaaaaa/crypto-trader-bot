@@ -2,12 +2,28 @@
   display: flex;
   align-items: center;
   flex-direction: column;
+  width: 100%;
 
+  h2 {
+    margin: 0;
+  }
   &__form {
     display: flex;
     align-items: center;
     flex-direction: column;
     padding: 36px 24px;
+    padding-top: 0;
+    width: 100%;
+  }
+
+  &__title {
+    display: flex;
+    justify-content: center;
+    align-items: end;
+    text-align: center;
+    gap: 24px;
+    width: 100%;
+    margin: 24px 0;
   }
 
   &__form-list {
@@ -26,7 +42,13 @@
 }
 
 .presetSelector {
-  margin: 20px 0;
   max-width: 400px;
   width: 100%;
+}
+
+.back_btn {
+  width: 100%;
+  display: flex;
+  justify-content: start;
+  padding: 10px 0 0 10px;
 }

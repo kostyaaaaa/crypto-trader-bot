@@ -39,10 +39,6 @@ export async function preparePosition(symbol, cfg, analysis, side, entryPrice) {
       stopPrice =
         side === 'LONG' ? entryPrice - stopDist : entryPrice + stopDist;
       stopModel = `atr×${atrMult}`;
-
-      const approxLossUsd = stopDist * qty;
-      const lossPctOfMargin =
-        marginUsd > 0 ? (approxLossUsd / marginUsd) * 100 : 0;
     } else if (Number.isFinite(exits.sl?.hardPct)) {
       const slPct = exits.sl.hardPct / 100;
       const lossUsd = marginUsd * slPct;

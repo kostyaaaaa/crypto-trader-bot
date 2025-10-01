@@ -8,7 +8,13 @@ import {
   updateStopPrice,
   updateTakeProfits,
 } from '../core/historyStore.js';
-import { cancelAllOrders, getPosition, openMarketOrder } from './binance.js';
+import {
+  cancelAllOrders,
+  cancelStopOrders,
+  getPosition,
+  openMarketOrder,
+  placeStopLoss,
+} from './binance.js';
 
 // -------------------------
 // 1. Отримання listenKey
@@ -97,6 +103,29 @@ async function forceCloseIfLeftover(symbol) {
   }
 }
 
+// ---- PnL helpers (gross, excl. fees) ----
+function calcFillPnl(entryPrice, fillPrice, qty, posSide) {
+  const dir = posSide === 'LONG' ? 1 : -1;
+  return (fillPrice - entryPrice) * qty * dir;
+}
+function sumTpRealizedPnl(pos) {
+  if (!pos || !Array.isArray(pos.takeProfits)) return 0;
+  const entry = Number(pos.entryPrice) || 0;
+  const side = pos.side || 'LONG';
+  let sum = 0;
+  for (const tp of pos.takeProfits) {
+    if (!tp || !Array.isArray(tp.fills)) continue;
+    for (const f of tp.fills) {
+      const qty = Number(f.qty) || 0;
+      const price = Number(f.price) || 0;
+      if (qty > 0 && Number.isFinite(price)) {
+        sum += calcFillPnl(entry, price, qty, side);
+      }
+    }
+  }
+  return sum;
+}
+
 // -------------------------
 // 4. Обробка івентів
 // -------------------------
@@ -159,9 +188,28 @@ async function handleEvent(msg) {
           // Оновлюємо ціну SL як "виконану"
           await updateStopPrice(symbol, lastPx, 'FILLED');
 
-          // Закриваємо позицію в історії
+          // Рахуємо фінальний PnL:
+          // 1) що вже реалізовано на попередніх TP філах
+          const realizedFromTP = sumTpRealizedPnl(pos);
+          // 2) дельта від поточного SL-філа (за lastQty/lastPx)
+          //    Примітка: side з позиції, qty = o.l
+          const slFillQty = Number(o.l) || 0;
+          const slDelta = calcFillPnl(
+            Number(pos.entryPrice) || 0,
+            lastPx,
+            slFillQty,
+            pos.side || 'LONG',
+          );
+          const finalGrossPnl =
+            (Number.isFinite(realizedFromTP) ? realizedFromTP : 0) +
+            (Number.isFinite(slDelta) ? slDelta : 0);
+
+          // Закриваємо позицію в історії з фінальним PnL
           const closed = await closePositionHistory(symbol, {
             closedBy: 'SL',
+            finalPnl: Number.isFinite(finalGrossPnl)
+              ? Number(finalGrossPnl.toFixed(4))
+              : undefined,
           });
 
           // Чистимо залишки
@@ -182,21 +230,68 @@ async function handleEvent(msg) {
           // Беремо копію поточних тейків
           const updatedTps = pos.takeProfits.map((tp) => ({ ...tp }));
 
+          // Зчитуємо дані про останній трейд (qty/price/fee)
+          const fillQty = Number(o.l) || 0; // last filled quantity
+          const fillPx = Number(o.L) || 0; // last fill price
+          const feeAmt = Number(o.n) || 0; // commission amount
+          const feeAsset = o.N || null;
+          const fillAt = new Date(msg.E || Date.now()).toISOString();
+
           // Шукаємо тейк, який відповідає ціні (з невеликою похибкою)
           const tolerance = Math.max(0.01, Math.abs(pos.entryPrice * 0.001)); // 0.1% або мін. 0.01
-          let found = false;
-          for (let tp of updatedTps) {
-            if (
-              !tp.filled &&
-              Math.abs(Number(tp.price) - lastPx) <= tolerance
-            ) {
-              tp.filled = true; // позначаємо цей TP як виконаний
-              found = true;
+          let matched = null;
+          for (const tp of updatedTps) {
+            const tpPrice = Number(tp.price);
+            // Дозволяємо дописувати часткові філи (кілька подій на один TP)
+            const priceMatch =
+              Number.isFinite(tpPrice) &&
+              Math.abs(tpPrice - fillPx) <= tolerance;
+            if (priceMatch) {
+              // ініціалізуємо пул філів
+              if (!Array.isArray(tp.fills)) tp.fills = [];
+              // додаємо філ
+              tp.fills.push({
+                qty: fillQty,
+                price: fillPx,
+                time: fillAt,
+                fee: feeAmt,
+                feeAsset,
+              });
+              // позначаємо TP як виконаний (якщо на біржі стоїть окремий ордер на весь цей partial/повний обсяг — подія фіксить його)
+              tp.filled = true;
+              matched = tp;
               break;
             }
           }
 
-          // Оновлюємо список тейків у БД
+          if (!matched) {
+            console.warn(
+              `⚠️ ${symbol}: TP fill received, but no matching TP by price (px=${fillPx}). Storing to the nearest TP.`,
+            );
+            // fallback: кидаємо у найближчий по ціні
+            let nearest = null;
+            let best = Infinity;
+            for (const tp of updatedTps) {
+              const d = Math.abs(Number(tp.price) - fillPx);
+              if (d < best) {
+                best = d;
+                nearest = tp;
+              }
+            }
+            if (nearest) {
+              if (!Array.isArray(nearest.fills)) nearest.fills = [];
+              nearest.fills.push({
+                qty: fillQty,
+                price: fillPx,
+                time: fillAt,
+                fee: feeAmt,
+                feeAsset,
+              });
+              nearest.filled = true;
+            }
+          }
+
+          // Оновлюємо список тейків у БД (з новими полями fills[])
           await updateTakeProfits(
             symbol,
             updatedTps,
@@ -204,17 +299,64 @@ async function handleEvent(msg) {
             'TP_FILLED',
           );
 
-          // Якщо ВСІ тейки виконані → закриваємо позицію
+          // Якщо ВСІ тейки виконані → закриваємо позицію і передаємо фінальний PnL (сума по всіх філах TP)
           const allFilled = updatedTps.every((tp) => tp.filled);
           if (allFilled) {
+            const realizedFromTP = sumTpRealizedPnl({
+              ...pos,
+              takeProfits: updatedTps,
+            });
             const closed = await closePositionHistory(symbol, {
               closedBy: 'TP',
+              finalPnl: Number.isFinite(realizedFromTP)
+                ? Number(realizedFromTP.toFixed(4))
+                : undefined,
             });
             await cancelAllOrders(symbol);
             await forceCloseIfLeftover(symbol);
             if (closed) notifyTrade(closed, 'CLOSED');
+          } else {
+            // ===== BREAK-EVEN після першого TP, якщо трейлінг вимкнено =====
+            try {
+              const tpsTotal = updatedTps.length;
+              const filledCount = updatedTps.filter((tp) => tp.filled).length;
+              const trailingOn = !!pos?.trailingCfg?.use;
+
+              if (!trailingOn && tpsTotal >= 2 && filledCount === 1) {
+                // перевіряємо поточну live-кількість на біржі
+                const live = await getPosition(symbol);
+                const liveAmt = live
+                  ? Math.abs(Number(live.positionAmt) || 0)
+                  : 0;
+
+                if (liveAmt > 0) {
+                  // скасовуємо лише SL (TP не чіпаємо)
+                  try {
+                    await cancelStopOrders(symbol, { onlySL: true });
+                  } catch {}
+
+                  // break-even ціна = entryPrice
+                  const bePrice = Number(pos.entryPrice);
+
+                  // ставимо новий SL на entry для залишкового обсягу
+                  await placeStopLoss(symbol, pos.side, bePrice, liveAmt);
+
+                  // логімо в історію
+                  await updateStopPrice(symbol, bePrice, 'BREAKEVEN');
+
+                  console.log(
+                    `🟩 ${symbol}: BE set at entry after 1st TP (qty=${liveAmt})`,
+                  );
+                }
+              }
+            } catch (e) {
+              console.warn(
+                `⚠️ ${symbol}: failed to set BE after 1st TP:`,
+                e?.message || e,
+              );
+            }
           }
-          // Інакше залишаємо позицію відкритою (частковий TP)
+          // Інакше — позиція залишається відкритою (частковий TP)
         }
       }
 

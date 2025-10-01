@@ -8,18 +8,11 @@ import {
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import clsx from 'clsx';
+import dayjs from 'dayjs';
 import { useState, type FC } from 'react';
+import CoinIcon from '../../components/SymbolIcon';
 import styles from './PositionsPage.module.scss';
 import usePositionsPage from './usePositionsPage';
-
-const formatDateWithTime = (date: Date) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  const h = String(date.getHours()).padStart(2, '0');
-  const min = String(date.getMinutes()).padStart(2, '0');
-  return `${y}/${m}/${d} ${h}:${min}`;
-};
 
 const PositionsPage: FC = () => {
   const [scrolled, setScrolled] = useState<boolean>(false);
@@ -37,28 +30,43 @@ const PositionsPage: FC = () => {
 
   const rows = positions?.map((pos) => (
     <Table.Tr key={pos._id}>
-      <Table.Td>{pos.symbol}</Table.Td>
-      <Table.Td
-        className={
-          styles[pos.side === 'LONG' ? 'wrapper__long' : 'wrapper__short']
-        }
-      >
-        {pos.side}
+      <Table.Td className={styles.wrapper__symbol_icon}>
+        {' '}
+        <CoinIcon symbol={pos.symbol} size={16} />
+        {pos.symbol}
       </Table.Td>
-      <Table.Td>{pos.closedBy}</Table.Td>
       <Table.Td>
-        <span
-          className={
-            styles[
-              pos.finalPnl >= 0
-                ? 'wrapper__pnlPositive'
-                : 'wrapper__pnlNegative'
-            ]
-          }
-        >
-          ${pos.finalPnl.toFixed(3)}
-        </span>
+        {(() => {
+          const pnl = Number(pos.finalPnl ?? 0);
+          const lev = Number(pos.meta?.leverage ?? 1);
+
+          // інтерпретуємо size як USD-ноціонал
+          const notionalUSD = Number(pos.size ?? 0);
+
+          // маржа = ноціонал / плече
+          const margin = lev ? notionalUSD / lev : 0;
+
+          const pct = margin > 0 ? (pnl / margin) * 100 : null;
+          const pctStr =
+            pct === null ? '' : ` (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
+
+          return (
+            <span
+              className={
+                styles[
+                  pnl >= 0 ? 'wrapper__pnlPositive' : 'wrapper__pnlNegative'
+                ]
+              }
+            >
+              ${pnl.toFixed(3)}
+              {pctStr}
+            </span>
+          );
+        })()}
       </Table.Td>
+      <Table.Td>{pos.side}</Table.Td>
+      <Table.Td>{pos.closedBy}</Table.Td>
+
       <Table.Td>{pos.size.toFixed(3)}</Table.Td>
       <Table.Td>
         <div className={styles.wrapper__scores}>
@@ -67,8 +75,12 @@ const PositionsPage: FC = () => {
         </div>
       </Table.Td>
       <Table.Td>x{pos.meta.leverage}</Table.Td>
-      <Table.Td>{formatDateWithTime(new Date(pos.openedAt))}</Table.Td>
-      <Table.Td>{formatDateWithTime(new Date(pos.closedAt))}</Table.Td>
+      <Table.Td>
+        {dayjs(new Date(pos.openedAt)).format('DD,MMM hh:mm')}
+      </Table.Td>
+      <Table.Td>
+        {dayjs(new Date(pos.closedAt)).format('DD,MMM hh:mm')}
+      </Table.Td>
     </Table.Tr>
   ));
 
@@ -153,7 +165,18 @@ const PositionsPage: FC = () => {
                       </Text>
                     </UnstyledButton>
                   </Table.Th>
-
+                  <Table.Th>
+                    <UnstyledButton onClick={() => handleSort('finalPnl')}>
+                      <Text inline>
+                        Final Pnl{' '}
+                        {sortField === 'finalPnl'
+                          ? sortDirection === 'asc'
+                            ? '▲'
+                            : '▼'
+                          : ''}
+                      </Text>
+                    </UnstyledButton>
+                  </Table.Th>
                   <Table.Th>
                     <UnstyledButton onClick={() => handleSort('side')}>
                       <Text inline>
@@ -178,18 +201,7 @@ const PositionsPage: FC = () => {
                       </Text>
                     </UnstyledButton>
                   </Table.Th>
-                  <Table.Th>
-                    <UnstyledButton onClick={() => handleSort('finalPnl')}>
-                      <Text inline>
-                        Final Pnl{' '}
-                        {sortField === 'finalPnl'
-                          ? sortDirection === 'asc'
-                            ? '▲'
-                            : '▼'
-                          : ''}
-                      </Text>
-                    </UnstyledButton>
-                  </Table.Th>
+
                   <Table.Th>
                     <UnstyledButton onClick={() => handleSort('size')}>
                       <Text inline>
