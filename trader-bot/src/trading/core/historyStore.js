@@ -3,6 +3,14 @@ import { loadDocs, saveDoc, updateDoc } from '../../storage/storage.js';
 import { notifyTrade } from '../../utils/notify.js';
 import { getPosition, getUserTrades } from '../binance/binance.js';
 
+function round(n, p = 6) {
+  const m = Math.pow(10, p);
+  return Math.round((Number(n) || 0) * m) / m;
+}
+function nowTs() {
+  return Date.now();
+}
+
 const COLLECTION = 'positions';
 
 const KEY_ADJUSTMENT_TYPES = new Set([
@@ -12,8 +20,9 @@ const KEY_ADJUSTMENT_TYPES = new Set([
   'SL_UPDATE',
   'TP_SET',
   'TP_UPDATE',
-  'TP_HIT',
-  'CLOSE',
+  'TP_HIT', // TP executed (partial or full)
+  'SL_HIT', // SL executed (partial or full)
+  'CLOSE', // manual or final close
 ]);
 
 // Допоміжне: дістати останню OPEN по символу
@@ -64,6 +73,10 @@ export async function openPosition(
         }
       : null,
 
+    realizedPnl: 0, // accumulated realized PnL (USDT)
+    fees: 0, // accumulated fees (USDT)
+    executions: [], // list of fills (TP/SL/CLOSE/ADD/OPEN)
+
     adds: [],
     adjustments: [],
 
@@ -93,19 +106,36 @@ export async function openPosition(
 }
 
 // Долив
-export async function addToPosition(symbol, { qty, price }) {
+export async function addToPosition(symbol, { qty, price, fee = 0 }) {
   const pos = await getOpenPosition(symbol);
   if (!pos) return null;
 
   const effectivePrice = price || pos.entryPrice || 0;
-  const addNotional = qty * effectivePrice;
+  const addNotional = (Number(qty) || 0) * effectivePrice;
+
+  const ts = nowTs();
+  const exec = {
+    kind: 'ADD',
+    ts,
+    price: effectivePrice,
+    qty: Number(qty) || 0,
+    fee: Number(fee) || 0,
+    pnl: 0,
+  };
 
   return await updateDoc(
     COLLECTION,
     { _id: pos._id },
     {
-      $inc: { size: addNotional }, // нотіонал ↑
-      $push: { adds: { qty, price: effectivePrice, ts: Date.now() } },
+      $inc: {
+        size: addNotional,
+        fees: exec.fee,
+      },
+      $push: {
+        adds: { qty: exec.qty, price: exec.price, ts },
+        executions: exec,
+      },
+      $setOnInsert: { realizedPnl: 0, fees: 0 },
     },
   );
 }
@@ -113,39 +143,98 @@ export async function addToPosition(symbol, { qty, price }) {
 // Оновлення стопів/тейків (історія)
 export async function adjustPosition(
   symbol,
-  { type, price, size, tps, reason },
+  { type, price, size, tps, reason, fee = 0 },
 ) {
   if (!KEY_ADJUSTMENT_TYPES.has(type)) {
-    // Ignore non-key adjustment types
     return await getOpenPosition(symbol);
   }
 
   const pos = await getOpenPosition(symbol);
   if (!pos) return null;
 
-  const ts = Date.now();
-  let newAdjustments = pos.adjustments ? [...pos.adjustments] : [];
+  const ts = nowTs();
+  const newAdjustments = pos.adjustments ? [...pos.adjustments] : [];
 
-  // Normalize adjustment entry
   const newAdjustment = { type, ts };
   if (price !== undefined) newAdjustment.price = price;
   if (size !== undefined) newAdjustment.size = size;
   if (tps !== undefined) newAdjustment.tps = tps;
   if (reason !== undefined) newAdjustment.reason = reason;
 
-  // Just append adjustment without merge logic
   newAdjustments.push(newAdjustment);
-
-  // Limit adjustments to last 20 entries
   if (newAdjustments.length > 20) {
     newAdjustments.splice(0, newAdjustments.length - 20);
   }
 
-  await updateDoc(
-    COLLECTION,
-    { _id: pos._id },
-    { $set: { adjustments: newAdjustments } },
-  );
+  // Default update with only adjustments
+  let update = { $set: { adjustments: newAdjustments } };
+
+  // If this is a fill-type event, account PnL and reduce live size
+  const FILL_TYPES = new Set(['TP_HIT', 'SL_HIT', 'CLOSE']);
+  const hasExecInputs =
+    FILL_TYPES.has(type) &&
+    Number.isFinite(+price) &&
+    Number.isFinite(+size) &&
+    +size > 0;
+
+  if (hasExecInputs) {
+    const dir = pos.side === 'LONG' ? 1 : -1;
+    const execQty = Number(size); // executed quantity in coins
+    const execPrice = Number(price);
+
+    // PnL by quantity
+    const pnl = round(dir * (execPrice - pos.entryPrice) * execQty, 8);
+    const execFee = Number(fee) || 0;
+
+    // Reduce cost-basis "size" (we store notional at entry price)
+    const reduceNotional = round(pos.entryPrice * execQty, 8);
+    const newSize = Math.max(0, round((pos.size || 0) - reduceNotional, 8));
+
+    const exec = {
+      kind: type === 'CLOSE' ? 'CLOSE' : type === 'TP_HIT' ? 'TP' : 'SL',
+      ts,
+      price: execPrice,
+      qty: execQty,
+      fee: execFee,
+      pnl,
+      cumPnl: round((pos.realizedPnl || 0) + pnl, 8),
+    };
+
+    update = {
+      $set: {
+        adjustments: newAdjustments,
+        status: newSize === 0 ? 'CLOSED' : 'OPEN',
+        size: newSize,
+        // entryPrice не змінюємо на виході; середня ціна лишається базою
+      },
+      $inc: {
+        realizedPnl: pnl,
+        fees: execFee,
+      },
+      $push: {
+        executions: exec,
+      },
+    };
+
+    // Якщо закрили повністю, додамо технічний CLOSE у executions
+    if (newSize === 0 && type !== 'CLOSE') {
+      const finalClose = {
+        kind: 'CLOSE',
+        ts,
+        price: execPrice,
+        qty: 0,
+        fee: 0,
+        pnl: 0,
+        cumPnl: round((pos.realizedPnl || 0) + pnl, 8),
+      };
+      update.$push.executions = { $each: [exec, finalClose] };
+      update.$set.finalPnl = round((pos.realizedPnl || 0) + pnl, 8);
+      update.$set.closedAt = new Date();
+      update.$set.closedBy = exec.kind; // TP або SL
+    }
+  }
+
+  await updateDoc(COLLECTION, { _id: pos._id }, update);
 
   return {
     ...pos,
@@ -160,18 +249,21 @@ export async function closePositionHistory(
 ) {
   const pos = await getOpenPosition(symbol);
   if (!pos) return null;
-  const trades = await getUserTrades(symbol, { limit: 100 });
 
-  // знаходимо останній ордер з PnL
-  const lastOrderId = [...trades]
-    .reverse()
-    .find((t) => t.realizedPnl !== 0)?.orderId;
+  let finalPnl = Number(pos.realizedPnl || 0);
 
-  if (!lastOrderId) return null;
+  // If we for some reason didn't accumulate PnL (legacy), fallback to trades aggregation
+  if (!Number.isFinite(finalPnl) || Math.abs(finalPnl) < 1e-9) {
+    try {
+      const trades = await getUserTrades(symbol, { limit: 1000 });
+      // беремо всі трейди після openedAt
+      const since = pos.openedAt ? new Date(pos.openedAt).getTime() : 0;
+      finalPnl = trades
+        .filter((t) => (t.time || t.T) >= since)
+        .reduce((sum, t) => sum + (Number(t.realizedPnl) || 0), 0);
+    } catch {}
+  }
 
-  // агрегуємо всі трейди цього ордера
-  const orderTrades = trades.filter((t) => t.orderId === lastOrderId);
-  const totalPnl = orderTrades.reduce((sum, t) => sum + t.realizedPnl, 0);
   await updateDoc(
     COLLECTION,
     { _id: pos._id },
@@ -179,7 +271,7 @@ export async function closePositionHistory(
       $set: {
         status: 'CLOSED',
         closedAt: new Date(),
-        finalPnl: totalPnl,
+        finalPnl: round(finalPnl, 8),
         closedBy,
       },
     },
@@ -189,7 +281,7 @@ export async function closePositionHistory(
     ...pos,
     status: 'CLOSED',
     closedAt: new Date(),
-    finalPnl: totalPnl,
+    finalPnl: round(finalPnl, 8),
     closedBy,
   };
 }
@@ -213,7 +305,6 @@ export async function reconcilePositions() {
           closedBy: 'DESYNC',
         });
         if (c) {
-          crossOriginIsolated.log(123123);
           await notifyTrade(c, 'CLOSED');
         }
       }
