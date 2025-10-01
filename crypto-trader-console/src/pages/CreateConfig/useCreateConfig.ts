@@ -1,13 +1,23 @@
 import { notifications } from '@mantine/notifications';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
-import { createCoinConfig } from '../../api';
-import { defaultPreset, presets, type PresetKey } from '../../presets';
+import {
+  QueryKeys,
+  binanceCoinsConfig,
+  createCoinConfig,
+  type IBinanceCoinsConfigResponse,
+} from '../../api';
+import {
+  defaultPreset,
+  presets,
+  type PresetKey,
+} from '../../constants/presets';
 import type { TCoinConfig } from '../../types';
 
 const useCreateConfig = () => {
   const [selectedPreset, setSelectedPreset] = useState<PresetKey | null>(null);
+  const [symbolList, setSymbolList] = useState<string[]>([]);
 
   const { mutate: createCoinConfigMutate } = useMutation({
     mutationFn: createCoinConfig,
@@ -56,6 +66,16 @@ const useCreateConfig = () => {
     }
   };
 
+  useQuery<IBinanceCoinsConfigResponse, Error>({
+    queryKey: [QueryKeys.SpotBalance],
+    queryFn: async () => {
+      const data = await binanceCoinsConfig();
+      const updateSymbolList = data.symbols.map((s) => s.symbol);
+      setSymbolList(updateSymbolList);
+      return data;
+    },
+    refetchOnWindowFocus: false,
+  });
   return {
     register,
     handleSubmit,
@@ -63,6 +83,7 @@ const useCreateConfig = () => {
     control,
     selectedPreset,
     handlePresetChange,
+    symbolList,
   };
 };
 

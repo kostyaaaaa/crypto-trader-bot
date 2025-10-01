@@ -1,12 +1,15 @@
 import {
-  Autocomplete,
   Checkbox,
+  Group,
   NumberInput,
   Select,
   Tabs,
   TagsInput,
   TextInput,
+  Tooltip,
 } from '@mantine/core';
+import { Info } from '@phosphor-icons/react';
+import type { ReactNode } from 'react';
 import { type FC } from 'react';
 import {
   Controller,
@@ -14,11 +17,38 @@ import {
   type Path,
   type UseFormRegister,
 } from 'react-hook-form';
+import { TIPS } from '../../constants/tooltips';
 import type { TCoinConfig } from '../../types';
 import styles from './CoinConfigTemplate.module.scss';
 import { tabs } from './config';
 import useCoinConfigTemplate from './useCoinConfigTemplate';
+type TabItem = { value: string; label: string; group: string };
 
+function getTip(name: string): string | undefined {
+  const normalized = name.replace(/\[(\d+)\]/g, '.$1').replace(/\.$/, '');
+  if (TIPS[normalized]) return TIPS[normalized];
+
+  const noIndex = normalized.replace(/\.\d+$/, '');
+  return TIPS[noIndex];
+}
+function LabelWithTip({
+  children,
+  tip,
+  w = 260,
+}: {
+  children: ReactNode;
+  tip: ReactNode;
+  w?: number;
+}) {
+  return (
+    <Group gap={6} align="center" wrap="nowrap">
+      <span>{children}</span>
+      <Tooltip label={tip} multiline w={w} withArrow>
+        <Info size={14} />
+      </Tooltip>
+    </Group>
+  );
+}
 const FormField = ({
   name,
   label,
@@ -40,7 +70,7 @@ const FormField = ({
     return (
       <Checkbox
         className={styles.wrapper__checkbox}
-        label={label}
+        label={<LabelWithTip tip={getTip(name) ?? '—'}>{label}</LabelWithTip>}
         disabled={disabledSymbol}
         {...register(name)}
       />
@@ -55,7 +85,9 @@ const FormField = ({
         render={({ field }) => (
           <NumberInput
             className={styles.wrapper__input}
-            label={label}
+            label={
+              <LabelWithTip tip={getTip(name) ?? '—'}>{label}</LabelWithTip>
+            }
             value={field.value as number}
             onChange={(value) => field.onChange(value)}
             onBlur={field.onBlur}
@@ -74,7 +106,9 @@ const FormField = ({
         render={({ field }) => (
           <Select
             className={styles.wrapper__input}
-            label={label}
+            label={
+              <LabelWithTip tip={getTip(name) ?? '—'}>{label}</LabelWithTip>
+            }
             data={options}
             value={field.value as string}
             onChange={(value) => field.onChange(value)}
@@ -100,7 +134,9 @@ const FormField = ({
           return (
             <TagsInput
               className={styles.wrapper__input}
-              label={label}
+              label={
+                <LabelWithTip tip={getTip(name) ?? '—'}>{label}</LabelWithTip>
+              }
               value={stringValue ? stringValue.split(', ') : []}
               onChange={(tags) => {
                 // Convert string tags to numbers if they're numeric
@@ -125,7 +161,7 @@ const FormField = ({
   return (
     <TextInput
       className={styles.wrapper__input}
-      label={label}
+      label={<LabelWithTip tip={getTip(name) ?? '—'}>{label}</LabelWithTip>}
       {...register(name)}
     />
   );
@@ -133,48 +169,42 @@ const FormField = ({
 
 const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
   register,
-  disabledSymbol,
   control,
 }) => {
-  const { symbolList, activeTab, setActiveTab } = useCoinConfigTemplate();
+  const { activeTab, setActiveTab } = useCoinConfigTemplate();
+  const groupedTabs = (tabs as TabItem[]).reduce<Record<string, TabItem[]>>(
+    (acc, t) => {
+      (acc[t.group] ??= []).push(t);
+      return acc;
+    },
+    {},
+  );
 
   return (
     <>
-      <div className={styles.wrapper__title}>
-        <Controller
-          name="symbol"
-          control={control}
-          render={({ field }) => (
-            <Autocomplete
-              {...field}
-              label="Symbol"
-              placeholder="Pick Symbol"
-              data={symbolList}
-              clearable
-              disabled={disabledSymbol}
-            />
-          )}
-        />
-
-        <Checkbox
-          className={styles.wrapper__checkbox}
-          label="is active"
-          {...register('isActive')}
-        />
-      </div>
-
       <Tabs
-        className={styles.wrapper__tabs}
+        className={`${styles.wrapper__tabs}`}
         defaultValue="anal_config"
         value={activeTab}
         onChange={setActiveTab}
+        orientation="vertical"
       >
-        <Tabs.List>
-          {tabs.map((t) => (
-            <Tabs.Tab key={t.value} value={t.value}>
-              {t.label}
-            </Tabs.Tab>
-          ))}
+        <Tabs.List className={styles.wrapper__tabsList}>
+          {Object.entries(groupedTabs).flatMap(([groupTitle, items]) => [
+            <Tabs.Tab
+              key={`__group__${groupTitle}`}
+              value={`__group__${groupTitle}`}
+              disabled
+              className={styles.wrapper__groupTitle}
+            >
+              {groupTitle}
+            </Tabs.Tab>,
+            ...items.map((it) => (
+              <Tabs.Tab key={it.value} value={it.value}>
+                {it.label}
+              </Tabs.Tab>
+            )),
+          ])}
         </Tabs.List>
 
         {/* Analysis Config */}

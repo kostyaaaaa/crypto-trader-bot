@@ -1,10 +1,10 @@
-import { Button, Select } from '@mantine/core';
+import { Autocomplete, Button, Checkbox, Select } from '@mantine/core';
 import type { FC } from 'react';
-import { presetOptions } from '../../presets';
+import { Controller } from 'react-hook-form';
+import { presetOptions } from '../../constants/presets';
 import { CoinConfigTemplate } from '../../widgets';
 import styles from './CreateConfig.module.scss';
 import useCreateConfig from './useCreateConfig';
-
 const CreateConfig: FC = () => {
   const {
     register,
@@ -13,30 +13,51 @@ const CreateConfig: FC = () => {
     control,
     selectedPreset,
     handlePresetChange,
+    symbolList,
   } = useCreateConfig();
 
   return (
     <div className={styles.wrapper}>
-      <h2>Create New Config</h2>
-
-      <div className={styles.presetSelector}>
-        <Select
-          label="Load from Preset"
-          placeholder="Choose a trading preset template"
-          data={presetOptions}
-          value={selectedPreset}
-          onChange={handlePresetChange}
-          clearable
-          searchable
-          description="Select a preset to load predefined trading strategy values"
-        />
-      </div>
-
       <form
         className={styles.wrapper__form}
         onSubmit={handleSubmit(onSubmit)}
         noValidate
       >
+        <h2>Create New Config</h2>
+
+        <div className={styles.wrapper__title}>
+          <Controller
+            name="symbol"
+            control={control}
+            render={({ field }) => (
+              <Autocomplete
+                {...field}
+                label="Symbol"
+                placeholder="Pick Symbol"
+                data={symbolList}
+                clearable
+                disabled={false}
+              />
+            )}
+          />
+          <Checkbox
+            className={styles.wrapper__checkbox}
+            label="Is active"
+            {...register('isActive')}
+          />
+          <div className={styles.presetSelector}>
+            <Select
+              label="Load from Preset"
+              placeholder="Choose a trading preset template"
+              data={presetOptions}
+              value={selectedPreset}
+              onChange={handlePresetChange}
+              clearable
+              searchable
+            />
+          </div>
+        </div>
+
         <CoinConfigTemplate register={register} control={control} />
 
         <Button type="submit" variant="gradient">

@@ -1,8 +1,9 @@
 import { Button, ScrollArea, Table } from '@mantine/core';
+import { Trash } from '@phosphor-icons/react';
 import clsx from 'clsx';
+import dayjs from 'dayjs';
 import { useState, type FC } from 'react';
 import { ROUTERS_PATH } from '../../router/constants';
-import { formatDate } from '../../utils/formatDate';
 import styles from './Configuration.module.scss';
 import useConfiguration from './useConfiguration';
 
@@ -17,23 +18,23 @@ const Configuration: FC = () => {
       <Table.Td>
         <Button
           variant="outline"
-          m={12}
           component="a"
           href={ROUTERS_PATH.coinConfigId(row.symbol)}
         >
           {row.symbol}
         </Button>
       </Table.Td>
-      <Table.Td>{row.strategy.capital.account}</Table.Td>
-      <Table.Td>{formatDate(row.updatedAt)}</Table.Td>
-      <Table.Td>{row.isActive ? 'Active' : 'Disable'}</Table.Td>
-      <Table.Td className={styles.actions}>
-        <Button
-          variant="light"
-          onClick={() => deleteCoinConfigMutate(row.symbol)}
-        >
-          Delete
-        </Button>
+      <Table.Td>{row.analysisConfig.candleTimeframe}</Table.Td>
+      <Table.Td>x{row.strategy.capital.leverage}</Table.Td>
+      <Table.Td>
+        L:{row.strategy.entry.minScore.LONG} - S:
+        {row.strategy.entry.minScore.SHORT}
+      </Table.Td>
+      <Table.Td>{dayjs(row.updatedAt || '').format('DD,MMM hh:mm')}</Table.Td>
+      <Table.Td style={row.isActive ? { color: '#228be6' } : { color: 'red' }}>
+        {row.isActive ? 'Active' : 'Disabled'}
+      </Table.Td>
+      <Table.Td>
         <Button
           variant="light"
           onClick={() =>
@@ -41,6 +42,15 @@ const Configuration: FC = () => {
           }
         >
           {row.isActive ? 'Deactivate' : 'Activate'}
+        </Button>
+      </Table.Td>
+      <Table.Td>
+        <Button
+          variant="light"
+          color="red"
+          onClick={() => deleteCoinConfigMutate(row.symbol)}
+        >
+          <Trash size={28} />
         </Button>
       </Table.Td>
     </Table.Tr>
@@ -67,9 +77,12 @@ const Configuration: FC = () => {
             >
               <Table.Tr>
                 <Table.Th>Symbol</Table.Th>
-                <Table.Th>strategy capital account</Table.Th>
+                <Table.Th>Candle TF</Table.Th>
+                <Table.Th>Leverage</Table.Th>
+                <Table.Th>Min entry</Table.Th>
                 <Table.Th>Last updated</Table.Th>
                 <Table.Th>Status</Table.Th>
+                <Table.Th></Table.Th>
                 <Table.Th></Table.Th>
               </Table.Tr>
             </Table.Thead>
