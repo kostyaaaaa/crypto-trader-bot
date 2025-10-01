@@ -64,10 +64,10 @@ export const scalpingPreset: TCoinConfig = {
     sizing: { maxAdds: 0, addOnAdverseMovePct: 0.3, addMultiplier: 1 },
     exits: {
       oppositeCountExit: 0,
-      tp: { use: true, tpGridPct: [1.5], tpGridSizePct: [100] },
+      tp: { use: true, tpGridPct: [2], tpGridSizePct: [100] },
       sl: {
         type: 'hard',
-        hardPct: 4,
+        hardPct: 3,
         atrMult: 0.5,
         signalRules: {
           flipIf: { scoreGap: 20, minOppScore: 65 },
