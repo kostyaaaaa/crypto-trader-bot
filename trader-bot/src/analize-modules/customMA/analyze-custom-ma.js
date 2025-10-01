@@ -244,7 +244,7 @@ export async function analyzeCustomMA(symbol = 'ETHUSDT', analysisConfig) {
       SHORT,
       rulesCount: rules.length,
       evaluations,
-      defaultMAType: (cfg.defaultMAType || 'EMA').toUpperCase(),
+      defaultMAType: (defaultMAType || 'EMA').toUpperCase(),
     },
   };
 }

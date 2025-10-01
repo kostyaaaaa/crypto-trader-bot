@@ -29,7 +29,7 @@ async function getMarkPrice(symbol) {
       { params: { symbol } },
     );
     return parseFloat(res.data.markPrice);
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -48,21 +48,21 @@ async function getOpenHistoryDoc(symbol) {
 
 // Обчислюємо один референсний TP у % (беремо перший або зважений середній)
 // Використовується для простого "TP-anchored trailing"
-function getTpReferencePct(tpCfg) {
-  if (!tpCfg || !tpCfg.use) return null;
-  const arr = Array.isArray(tpCfg.tpGridPct) ? tpCfg.tpGridPct : [];
-  if (!arr.length) return null;
+// function getTpReferencePct(tpCfg) {
+//   if (!tpCfg || !tpCfg.use) return null;
+//   const arr = Array.isArray(tpCfg.tpGridPct) ? tpCfg.tpGridPct : [];
+//   if (!arr.length) return null;
 
-  const sizes = Array.isArray(tpCfg.tpGridSizePct) ? tpCfg.tpGridSizePct : null;
-  if (sizes && sizes.length === arr.length) {
-    const wSum = sizes.reduce((s, v) => s + Number(v || 0), 0) || 1;
-    return arr.reduce(
-      (acc, p, i) => acc + Number(p || 0) * (Number(sizes[i] || 0) / wSum),
-      0,
-    );
-  }
-  return Number(arr[0] || 0);
-}
+//   const sizes = Array.isArray(tpCfg.tpGridSizePct) ? tpCfg.tpGridSizePct : null;
+//   if (sizes && sizes.length === arr.length) {
+//     const wSum = sizes.reduce((s, v) => s + Number(v || 0), 0) || 1;
+//     return arr.reduce(
+//       (acc, p, i) => acc + Number(p || 0) * (Number(sizes[i] || 0) / wSum),
+//       0,
+//     );
+//   }
+//   return Number(arr[0] || 0);
+// }
 
 // === Основний моніторинг ===
 export async function monitorPositions({ symbol, strategy }) {

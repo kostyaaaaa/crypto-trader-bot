@@ -70,7 +70,7 @@ const Analysis: FC = () => {
         setSelectedCoin(symbols[0]);
       }
     }
-  }, [symbols.length]);
+  }, [symbols.length, selectedCoin]); // eslint-disable-line
 
   const symbol = selectedCoin;
 
