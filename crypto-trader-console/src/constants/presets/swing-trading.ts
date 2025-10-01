@@ -31,6 +31,7 @@ export const swingTradingPreset: TCoinConfig = {
       correlation: 0.03,
       longShort: 0.01,
       higherMA: 0.05,
+      genyaAnal: 0,
     },
     moduleThresholds: {
       trend: 25,
@@ -42,6 +43,7 @@ export const swingTradingPreset: TCoinConfig = {
       correlation: 8,
       longShort: 8,
       higherMA: 10,
+      genyaAnal: 0,
     },
   },
   strategy: {
