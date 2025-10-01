@@ -8,8 +8,10 @@ export async function genyaTrendModule(symbol = 'ETHUSDT', candles = []) {
     return null;
   }
 
-  const closes = candles.map((c) => c.close);
-  const volumes = candles.map((c) => Number(c.volume ?? 0));
+  const lastCandles = candles.slice(-21);
+
+  const closes = lastCandles.map((c) => c.close);
+  const volumes = lastCandles.map((c) => Number(c.volume ?? 0));
 
   // 📊 Індикатори
   const emaFast = EMA(closes, 9, { seed: 'sma' });
