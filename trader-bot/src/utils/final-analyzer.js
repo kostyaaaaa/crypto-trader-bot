@@ -79,7 +79,7 @@ export async function finalAnalyzer({
 
   modules.liquidity = await analyzeLiquidity(symbol, liqWindow, lastPrice);
   modules.funding = await analyzeFunding(symbol, fundingWindow);
-  modules.liquidations = await analyzeLiquidations(symbol, liqSentWindow);
+  modules.liquidations = await analyzeLiquidations(symbol);
   modules.openInterest = await analyzeOpenInterest(symbol, oiWindow);
   modules.correlation = await analyzeCorrelation(symbol, corrWindow);
   modules.longShort = await analyzeLongShort(symbol, longShortWindow);

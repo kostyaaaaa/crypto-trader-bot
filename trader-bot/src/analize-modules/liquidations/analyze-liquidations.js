@@ -5,10 +5,35 @@
 
 import { loadDocs } from '../../storage/storage.js';
 
-export async function analyzeLiquidations(symbol = 'ETHUSDT', window = 5) {
-  const liquidations = await loadDocs('liquidations', symbol, window);
-  if (!liquidations || liquidations.length < window) {
+// Usage:
+// - analyzeLiquidations('ETHUSDT') → бере ОСТАННІ 10 записів; якщо найновіший старше 30 хв — повертає null
+const MAX_COUNT = 10; // скільки точок беремо
+const MAX_AGE_MIN = 30; // дані мають бути свіжішими за 30 хв
+
+export async function analyzeLiquidations(symbol = 'ETHUSDT') {
+  // Тягнемо останні MAX_COUNT записів, сортуємо найновіші → найстаріші
+  const raw = await loadDocs('liquidations', symbol, MAX_COUNT);
+  const sorted = Array.isArray(raw)
+    ? [...raw].sort(
+        (a, b) =>
+          new Date(b?.time || b?.createdAt || 0) -
+          new Date(a?.time || a?.createdAt || 0),
+      )
+    : [];
+
+  const liquidations = sorted.slice(0, MAX_COUNT);
+
+  if (!liquidations || liquidations.length === 0) {
     return null;
+  }
+
+  // Перевіряємо свіжість: найновіший запис має бути ≤ MAX_AGE_MIN хв
+  const newestTs = new Date(
+    liquidations[0]?.time || liquidations[0]?.createdAt || 0,
+  ).getTime();
+  const ageMin = newestTs ? (Date.now() - newestTs) / 60000 : Infinity;
+  if (ageMin > MAX_AGE_MIN) {
+    return null; // дані застарілі — модуль не впливає на скор
   }
 
   const avgBuy =

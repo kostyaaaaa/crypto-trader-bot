@@ -102,6 +102,11 @@ export async function tradingEngine(symbol, config) {
   }
 
   const { entry } = config.strategy;
+  // Gate: only enforce higher-TF trend agreement if 'higherMA' is marked as required
+  const required = Array.isArray(config?.strategy?.entry?.requiredModules)
+    ? config.strategy.entry.requiredModules
+    : [];
+  const needHigherMAGate = required.includes('higherMA');
   // ---- risk handling: do not mutate global config ----
   const baseRiskPct = Number(config?.strategy?.capital?.riskPerTradePct ?? 0);
   let riskFactor = 1; // will be adjusted by higherTF / volatility gates
@@ -202,9 +207,10 @@ export async function tradingEngine(symbol, config) {
       return;
     }
 
-    if (higherTrend.signal !== majority) {
+    // Enforce this check only if higherMA is marked as required in entry.requiredModules
+    if (needHigherMAGate && higherTrend.signal !== majority) {
       console.log(
-        `⚠️ ${symbol}: higherTrend.signal !== majority, risk reduced`,
+        `⏸️ ${symbol}: skip, higherMA gate — higherTF trend (${higherTrend.signal}) ≠ majority (${majority})`,
       );
       return;
     }
