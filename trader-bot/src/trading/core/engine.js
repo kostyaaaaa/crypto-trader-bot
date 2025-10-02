@@ -1,10 +1,7 @@
 // trading/core/engine.js
 import axios from 'axios';
-import { analyzeCandles } from '../../analize-modules/candles/analyze-candles.js';
-import { analyzeVolatility } from '../../analize-modules/volatility/analyze-volatility.js';
 import { loadDocs } from '../../storage/storage.js';
 import { notifyTrade } from '../../utils/notify.js';
-import { getHigherTF } from '../../utils/timeframes.js';
 import { getUserTrades } from '../binance/binance.js';
 import { executeTrade } from '../binance/exchange-executor.js';
 import { getActivePositions } from './binance-positions-manager.js';
@@ -106,7 +103,6 @@ export async function tradingEngine(symbol, config) {
   const required = Array.isArray(config?.strategy?.entry?.requiredModules)
     ? config.strategy.entry.requiredModules
     : [];
-  const needHigherMAGate = required.includes('higherMA');
   // ---- risk handling: do not mutate global config ----
   const baseRiskPct = Number(config?.strategy?.capital?.riskPerTradePct ?? 0);
   let riskFactor = 1; // will be adjusted by higherTF / volatility gates
@@ -137,6 +133,17 @@ export async function tradingEngine(symbol, config) {
         console.log(`⏸️ ${symbol}: skip, required module ${req} not satisfied`);
         return;
       }
+    }
+  }
+
+  // If higherMA is marked as required, enforce its agreement with majority (no extra REST calls)
+  if (required.includes('higherMA')) {
+    const hmSignal = modules?.higherMA?.signal || 'NEUTRAL';
+    if (hmSignal !== majority) {
+      console.log(
+        `⏸️ ${symbol}: skip, higherMA(${hmSignal}) ≠ majority(${majority})`,
+      );
+      return;
     }
   }
 
@@ -176,49 +183,6 @@ export async function tradingEngine(symbol, config) {
 
   if (!modules?.trendRegime || modules.trendRegime.signal === 'NEUTRAL') {
     console.log(`ℹ️ ${symbol}: ADX regime NEUTRAL (no trend)`);
-  }
-
-  const mainTF = config.analysisConfig.candleTimeframe || '1m';
-  const higherTF = getHigherTF(mainTF);
-  if (higherTF) {
-    const limit = 100;
-    const klineRes = await axios.get(
-      'https://fapi.binance.com/fapi/v1/klines',
-      { params: { symbol, interval: higherTF, limit } },
-    );
-    const candles = klineRes.data.map((k) => ({
-      time: new Date(k[0]).toISOString(),
-      open: parseFloat(k[1]),
-      high: parseFloat(k[2]),
-      low: parseFloat(k[3]),
-      close: parseFloat(k[4]),
-      volume: parseFloat(k[5]),
-    }));
-
-    const higherTrend = await analyzeCandles(symbol, candles);
-    const higherVol = await analyzeVolatility(
-      symbol,
-      candles,
-      14,
-      config.strategy.volatilityFilter || { deadBelow: 0.2, extremeAbove: 2.5 },
-    );
-
-    if (!higherTrend || !higherVol) {
-      return;
-    }
-
-    // Enforce this check only if higherMA is marked as required in entry.requiredModules
-    if (needHigherMAGate && higherTrend.signal !== majority) {
-      console.log(
-        `⏸️ ${symbol}: skip, higherMA gate — higherTF trend (${higherTrend.signal}) ≠ majority (${majority})`,
-      );
-      return;
-    }
-
-    if (higherVol.signal === 'NONE' && higherVol.meta?.regime === 'DEAD') {
-      console.log(`⏸️ ${symbol}: skip, higherVol regime DEAD`);
-      return;
-    }
   }
 
   const lastPriceRes = await axios.get(
