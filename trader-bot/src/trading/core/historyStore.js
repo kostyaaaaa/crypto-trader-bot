@@ -1,5 +1,6 @@
 // core/historyStore.js
 import { loadDocs, saveDoc, updateDoc } from '../../storage/storage.js';
+import logger from '../../utils/db-logger.js';
 import { notifyTrade } from '../../utils/notify.js';
 import { getPosition, getUserTrades } from '../binance/binance.js';
 
@@ -309,7 +310,7 @@ export async function reconcilePositions() {
         }
       }
     } catch (err) {
-      console.error(
+      logger.error(
         `⚠️ reconcilePositions failed for ${pos.symbol}:`,
         err.message,
       );

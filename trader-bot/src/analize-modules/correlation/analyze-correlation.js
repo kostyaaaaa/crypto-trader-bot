@@ -5,6 +5,7 @@
 
 import axios from 'axios';
 import { correlationGroups } from '../../constants/correlation-config.js';
+import logger from '../../utils/db-logger.js';
 
 // Визначаємо групу (наскільки сильно символ корелює з BTC)
 function getGroup(symbol) {
@@ -87,7 +88,7 @@ export async function analyzeCorrelation(symbol, window = 5) {
       },
     };
   } catch (e) {
-    console.error('❌ Correlation fetch error:', e.message);
+    logger.error('❌ Correlation fetch error:', e.message);
     return null;
   }
 }

@@ -1,5 +1,6 @@
 // utils/notify.js
 import axios from 'axios';
+import logger from './db-logger';
 
 /**
  * Відправляє повідомлення в Telegram (або лог)
@@ -9,7 +10,7 @@ async function sendTelegram(text) {
   const token = process.env.TG_TOKEN;
   const chatId = process.env.TG_CHAT_ID;
   if (!token || !chatId) {
-    console.warn(
+    logger.error(
       'Telegram not configured (TELEGRAM_BOT_TOKEN/CHAT_ID missing). Message:\n',
       text,
     );
@@ -24,7 +25,7 @@ async function sendTelegram(text) {
       disable_web_page_preview: true,
     });
   } catch (err) {
-    console.error('Failed to send telegram message:', err?.message || err);
+    logger.error('Failed to send telegram message:', err?.message || err);
   }
 }
 
@@ -117,7 +118,7 @@ export async function notifyTrade(position = {}, action = 'UPDATE') {
 
     await sendTelegram(text);
   } catch (err) {
-    console.error('notifyTrade failed:', err?.message || err);
+    logger.error('notifyTrade failed:', err?.message || err);
   }
 }
 

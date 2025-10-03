@@ -28,10 +28,6 @@ const getPositionsByDateRangeAndSymbol = async (
       return;
     }
 
-    logger.info(
-      `Fetching closed positions history for symbol: ${symbol || 'all'} between ${dateFrom} and ${dateTo}`,
-    );
-
     const startDate = new Date(dateFrom as string);
     const endDate = new Date(dateTo as string);
 

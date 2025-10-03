@@ -1,6 +1,7 @@
 // trading/core/monitor.js
 import axios from 'axios';
 import { loadDocs } from '../../storage/storage.js';
+import logger from '../../utils/db-logger.js';
 import {
   cancelStopOrders,
   openMarketOrder,
@@ -118,7 +119,7 @@ export async function monitorPositions({ symbol, strategy }) {
         lastN.every((a) => isOppositeToPos(anaSideFn(a)));
 
       if (allOpposite) {
-        console.log(
+        logger.info(
           `⏹️ ${symbol}: exit by opposite signals x${oppExitN} (pos=${side})`,
         );
         if (TRADE_MODE === 'live') {

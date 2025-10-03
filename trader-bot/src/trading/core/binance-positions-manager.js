@@ -1,3 +1,4 @@
+import logger from '../../utils/db-logger.js';
 import {
   adjustPrice,
   adjustQuantity,
@@ -40,12 +41,12 @@ export async function applyAddToPosition(symbol, side, addUsd, price, exits) {
   const rawQty = addUsd / price;
   const qty = adjustQuantity(filters, rawQty);
   if (!qty || Number(qty) <= 0) {
-    console.error(`❌ Add qty too small for ${symbol}`);
+    logger.error(`❌ Add qty too small for ${symbol}`);
     return null;
   }
 
   await openMarketOrder(symbol, side === 'LONG' ? 'BUY' : 'SELL', qty);
-  console.log(`➕ Added ${addUsd}$ to ${symbol} @ ${price}`);
+  logger.info(`➕ Added ${addUsd}$ to ${symbol} @ ${price}`);
 
   await cancelAllOrders(symbol);
 
@@ -55,7 +56,7 @@ export async function applyAddToPosition(symbol, side, addUsd, price, exits) {
   if (exits?.sl?.price) {
     const stopPx = adjustPrice(filters, exits.sl.price);
     await placeStopLoss(symbol, side, stopPx, totalQty);
-    console.log(`🛑 New SL placed @ ${stopPx}`);
+    logger.info(`🛑 New SL placed @ ${stopPx}`);
   }
 
   if (Array.isArray(exits?.tp)) {
@@ -64,7 +65,7 @@ export async function applyAddToPosition(symbol, side, addUsd, price, exits) {
       const tpQty = adjustQuantity(filters, (totalQty * tp.sizePct) / 100);
       if (tpQty > 0) {
         await placeTakeProfit(symbol, side, tpPx, tpQty);
-        console.log(`🎯 New TP @ ${tpPx} (${tp.sizePct}%)`);
+        logger.info(`🎯 New TP @ ${tpPx} (${tp.sizePct}%)`);
       }
     }
   }

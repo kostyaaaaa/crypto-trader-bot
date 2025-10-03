@@ -1,4 +1,5 @@
 import { loadDocs } from '../../storage/storage.js';
+import logger from '../../utils/db-logger.js';
 
 export async function analyzeLiquidity(
   symbol = 'ETHUSDT',
@@ -8,7 +9,7 @@ export async function analyzeLiquidity(
   const liq = await loadDocs('liquidity', symbol, window);
 
   if (!liq || liq.length === 0) {
-    console.log(`⚠️ No liquidity aggregates for ${symbol}`);
+    logger.warn(`⚠️ No liquidity aggregates for ${symbol}`);
     return null;
   }
 

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import crypto from 'crypto';
+import logger from '../../utils/Logger';
 import { PnLIncomeItem, PnLSummaryResponse } from './pnl.type';
 
 const MAX_LIMIT = 999;
@@ -44,7 +45,7 @@ export const getPnL = async (
       data: res.data,
     };
   } catch (err: any) {
-    console.error('Error:', err.response?.data || err.message);
+    logger.error('Error:', err.response?.data || err.message);
     throw err;
   }
 };

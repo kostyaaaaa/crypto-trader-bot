@@ -12,7 +12,6 @@ const getFuturesBalance = async (
   res: Response<FuturesAccountResponse | ApiErrorResponse>,
 ): Promise<void> => {
   try {
-    logger.info('Fetching futures account balance');
     const balance = await getAccountFuturesBalance();
     logger.success('Successfully fetched futures account balance');
     res.json(balance);
@@ -35,8 +34,6 @@ const getAccountPnL = async (
 ): Promise<void> => {
   try {
     const daysBack: number = parseInt(req.query.days as string) || 1;
-    logger.info(`Fetching PnL data for last ${daysBack} day(s)`);
-
     const pnlData = await getPnL(daysBack);
     logger.success(`Successfully fetched PnL data for last ${daysBack} day(s)`);
     res.json(pnlData);

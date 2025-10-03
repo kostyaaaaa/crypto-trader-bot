@@ -1,9 +1,11 @@
 // exchanges/binance.js
 import pkg from 'binance-api-node';
 import crypto from 'crypto';
-const Binance = pkg.default;
+import logger from '../../utils/db-logger';
 
+const Binance = pkg.default;
 const BASE_URL = 'https://fapi.binance.com';
+
 export const client = Binance({
   apiKey: process.env.BINANCE_API_KEY,
   apiSecret: process.env.BINANCE_ACCOUNT_SECRET_KEY,
@@ -31,7 +33,7 @@ export async function getSymbolFilters(symbol) {
     const sym = info.symbols.find((s) => s.symbol === symbol);
     return sym?.filters || [];
   } catch (err) {
-    console.error(`❌ getSymbolFilters failed for ${symbol}:`, err.message);
+    logger.error(`❌ getSymbolFilters failed for ${symbol}:`, err.message);
     return [];
   }
 }
@@ -41,7 +43,7 @@ export async function getSymbolInfo(symbol) {
     const info = await client.futuresExchangeInfo();
     return info.symbols.find((s) => s.symbol === symbol) || null;
   } catch (err) {
-    console.error(`❌ getSymbolInfo failed for ${symbol}:`, err.message);
+    logger.error(`❌ getSymbolInfo failed for ${symbol}:`, err.message);
     return null;
   }
 }
@@ -89,7 +91,7 @@ export async function getFuturesBalance(asset = 'USDT') {
     const balances = await client.futuresAccountBalance();
     return balances.find((b) => b.asset === asset)?.balance || 0;
   } catch (err) {
-    console.error(`❌ getFuturesBalance failed for ${asset}:`, err.message);
+    logger.error(`❌ getFuturesBalance failed for ${asset}:`, err.message);
     return 0;
   }
 }
@@ -99,7 +101,7 @@ export async function getPosition(symbol) {
     const positions = await client.futuresPositionRisk();
     return positions.find((p) => p.symbol === symbol) || null;
   } catch (err) {
-    console.error(`❌ getPosition failed for ${symbol}:`, err.message);
+    logger.error(`❌ getPosition failed for ${symbol}:`, err.message);
     return null;
   }
 }
@@ -108,7 +110,7 @@ export async function getOpenOrders(symbol) {
   try {
     return await client.futuresOpenOrders({ symbol });
   } catch (err) {
-    console.error(`❌ getOpenOrders failed for ${symbol}:`, err.message);
+    logger.error(`❌ getOpenOrders failed for ${symbol}:`, err.message);
     return [];
   }
 }
@@ -132,7 +134,7 @@ export async function openMarketOrder(symbol, side, quantity) {
       quantity: qty,
     });
   } catch (err) {
-    console.error(`❌ openMarketOrder failed for ${symbol}:`, err.message);
+    logger.error(`❌ openMarketOrder failed for ${symbol}:`, err.message);
     throw err; // хай летить, бо це критично
   }
 }
@@ -158,7 +160,7 @@ export async function placeStopLoss(symbol, positionSide, stopPrice, quantity) {
       reduceOnly: true,
     });
   } catch (err) {
-    console.error(`❌ placeStopLoss failed for ${symbol}:`, err.message);
+    logger.error(`❌ placeStopLoss failed for ${symbol}:`, err.message);
     return null;
   }
 }
@@ -184,7 +186,7 @@ export async function placeTakeProfit(symbol, positionSide, tpPrice, quantity) {
       reduceOnly: true,
     });
   } catch (err) {
-    console.error(`❌ placeTakeProfit failed for ${symbol}:`, err.message);
+    logger.error(`❌ placeTakeProfit failed for ${symbol}:`, err.message);
     return null;
   }
 }
@@ -207,7 +209,7 @@ export async function closePosition(symbol, side, quantity) {
       reduceOnly: true,
     });
   } catch (err) {
-    console.error(`❌ closePosition failed for ${symbol}:`, err.message);
+    logger.error(`❌ closePosition failed for ${symbol}:`, err.message);
     return null;
   }
 }
@@ -218,7 +220,7 @@ export async function getOpenPositions() {
   try {
     return await client.futuresPositionRisk();
   } catch (err) {
-    console.error('❌ getOpenPositions failed:', err.message);
+    logger.error('❌ getOpenPositions failed:', err.message);
     return [];
   }
 }
@@ -227,7 +229,7 @@ export async function cancelAllOrders(symbol) {
   try {
     return await client.futuresCancelAllOpenOrders({ symbol });
   } catch (err) {
-    console.error(`❌ cancelAllOrders failed for ${symbol}:`, err.message);
+    logger.error(`❌ cancelAllOrders failed for ${symbol}:`, err.message);
     return null;
   }
 }
@@ -272,7 +274,7 @@ export async function getLiveState(symbol) {
 
     return { position, orders };
   } catch (err) {
-    console.error(`❌ getLiveState failed for ${symbol}:`, err.message);
+    logger.error(`❌ getLiveState failed for ${symbol}:`, err.message);
     return { position: null, orders: [] };
   }
 }
@@ -313,7 +315,7 @@ export async function setLeverage(symbol, leverage) {
 
     return await res.json();
   } catch (err) {
-    console.error(`❌ setLeverage failed for ${symbol}:`, err.message);
+    logger.error(`❌ setLeverage failed for ${symbol}:`, err.message);
     return null;
   }
 }
@@ -340,7 +342,7 @@ export async function getUserTrades(symbol, options = {}) {
       time: t.time,
     }));
   } catch (err) {
-    console.error(`❌ getUserTrades failed for ${symbol}:`, err.message);
+    logger.error(`❌ getUserTrades failed for ${symbol}:`, err.message);
     return [];
   }
 }
@@ -362,9 +364,9 @@ export async function cancelStopOrders(symbol, opts = {}) {
       if (!onlySL && !onlyTP && !(isSL || isTP)) continue; // за замовчуванням — тільки SL/TP
 
       await client.futuresCancelOrder({ symbol, orderId: o.orderId });
-      console.log(`❌ Canceled ${o.type} @ ${symbol} (${o.orderId})`);
+      logger.info(`❌ Canceled ${o.type} @ ${symbol} (${o.orderId})`);
     }
   } catch (err) {
-    console.error(`❌ cancelStopOrders failed for ${symbol}:`, err.message);
+    logger.error(`❌ cancelStopOrders failed for ${symbol}:`, err.message);
   }
 }
