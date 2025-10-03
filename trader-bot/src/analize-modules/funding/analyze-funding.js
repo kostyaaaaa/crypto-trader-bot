@@ -6,7 +6,7 @@
 //   funding < 0 → перевага SHORTів → LONG-сигнал
 
 import axios from 'axios';
-import logger from '../../utils/db-logger';
+import logger from '../../utils/db-logger.js';
 
 export async function analyzeFunding(symbol = 'ETHUSDT', window = 60) {
   try {

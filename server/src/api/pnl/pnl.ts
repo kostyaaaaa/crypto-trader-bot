@@ -1,7 +1,7 @@
 import axios from 'axios';
 import crypto from 'crypto';
-import logger from '../../utils/Logger';
-import { PnLIncomeItem, PnLSummaryResponse } from './pnl.type';
+import logger from '../../utils/Logger.js';
+import { PnLIncomeItem, PnLSummaryResponse } from './pnl.type.js';
 
 const MAX_LIMIT = 999;
 

@@ -1,7 +1,7 @@
 // exchanges/binance.js
 import pkg from 'binance-api-node';
 import crypto from 'crypto';
-import logger from '../../utils/db-logger';
+import logger from '../../utils/db-logger.js';
 
 const Binance = pkg.default;
 const BASE_URL = 'https://fapi.binance.com';

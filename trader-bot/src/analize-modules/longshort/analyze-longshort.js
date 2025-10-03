@@ -3,7 +3,7 @@
 // API: /futures/data/globalLongShortAccountRatio
 
 import axios from 'axios';
-import logger from '../../utils/db-logger';
+import logger from '../../utils/db-logger.js';
 
 export async function analyzeLongShort(symbol = 'ETHUSDT', window = 5) {
   try {

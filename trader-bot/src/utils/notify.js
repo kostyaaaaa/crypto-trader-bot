@@ -1,6 +1,6 @@
 // utils/notify.js
 import axios from 'axios';
-import logger from './db-logger';
+import logger from './db-logger.js';
 
 /**
  * Відправляє повідомлення в Telegram (або лог)
