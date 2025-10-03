@@ -7,6 +7,7 @@
 //  • OI↓ + Price↓ → LONG (short covering)
 
 import axios from 'axios';
+import logger from '../../utils/db-logger';
 
 export async function analyzeOpenInterest(symbol = 'ETHUSDT', window = 5) {
   try {
@@ -106,7 +107,7 @@ export async function analyzeOpenInterest(symbol = 'ETHUSDT', window = 5) {
       },
     };
   } catch (err) {
-    console.error('❌ analyzeOpenInterest error:', err.message);
+    logger.error('❌ analyzeOpenInterest error:', err.message);
     return null;
   }
 }

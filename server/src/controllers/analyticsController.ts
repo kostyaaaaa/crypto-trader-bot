@@ -28,10 +28,6 @@ const getAnalysisByDateRangeAndSymbol = async (
       return;
     }
 
-    logger.info(
-      `Fetching analysis data for symbol: ${symbol} between ${dateFrom} and ${dateTo}`,
-    );
-
     const startDate = new Date(dateFrom as string);
     const endDate = new Date(dateTo as string);
 

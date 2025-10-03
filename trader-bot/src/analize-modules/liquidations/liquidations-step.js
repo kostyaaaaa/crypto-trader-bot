@@ -76,7 +76,9 @@ export function LiquidationsStepWS(
     bucket = [];
   }, windowMs);
 
-  ws.on('error', (err) => console.error('❌ WS error:', err.message));
+  ws.on('error', (err) =>
+    logger.error('❌ Liquidations WS error:', err.message),
+  );
 
   return () => {
     clearInterval(interval);

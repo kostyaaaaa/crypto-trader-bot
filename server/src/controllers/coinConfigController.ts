@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
 import { CoinConfigModel, ICoinConfig } from 'crypto-trader-db';
+import { Request, Response } from 'express';
 import logger from '../utils/Logger.js';
 import { ApiErrorResponse } from './common.type.js';
 
@@ -33,10 +33,6 @@ const createCoinConfig = async (
   try {
     const coinConfigData: Omit<ICoinConfig, 'createdAt' | 'updatedAt'> =
       req.body;
-
-    logger.info(
-      `Creating coin configuration for symbol: ${coinConfigData.symbol}`,
-    );
 
     // Check if config already exists
     const existingConfig = await CoinConfigModel.findBySymbol(
@@ -89,8 +85,6 @@ const getAllCoinConfigs = async (
   res: Response<CoinConfigListResponse | ApiErrorResponse>,
 ): Promise<void> => {
   try {
-    logger.info('Fetching all coin configurations');
-
     const configs = await CoinConfigModel.find({}).sort({ symbol: 1 });
 
     logger.success(
@@ -124,8 +118,6 @@ const getCoinConfigBySymbol = async (
 ): Promise<void> => {
   try {
     const { symbol } = req.params;
-
-    logger.info(`Fetching coin configuration for symbol: ${symbol}`);
 
     const config = await CoinConfigModel.findBySymbol(symbol);
 
@@ -171,8 +163,6 @@ const updateCoinConfig = async (
   try {
     const { symbol } = req.params;
     const updateData: Partial<ICoinConfig> = req.body;
-
-    logger.info(`Updating coin configuration for symbol: ${symbol}`);
 
     // Ensure symbol in body matches URL parameter
     if (updateData.symbol && updateData.symbol !== symbol) {
@@ -242,8 +232,6 @@ const deleteCoinConfig = async (
   try {
     const { symbol } = req.params;
 
-    logger.info(`Deleting coin configuration for symbol: ${symbol}`);
-
     const deletedConfig = await CoinConfigModel.findOneAndDelete({ symbol });
 
     if (!deletedConfig) {
@@ -281,8 +269,8 @@ const deleteCoinConfig = async (
 
 export {
   createCoinConfig,
+  deleteCoinConfig,
   getAllCoinConfigs,
   getCoinConfigBySymbol,
   updateCoinConfig,
-  deleteCoinConfig,
 };

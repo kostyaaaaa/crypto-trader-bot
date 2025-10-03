@@ -1,5 +1,6 @@
 import axios from 'axios';
 import crypto from 'crypto';
+import logger from '../../utils/Logger.js';
 import { FuturesAccountResponse } from './futures.type.js';
 
 export const getAccountFuturesBalance =
@@ -27,7 +28,7 @@ export const getAccountFuturesBalance =
 
       return res.data;
     } catch (err: any) {
-      console.error('Error:', err.response?.data || err.message);
+      logger.error('Error:', err.response?.data || err.message);
       throw err;
     }
   };

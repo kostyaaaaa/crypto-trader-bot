@@ -22,7 +22,6 @@ export function OrderBookStepWS(symbol = 'BTCUSDT') {
   ws.on('message', (msg) => {
     const data = JSON.parse(msg.toString());
     if (!data.b || !data.a) return;
-    // console.log(data);
 
     const bids = data.b;
     const asks = data.a;
@@ -44,7 +43,7 @@ export function OrderBookStepWS(symbol = 'BTCUSDT') {
   });
 
   ws.on('error', (err) => {
-    console.error('❌ WS error:', err.message);
+    logger.error('❌ OrderBook WS error:', err.message);
   });
 
   interval = setInterval(async () => {

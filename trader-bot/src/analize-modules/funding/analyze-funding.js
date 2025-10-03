@@ -6,6 +6,7 @@
 //   funding < 0 → перевага SHORTів → LONG-сигнал
 
 import axios from 'axios';
+import logger from '../../utils/db-logger';
 
 export async function analyzeFunding(symbol = 'ETHUSDT', window = 60) {
   try {
@@ -18,7 +19,7 @@ export async function analyzeFunding(symbol = 'ETHUSDT', window = 60) {
     });
 
     if (!res.data || res.data.length === 0) {
-      console.log(`⚠️ No funding data for ${symbol}`);
+      logger.warn(`⚠️ No funding data for ${symbol}`);
       return null;
     }
 
@@ -86,7 +87,7 @@ export async function analyzeFunding(symbol = 'ETHUSDT', window = 60) {
       },
     };
   } catch (e) {
-    console.error(`❌ Funding fetch/analyze error for ${symbol}:`, e.message);
+    logger.error(`❌ Funding fetch/analyze error for ${symbol}:`, e.message);
     return null;
   }
 }

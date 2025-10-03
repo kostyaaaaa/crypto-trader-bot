@@ -12,6 +12,7 @@ import {
   analyzeVolatility,
 } from '../analize-modules/index.js';
 import { saveDoc } from '../storage/storage.js';
+import logger from './db-logger.js';
 
 export async function finalAnalyzer({
   symbol = 'ETHUSDT',
@@ -47,7 +48,7 @@ export async function finalAnalyzer({
     });
   } catch (err) {
     if (err && err.code === 'ENOTFOUND') {
-      console.warn(`⚠️ ${symbol} skipped (DNS error)`);
+      logger.warn(`⚠️ ${symbol} skipped (DNS error)`);
       return null;
     }
     throw err;

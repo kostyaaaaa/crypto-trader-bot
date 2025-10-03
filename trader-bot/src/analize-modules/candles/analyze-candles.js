@@ -1,3 +1,4 @@
+import logger from '../../utils/db-logger.js';
 import { EMA, RSI } from '../../utils/getEMAAndRSI.js';
 
 // Wilder RSI full-series (returns array aligned to candles; nulls before seed complete)
@@ -33,7 +34,7 @@ function computeRSISeries(values = [], period = 14) {
 
 export async function analyzeCandles(symbol = 'ETHUSDT', candles = []) {
   if (!candles || candles.length < 21) {
-    console.log(
+    logger.info(
       `⏳ Only ${candles?.length || 0} candles for ${symbol}, need ≥21...`,
     );
     return null;

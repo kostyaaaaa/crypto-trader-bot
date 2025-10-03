@@ -1,16 +1,17 @@
 import { CoinConfigModel } from 'crypto-trader-db';
-import connectDB from './config/database.js';
-// import dns from 'dns';
-// dns.setDefaultResultOrder('ipv4first');
 import { LiquidationsStepWS } from './analize-modules/liquidations/liquidations-step.js';
 import { OrderBookStepWS } from './analize-modules/orderbook/order-book-step.js';
+import connectDB from './config/database.js';
 import { startUserStream } from './trading/binance/binance-ws-listener.js';
 import { tradingEngine } from './trading/core/engine.js';
 import { monitorPositions } from './trading/core/monitor.js';
+import logger from './utils/db-logger.js';
 import { finalAnalyzer } from './utils/final-analyzer.js';
+
 const activeIntervals = {};
 const idToSymbol = {};
 const isBotActive = process.env.IS_BOT_ACTIVE === 'true';
+
 async function startConfig(config) {
   const { symbol, isActive, analysisConfig, strategy } = config;
   if (!isActive) return;
@@ -54,13 +55,13 @@ function stopConfig(symbol) {
   for (const [id, sym] of Object.entries(idToSymbol)) {
     if (sym === symbol) delete idToSymbol[id];
   }
-  console.log(`🛑 Stopped services for ${symbol}`);
+  logger.info(`🛑 Stopped services for ${symbol}`);
 }
 
 export async function subscribeCoinConfigs() {
   // 1️⃣ При старті — витягуємо всі конфіги з БД
   const allConfigs = await CoinConfigModel.find({});
-  console.log(
+  logger.info(
     '📦 Initial configs:',
     allConfigs.map((c) => c.symbol),
   );
@@ -94,16 +95,13 @@ export async function subscribeCoinConfigs() {
       if (symbol) {
         stopConfig(symbol);
       } else {
-        console.warn(
-          '⚠️ Delete event for unknown _id (no active mapping):',
-          id,
-        );
+        logger.info('⚠️ Delete event for unknown _id (no active mapping):', id);
       }
     }
   });
 
   changeStream.on('error', (err) => {
-    console.error('❌ Change stream error:', err);
+    logger.info('❌ Change stream error:', err);
   });
 }
 if (isBotActive) {

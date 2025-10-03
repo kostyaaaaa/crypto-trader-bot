@@ -3,6 +3,7 @@
 // API: /futures/data/globalLongShortAccountRatio
 
 import axios from 'axios';
+import logger from '../../utils/db-logger';
 
 export async function analyzeLongShort(symbol = 'ETHUSDT', window = 5) {
   try {
@@ -65,7 +66,7 @@ export async function analyzeLongShort(symbol = 'ETHUSDT', window = 5) {
       },
     };
   } catch (e) {
-    console.error('❌ Error fetching long/short ratio:', e.message);
+    logger.error('❌ Error fetching long/short ratio:', e.message);
     return null;
   }
 }

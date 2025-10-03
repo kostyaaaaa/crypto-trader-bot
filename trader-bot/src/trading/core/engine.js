@@ -7,6 +7,7 @@ import { executeTrade } from '../binance/exchange-executor.js';
 import { getActivePositions } from './binance-positions-manager.js';
 import { preparePosition } from './prepare.js';
 
+import logger from '../../utils/db-logger.js';
 import { openPosition } from './historyStore.js';
 
 const TRADE_MODE = process.env.TRADE_MODE || 'paper';
@@ -18,7 +19,7 @@ export async function tradingEngine(symbol, config) {
   // 0. Перевіряємо відкриті позиції
   const activePositions = await getActivePositions(symbol);
   if (activePositions.length > 0) {
-    console.log(`⏸️ ${symbol}: skip, active positions exist`);
+    logger.info(`⏸️ ${symbol}: skip, active positions exist`);
     return;
   }
   // cooldown
@@ -35,7 +36,7 @@ export async function tradingEngine(symbol, config) {
           const cooldown = config.strategy.entry.cooldownMin;
 
           if (minutesSince < cooldown) {
-            console.log(
+            logger.info(
               `⏸️ ${symbol}: cooldown ${cooldown}m, залишилось ${(
                 cooldown - minutesSince
               ).toFixed(1)}m`,
@@ -45,7 +46,7 @@ export async function tradingEngine(symbol, config) {
         }
       }
     } catch (err) {
-      console.error(
+      logger.error(
         `⚠️ ${symbol}: failed to check cooldown via trades`,
         err?.message || err,
       );
@@ -89,12 +90,12 @@ export async function tradingEngine(symbol, config) {
   const majority = majorityVoteStrict(decisions);
 
   if (majority === 'NEUTRAL') {
-    console.log(`⚠️ ${symbol}: skip, majority is NEUTRAL`);
+    logger.info(`⚠️ ${symbol}: skip, majority is NEUTRAL`);
     return;
   }
 
   if (analysis.bias !== majority) {
-    console.log(`⏸️ ${symbol}: skip, analysis.bias !== majority`);
+    logger.info(`⏸️ ${symbol}: skip, analysis.bias !== majority`);
     return;
   }
 
@@ -111,7 +112,7 @@ export async function tradingEngine(symbol, config) {
 
   const minScore = entry.minScore[majority];
   if (scores[majority] < minScore) {
-    console.log(
+    logger.info(
       `⏸️ ${symbol}: skip, score ${scores[majority]} < minScore ${minScore}`,
     );
     return;
@@ -120,7 +121,7 @@ export async function tradingEngine(symbol, config) {
   if (coverage) {
     const [filled] = coverage.split('/').map(Number);
     if (filled < entry.minModules) {
-      console.log(
+      logger.info(
         `⏸️ ${symbol}: skip, coverage ${filled} < minModules ${entry.minModules}`,
       );
       return;
@@ -130,7 +131,7 @@ export async function tradingEngine(symbol, config) {
   if (entry.requiredModules?.length) {
     for (const req of entry.requiredModules) {
       if (!modules[req] || (modules[req].signal ?? 'NEUTRAL') === 'NEUTRAL') {
-        console.log(`⏸️ ${symbol}: skip, required module ${req} not satisfied`);
+        logger.info(`⏸️ ${symbol}: skip, required module ${req} not satisfied`);
         return;
       }
     }
@@ -140,7 +141,7 @@ export async function tradingEngine(symbol, config) {
   if (required.includes('higherMA')) {
     const hmSignal = modules?.higherMA?.signal || 'NEUTRAL';
     if (hmSignal !== majority) {
-      console.log(
+      logger.info(
         `⏸️ ${symbol}: skip, higherMA(${hmSignal}) ≠ majority(${majority})`,
       );
       return;
@@ -149,7 +150,7 @@ export async function tradingEngine(symbol, config) {
 
   const diff = Math.abs(scores.LONG - scores.SHORT);
   if (diff < entry.sideBiasTolerance) {
-    console.log(
+    logger.info(
       `⏸️ ${symbol}: skip, side bias diff ${diff} < tolerance ${entry.sideBiasTolerance}`,
     );
     return;
@@ -158,7 +159,7 @@ export async function tradingEngine(symbol, config) {
   if (modules?.volatility) {
     const { signal, meta } = modules.volatility;
     if (signal === 'NONE' && meta?.regime === 'DEAD') {
-      console.log(`⏸️ ${symbol}: skip, volatility regime DEAD`);
+      logger.info(`⏸️ ${symbol}: skip, volatility regime DEAD`);
       return;
     }
     if (signal === 'NONE' && meta?.regime === 'EXTREME') {
@@ -168,7 +169,7 @@ export async function tradingEngine(symbol, config) {
   }
 
   if (modules?.liquidity?.meta?.spreadPct > entry.maxSpreadPct) {
-    console.log(
+    logger.info(
       `⏸️ ${symbol}: skip, spread ${modules.liquidity.meta.spreadPct} > maxSpreadPct ${entry.maxSpreadPct}`,
     );
     return;
@@ -177,12 +178,12 @@ export async function tradingEngine(symbol, config) {
   const fr = modules?.funding?.meta?.avgFunding;
   const absOver = entry.avoidWhen?.fundingExtreme?.absOver;
   if (absOver && Math.abs(fr) > absOver) {
-    console.log(`⏸️ ${symbol}: skip, funding extreme abs(${fr}) > ${absOver}`);
+    logger.info(`⏸️ ${symbol}: skip, funding extreme abs(${fr}) > ${absOver}`);
     return;
   }
 
   if (!modules?.trendRegime || modules.trendRegime.signal === 'NEUTRAL') {
-    console.log(`ℹ️ ${symbol}: ADX regime NEUTRAL (no trend)`);
+    logger.info(`ℹ️ ${symbol}: ADX regime NEUTRAL (no trend)`);
   }
 
   const lastPriceRes = await axios.get(
@@ -194,7 +195,7 @@ export async function tradingEngine(symbol, config) {
   // Build a per-trade config without mutating the original
   const runConfig = JSON.parse(JSON.stringify(config));
   runConfig.strategy.capital.riskPerTradePct = baseRiskPct * riskFactor;
-  console.log(
+  logger.info(
     `[RISK] ${symbol} base=${baseRiskPct}% × factor=${riskFactor} → effective=${runConfig.strategy.capital.riskPerTradePct}%`,
   );
 

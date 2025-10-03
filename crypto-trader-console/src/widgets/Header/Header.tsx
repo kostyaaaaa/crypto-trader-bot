@@ -74,4 +74,5 @@ const links: ILink[] = [
   { link: ROUTERS_PATH.configuration, label: 'Configuration' },
   { link: ROUTERS_PATH.positions, label: 'Positions' },
   { link: ROUTERS_PATH.analysis, label: 'Analysis' },
+  { link: ROUTERS_PATH.logs, label: 'Logs' },
 ];

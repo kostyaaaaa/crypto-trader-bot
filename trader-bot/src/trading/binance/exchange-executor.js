@@ -1,4 +1,7 @@
 // trading/executeTrade.js
+import logger from '../../utils/db-logger.js';
+import { updateStopPrice, updateTakeProfits } from '../core/historyStore.js';
+import { preparePosition } from '../core/prepare.js';
 import {
   adjustPrice,
   adjustQuantity,
@@ -10,9 +13,6 @@ import {
   placeTakeProfit,
   setLeverage,
 } from './binance.js';
-
-import { updateStopPrice, updateTakeProfits } from '../core/historyStore.js';
-import { preparePosition } from '../core/prepare.js';
 
 const TRADE_MODE = process.env.TRADE_MODE || 'paper';
 
@@ -85,7 +85,7 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
 
   // PAPER MODE — просто повертаємо підготовлену позицію
   if (TRADE_MODE === 'paper') {
-    console.log(
+    logger.info(
       `🟢 [PAPER] Simulated ${side} ${symbol} @ ${entryPrice} (size=${size}$, lev=${leverage}x)`,
     );
     return pos;
@@ -99,7 +99,7 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
     await setLeverage(symbol, leverage);
     pos.leverage = leverage;
   } catch (err) {
-    console.error(
+    logger.error(
       `❌ Failed to set leverage for ${symbol}:`,
       err?.message || err,
     );
@@ -110,7 +110,7 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
   try {
     filters = await getSymbolFilters(symbol);
   } catch (err) {
-    console.error(
+    logger.error(
       `❌ Failed to fetch filters for ${symbol}:`,
       err?.message || err,
     );
@@ -120,13 +120,11 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
   // кількість у базовій валюті
   const rawQty = size / entryPrice;
   const qty = adjustQuantity(filters, rawQty);
-  console.log(
+  logger.info(
     `📏 Position sizing ${symbol}: size=${size}$, entry=${entryPrice}, rawQty=${rawQty}, adjustedQty=${qty}`,
   );
   if (!qty || Number(qty) <= 0) {
-    console.error(
-      `❌ Quantity too small, skip trade ${symbol} (raw=${rawQty})`,
-    );
+    logger.error(`❌ Quantity too small, skip trade ${symbol} (raw=${rawQty})`);
     return null;
   }
 
@@ -134,7 +132,7 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
   try {
     await cancelAllOrders(symbol);
   } catch (err) {
-    console.warn(
+    logger.warn(
       `⚠️ Failed to cancel existing orders for ${symbol}:`,
       err?.message || err,
     );
@@ -148,11 +146,11 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
       qty,
     );
     orderIds.entry = entryOrder?.orderId || null;
-    console.log(
+    logger.info(
       `✅ [LIVE] Opened ${side} ${symbol}, qty=${qty}, orderId=${orderIds.entry}`,
     );
   } catch (err) {
-    console.error(
+    logger.error(
       `❌ Failed to open market order for ${symbol}:`,
       err?.message || err,
     );
@@ -162,7 +160,7 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
   // 5) Stop-loss (reduceOnly, валідність ціни)
   let effectiveStopPrice = stopPrice;
   if (!effectiveStopPrice) {
-    console.warn(
+    logger.warn(
       `⚠️ No stopPrice calculated for ${symbol}, fallback to hard stop (-5%).`,
     );
     effectiveStopPrice =
@@ -174,20 +172,20 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
       const stopPx = adjustPrice(filters, effectiveStopPrice);
       const slOrder = await placeStopLoss(symbol, side, stopPx, qty);
       orderIds.stop = slOrder?.orderId || null;
-      console.log(`🛑 Stop-loss placed @ ${stopPx}, orderId=${orderIds.stop}`);
+      logger.info(`🛑 Stop-loss placed @ ${stopPx}, orderId=${orderIds.stop}`);
       try {
         await updateStopPrice(symbol, stopPx, 'OPEN');
       } catch (err) {
-        console.warn(
+        logger.warn(
           `⚠️ Failed to update stop price for ${symbol}:`,
           err?.message || err,
         );
       }
     } catch (err) {
-      console.warn(`⚠️ Failed to place SL for ${symbol}:`, err?.message || err);
+      logger.warn(`⚠️ Failed to place SL for ${symbol}:`, err?.message || err);
     }
   } else {
-    console.log(
+    logger.info(
       `ℹ️ SL skipped (invalid or not provided): stopPrice=${effectiveStopPrice}`,
     );
   }
@@ -220,7 +218,7 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
         }
 
         if (!Number.isFinite(tpQty) || tpQty <= 0) {
-          console.log(`ℹ️ Skip TP#${i + 1}: qty=${tpQty}`);
+          logger.info(`ℹ️ Skip TP#${i + 1}: qty=${tpQty}`);
           continue;
         }
 
@@ -237,7 +235,7 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
 
         tpPlan.push({ price: tpPx, sizePct });
 
-        console.log(
+        logger.info(
           `🎯 TP#${i + 1} @ ${tpPx} for qty=${tpQty} (${sizePct.toFixed(2)}%), orderId=${tpOrder?.orderId}`,
         );
       }
@@ -245,7 +243,7 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
       try {
         await updateTakeProfits(symbol, tpPlan, entryPrice, 'OPEN');
       } catch (err) {
-        console.warn(
+        logger.warn(
           `⚠️ Failed to update take profits for ${symbol}:`,
           err?.message || err,
         );
@@ -254,16 +252,16 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
       // якщо через квантування сума < totalQty — інформуємо (дрібна різниця ок)
       const diff = totalQty - allocated;
       if (diff > 0) {
-        console.log(`ℹ️ Unallocated qty due to quantization: ${diff}`);
+        logger.info(`ℹ️ Unallocated qty due to quantization: ${diff}`);
       }
     } catch (err) {
-      console.warn(
+      logger.warn(
         `⚠️ Failed to place TP grid for ${symbol}:`,
         err?.message || err,
       );
     }
   } else {
-    console.log('ℹ️ No TP plan provided (skip TP placement).');
+    logger.info('ℹ️ No TP plan provided (skip TP placement).');
   }
 
   // 7) Підтверджуємо фактичні цифри з Binance (entry avg, фактична кількість)
@@ -290,7 +288,7 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
       pos.orderIds = orderIds;
     }
   } catch (err) {
-    console.warn(
+    logger.warn(
       `⚠️ Failed to read live position for ${symbol}:`,
       err?.message || err,
     );
@@ -310,7 +308,7 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
         : 0;
 
     if (liveQty > 0 && slippagePct > 0.05 && Array.isArray(pos.takeProfits)) {
-      console.log(
+      logger.info(
         `♻️ Realign SL/TP to avgEntry (slippage=${slippagePct.toFixed(3)}%)...`,
       );
 
@@ -318,7 +316,7 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
       try {
         await cancelAllOrders(symbol);
       } catch (err) {
-        console.warn(
+        logger.warn(
           `⚠️ Failed to cancel existing orders before realign for ${symbol}:`,
           err?.message || err,
         );
@@ -336,11 +334,11 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
             const slOrder = await placeStopLoss(symbol, side, stopPx, liveQty);
             orderIds.stop = slOrder?.orderId || orderIds.stop;
             await updateStopPrice(symbol, stopPx, 'OPEN_REALIGN');
-            console.log(`🛑 SL realigned @ ${stopPx} (absΔ=${absDelta})`);
+            logger.info(`🛑 SL realigned @ ${stopPx} (absΔ=${absDelta})`);
           }
         }
       } catch (err) {
-        console.warn(
+        logger.warn(
           `⚠️ Failed to realign SL for ${symbol}:`,
           err?.message || err,
         );
@@ -389,7 +387,7 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
           if (tpOrder?.orderId) orderIds.takes.push(tpOrder.orderId);
           allocated += tpQty;
           tpPlan.push({ price: tpPx, sizePct });
-          console.log(
+          logger.info(
             `🎯 TP(realigned)#${i + 1} @ ${tpPx} for qty=${tpQty} (${Number(sizePct).toFixed(2)}%)`,
           );
         }
@@ -397,16 +395,16 @@ export async function executeTrade(symbol, cfg, analysis, side, price) {
         await updateTakeProfits(symbol, tpPlan, avgEntry, 'OPEN_REALIGN');
 
         const diff = totalQty - allocated;
-        if (diff > 0) console.log(`ℹ️ Unallocated qty after realign: ${diff}`);
+        if (diff > 0) logger.info(`ℹ️ Unallocated qty after realign: ${diff}`);
       } catch (err) {
-        console.warn(
+        logger.warn(
           `⚠️ Failed to realign TP grid for ${symbol}:`,
           err?.message || err,
         );
       }
     }
   } catch (err) {
-    console.warn(`⚠️ Realign check failed for ${symbol}:`, err?.message || err);
+    logger.warn(`⚠️ Realign check failed for ${symbol}:`, err?.message || err);
   }
 
   return pos;

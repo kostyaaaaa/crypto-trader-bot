@@ -23,6 +23,7 @@ import { getAllCoinConfigs, getAnalysisByDateRangeAndSymbol } from '../../api';
 import type { IAnalysis, TCoinConfigResponse } from '../../types';
 import styles from './Analysis.module.scss';
 
+const HALF_MINUTE = 30 * 1000;
 type AxisSeries = Array<{ name: string; data: { x: number; y: number }[] }>;
 
 type ModuleMeta = { LONG?: number; SHORT?: number };
@@ -107,6 +108,7 @@ const Analysis: FC = () => {
     },
 
     refetchOnWindowFocus: false,
+    refetchInterval: HALF_MINUTE,
   });
 
   // take the last N items (most recent)

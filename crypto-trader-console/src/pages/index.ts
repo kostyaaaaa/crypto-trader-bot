@@ -3,4 +3,5 @@ export * from './CoinConfig';
 export * from './Configuration';
 export * from './CreateConfig';
 export * from './Dashboard';
+export * from './Logs';
 export * from './PositionsPage';

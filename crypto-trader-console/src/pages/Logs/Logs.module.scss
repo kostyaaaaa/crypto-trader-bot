@@ -1,0 +1,42 @@
+.container {
+  padding: 1rem;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.logRow {
+  &:hover {
+    background-color: var(--mantine-color-gray-0);
+  }
+}
+
+.logLevel {
+  &.info {
+    color: var(--mantine-color-blue-6);
+  }
+
+  &.warn {
+    color: var(--mantine-color-yellow-6);
+  }
+
+  &.error {
+    color: var(--mantine-color-red-6);
+  }
+}
+
+.logMessage {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.timestamp {
+  font-size: 0.75rem;
+  color: var(--mantine-color-gray-6);
+  white-space: nowrap;
+}

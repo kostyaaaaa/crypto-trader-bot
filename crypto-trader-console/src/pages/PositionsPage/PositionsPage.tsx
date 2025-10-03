@@ -65,7 +65,7 @@ const PositionsPage: FC = () => {
         })()}
       </Table.Td>
       <Table.Td>{pos.side}</Table.Td>
-      <Table.Td>{pos.closedBy}</Table.Td>
+      <Table.Td>{pos.closedBy || 'Manually'}</Table.Td>
 
       <Table.Td>{pos.size.toFixed(3)}</Table.Td>
       <Table.Td>
@@ -76,10 +76,10 @@ const PositionsPage: FC = () => {
       </Table.Td>
       <Table.Td>x{pos.meta.leverage}</Table.Td>
       <Table.Td>
-        {dayjs(new Date(pos.openedAt)).format('DD,MMM hh:mm')}
+        {dayjs(new Date(pos.openedAt)).format('DD,MMM HH:mm')}
       </Table.Td>
       <Table.Td>
-        {dayjs(new Date(pos.closedAt)).format('DD,MMM hh:mm')}
+        {dayjs(new Date(pos.closedAt)).format('DD,MMM HH:mm')}
       </Table.Td>
     </Table.Tr>
   ));
