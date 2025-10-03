@@ -14,7 +14,6 @@ function calcCommission(notional: number): number {
 
 const Dashboard: FC = () => {
   const {
-    spotUSDBalance,
     futuresUSDBalance,
     accountPnlData,
     futuresPositions,
@@ -60,12 +59,6 @@ const Dashboard: FC = () => {
   return (
     <div className={styles.dashboard}>
       <div className={styles['dashboard-info']}>
-        <CardWrapper>
-          <p>
-            Орієнтовний баланс спота: $
-            {parseFloat((spotUSDBalance ?? 0).toFixed(6))}
-          </p>
-        </CardWrapper>
         <CardWrapper>
           <p>Орієнтовний баланс futures: ${futuresUSDBalance}</p>
         </CardWrapper>

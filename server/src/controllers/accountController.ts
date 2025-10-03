@@ -1,34 +1,10 @@
 import { Request, Response } from 'express';
-import { getAccountSpotBalance } from '../api/spot/spot.js';
 import { getAccountFuturesBalance } from '../api/futures/futures.js';
+import { FuturesAccountResponse } from '../api/futures/futures.type.js';
 import { getPnL } from '../api/pnl/pnl.js';
+import { PnLSummaryResponse } from '../api/pnl/pnl.type.js';
 import logger from '../utils/Logger.js';
 import { ApiErrorResponse } from './common.type.js';
-import { SpotAccountResponse } from '../api/spot/spot.type.js';
-import { FuturesAccountResponse } from '../api/futures/futures.type.js';
-import { PnLSummaryResponse } from '../api/pnl/pnl.type.js';
-
-// Get spot account balance
-const getSpotBalance = async (
-  req: Request,
-  res: Response<SpotAccountResponse | ApiErrorResponse>,
-): Promise<void> => {
-  try {
-    logger.info('Fetching spot account balance');
-    const balance = await getAccountSpotBalance();
-    logger.success('Successfully fetched spot account balance');
-    res.json(balance);
-  } catch (error: any) {
-    logger.error('Error fetching spot balance', {
-      message: error.message,
-      stack: error.stack,
-    });
-    res.status(500).json({
-      error: 'Failed to fetch spot balance',
-      message: error.message,
-    } as ApiErrorResponse);
-  }
-};
 
 // Get futures account balance
 const getFuturesBalance = async (
@@ -76,4 +52,4 @@ const getAccountPnL = async (
   }
 };
 
-export { getSpotBalance, getFuturesBalance, getAccountPnL };
+export { getAccountPnL, getFuturesBalance };

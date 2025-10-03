@@ -1,20 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
 import {
   QueryKeys,
   getAccountPnl,
   getAllCoinPrice,
   getFuturesBalance,
-  getSpotBalance,
   type IGetFuturesBalanceResponse,
-  type IGetSpotBalanceResponse,
 } from '../../api';
-import { useMemo, useState } from 'react';
 
 const useDashboard = () => {
-  const [spotBalance, setSpotBalance] = useState<
-    IGetSpotBalanceResponse['balances'] | null
-  >(null);
-
   const [futuresAssets, setFuturesAssets] =
     useState<IGetFuturesBalanceResponse['assets']>();
 
@@ -24,22 +18,6 @@ const useDashboard = () => {
   const { data: accountPnlData } = useQuery({
     queryKey: [QueryKeys.AccountPnl],
     queryFn: () => getAccountPnl(),
-    refetchOnWindowFocus: false,
-  });
-
-  useQuery<IGetSpotBalanceResponse, Error>({
-    queryKey: [QueryKeys.SpotBalance],
-    queryFn: async () => {
-      const data = await getSpotBalance();
-      setSpotBalance(
-        data.balances.filter(
-          (b: { free: string; locked: string }) =>
-            parseFloat(b.free) > 0 || parseFloat(b.locked) > 0,
-        ),
-      );
-
-      return data;
-    },
     refetchOnWindowFocus: false,
   });
 
@@ -74,27 +52,6 @@ const useDashboard = () => {
     staleTime: 60_000,
   });
 
-  const spotUSDBalance = useMemo(() => {
-    if (!spotBalance || !allSpotPrices) return 0;
-
-    const priceMap = new Map(
-      allSpotPrices.map((p) => [p.symbol, parseFloat(p.price)]),
-    );
-
-    return spotBalance.reduce((sum, b) => {
-      const amount = parseFloat(b.free) + parseFloat(b.locked);
-
-      if (['USDT', 'BUSD', 'USDC'].includes(b.asset)) {
-        return sum + amount;
-      }
-
-      const symbol = `${b.asset}USDT`;
-      const price = priceMap.get(symbol);
-
-      return price ? sum + amount * price : sum;
-    }, 0);
-  }, [spotBalance, allSpotPrices]);
-
   const futuresUSDBalance = useMemo(() => {
     if (!futuresAssets || !allSpotPrices) return 0;
 
@@ -117,9 +74,7 @@ const useDashboard = () => {
   }, [futuresAssets, allSpotPrices]);
 
   return {
-    spotBalance,
     futuresAssets,
-    spotUSDBalance,
     futuresUSDBalance,
     accountPnlData,
     futuresPositions,
