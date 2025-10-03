@@ -16,8 +16,6 @@ export function LiquidationsStepWS(
 
   let bucket = []; // буфер для ліквідацій за поточний інтервал (1 хв)
 
-  ws.on('open', () => logger.success(symbol, 'forceOrder'));
-
   ws.on('message', (msg) => {
     const raw = JSON.parse(msg.toString());
     const events = extractForceOrders(raw); // нормалізуємо в масив {e,o}

@@ -17,7 +17,6 @@ export function OrderBookStepWS(symbol = 'BTCUSDT') {
   let imbalances = [];
   let spreads = [];
   let interval;
-  ws.on('open', () => logger.success(symbol, 'OrderBook'));
 
   ws.on('message', (msg) => {
     const data = JSON.parse(msg.toString());
