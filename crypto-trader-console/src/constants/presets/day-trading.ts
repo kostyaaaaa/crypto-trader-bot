@@ -5,13 +5,13 @@ export const dayTradingPreset: TCoinConfig = {
   isActive: true,
   analysisConfig: {
     candleTimeframe: '15m',
-    oiWindow: 20,
-    liqWindow: 20,
+    oiWindow: 3,
+    liqWindow: 15,
     liqSentWindow: 5,
-    fundingWindow: 24,
+    fundingWindow: 12,
     volWindow: 14,
     corrWindow: 8,
-    longShortWindow: 8,
+    longShortWindow: 24,
     higherMA: {
       timeframe: '4h',
       maShort: 7,
