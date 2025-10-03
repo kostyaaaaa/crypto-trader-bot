@@ -6,12 +6,10 @@ import {
   getAllCoinConfigs,
   getPositionsByTimeAndSymbol,
 } from '../../api';
-const formatDate = (date: Date) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-};
+import {
+  dateStringToTimezoneISO,
+  formatDateForPicker,
+} from '../../utils/date-time';
 
 const today = new Date();
 const yesterday = new Date();
@@ -19,8 +17,8 @@ today.setDate(today.getDate() + 1);
 yesterday.setDate(today.getDate() - 1);
 
 const defaultPeriod: DatesRangeValue<string> = [
-  formatDate(yesterday),
-  formatDate(today),
+  formatDateForPicker(yesterday),
+  formatDateForPicker(today),
 ];
 
 type SortField =
@@ -45,8 +43,8 @@ const usePositionsPage = () => {
     queryFn: async () => {
       if (period[0] && period[1]) {
         const data = await getPositionsByTimeAndSymbol(
-          new Date(period[0]).toISOString(),
-          new Date(period[1]).toISOString(),
+          dateStringToTimezoneISO(period[0]),
+          dateStringToTimezoneISO(period[1]),
           selectedCoin,
         );
 
@@ -124,7 +122,6 @@ const usePositionsPage = () => {
     handleSort,
     sortField,
     sortDirection,
-    formatDate,
   };
 };
 
