@@ -187,7 +187,14 @@ async function handleEvent(msg) {
         logger.info(`🛑 ${symbol}: Stop-loss triggered`);
         if (pos) {
           // Оновлюємо ціну SL як "виконану"
-          await updateStopPrice(symbol, lastPx, 'FILLED');
+          try {
+            await updateStopPrice(symbol, lastPx, 'FILLED');
+          } catch (err) {
+            logger.error(
+              `❌ ${symbol}: failed to update stop price:`,
+              err?.message || err,
+            );
+          }
 
           // Рахуємо фінальний PnL:
           // 1) що вже реалізовано на попередніх TP філах
@@ -205,20 +212,28 @@ async function handleEvent(msg) {
             (Number.isFinite(realizedFromTP) ? realizedFromTP : 0) +
             (Number.isFinite(slDelta) ? slDelta : 0);
 
-          // Закриваємо позицію в історії з фінальним PnL
-          const closed = await closePositionHistory(symbol, {
-            closedBy: 'SL',
-            finalPnl: Number.isFinite(finalGrossPnl)
-              ? Number(finalGrossPnl.toFixed(4))
-              : undefined,
-          });
+          try {
+            // Закриваємо позицію в історії з фінальним PnL
+            const closed = await closePositionHistory(symbol, {
+              closedBy: 'SL',
+              finalPnl: Number.isFinite(finalGrossPnl)
+                ? Number(finalGrossPnl.toFixed(4))
+                : undefined,
+            });
+            // Чистимо залишки
+            await cancelAllOrders(symbol);
+            await forceCloseIfLeftover(symbol);
 
-          // Чистимо залишки
-          await cancelAllOrders(symbol);
-          await forceCloseIfLeftover(symbol);
-
-          // Відправляємо нотифікацію
-          if (closed) notifyTrade(closed, 'CLOSED');
+            // Відправляємо нотифікацію
+            if (closed) {
+              notifyTrade(closed, 'CLOSED');
+            }
+          } catch (err) {
+            logger.error(
+              `❌ ${symbol}: failed to close position:`,
+              err?.message || err,
+            );
+          }
         }
       }
 
@@ -291,14 +306,20 @@ async function handleEvent(msg) {
               nearest.filled = true;
             }
           }
-
-          // Оновлюємо список тейків у БД (з новими полями fills[])
-          await updateTakeProfits(
-            symbol,
-            updatedTps,
-            pos.entryPrice,
-            'TP_FILLED',
-          );
+          try {
+            // Оновлюємо список тейків у БД (з новими полями fills[])
+            await updateTakeProfits(
+              symbol,
+              updatedTps,
+              pos.entryPrice,
+              'TP_FILLED',
+            );
+          } catch (err) {
+            logger.error(
+              `❌ ${symbol}: failed to update take profits:`,
+              err?.message || err,
+            );
+          }
 
           // Якщо ВСІ тейки виконані → закриваємо позицію і передаємо фінальний PnL (сума по всіх філах TP)
           const allFilled = updatedTps.every((tp) => tp.filled);
@@ -307,15 +328,24 @@ async function handleEvent(msg) {
               ...pos,
               takeProfits: updatedTps,
             });
-            const closed = await closePositionHistory(symbol, {
-              closedBy: 'TP',
-              finalPnl: Number.isFinite(realizedFromTP)
-                ? Number(realizedFromTP.toFixed(4))
-                : undefined,
-            });
-            await cancelAllOrders(symbol);
-            await forceCloseIfLeftover(symbol);
-            if (closed) notifyTrade(closed, 'CLOSED');
+            try {
+              const closed = await closePositionHistory(symbol, {
+                closedBy: 'TP',
+                finalPnl: Number.isFinite(realizedFromTP)
+                  ? Number(realizedFromTP.toFixed(4))
+                  : undefined,
+              });
+              await cancelAllOrders(symbol);
+              await forceCloseIfLeftover(symbol);
+              if (closed) {
+                notifyTrade(closed, 'CLOSED');
+              }
+            } catch (err) {
+              logger.error(
+                `❌ ${symbol}: failed to close position:`,
+                err?.message || err,
+              );
+            }
           } else {
             // ===== BREAK-EVEN після першого TP, якщо трейлінг вимкнено =====
             try {
