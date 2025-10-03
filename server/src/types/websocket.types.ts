@@ -26,7 +26,10 @@ export interface SubscribeLogsMessage extends WebSocketMessage {
   data?: never;
 }
 
-export type OutgoingMessage = InitialLogsMessage | NewLogMessage | NewLogsBatchMessage;
+export type OutgoingMessage =
+  | InitialLogsMessage
+  | NewLogMessage
+  | NewLogsBatchMessage;
 export type IncomingMessage = SubscribeLogsMessage | WebSocketMessage;
 
 // WebSocket client message handler types
