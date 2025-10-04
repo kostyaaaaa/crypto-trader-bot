@@ -13,7 +13,20 @@ import {
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import clsx from 'clsx';
-import type { IAnalysis } from 'crypto-trader-db';
+import type {
+  IAnalysis,
+  ICorrelationMeta,
+  IFundingMeta,
+  IHigherMAMeta,
+  ILiquidityMeta,
+  ILongShortMeta,
+  IModuleBase,
+  IOpenInterestMeta,
+  IRsiVolTrendMeta,
+  ITrendMeta,
+  ITrendRegimeMeta,
+  IVolatilityMeta,
+} from 'crypto-trader-db';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useState, type FC } from 'react';
 import type {
@@ -27,6 +40,22 @@ import type {
 import CoinIcon from '../../components/SymbolIcon';
 import styles from './PositionsPage.module.scss';
 import usePositionsPage from './usePositionsPage';
+
+// Union type for all meta interfaces that have LONG/SHORT properties
+type ModuleMetaWithScores =
+  | ITrendMeta
+  | IVolatilityMeta
+  | ITrendRegimeMeta
+  | ILiquidityMeta
+  | IFundingMeta
+  | IOpenInterestMeta
+  | ICorrelationMeta
+  | ILongShortMeta
+  | IHigherMAMeta
+  | IRsiVolTrendMeta;
+
+// Type for modules with scores
+type ModuleWithScores = IModuleBase & { meta: ModuleMetaWithScores };
 
 // Helper function for formatting numbers
 const fmt = (n: number, d = 2) =>
@@ -418,9 +447,10 @@ const PositionsPage: FC = () => {
                     {Object.entries(
                       (pos.analysis as IAnalysis).modules || {},
                     ).map(([key, mod]) => {
-                      // Handle different module types - all have signal and meta with LONG/SHORT
-                      const signal = mod?.signal || 'NO DATA';
-                      const meta = mod?.meta || {};
+                      // All modules extend IModuleBase with signal and meta containing LONG/SHORT
+                      const module = mod as ModuleWithScores;
+                      const signal = module?.signal || 'NO DATA';
+                      const meta = module?.meta || { LONG: 0, SHORT: 0 };
                       const long = Number(meta.LONG ?? 0);
                       const short = Number(meta.SHORT ?? 0);
 
