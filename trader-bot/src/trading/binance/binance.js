@@ -159,6 +159,17 @@ export async function getPosition(symbol) {
   }
 }
 
+// Fresh (non-cached) variant for WS listener / critical checks
+export async function getPositionFresh(symbol) {
+  try {
+    const positions = await client.futuresPositionRisk(); // no cache on purpose
+    return positions.find((p) => p.symbol === symbol) || null;
+  } catch (err) {
+    logger.error(`❌ getPositionFresh failed for ${symbol}:`, err.message);
+    return null;
+  }
+}
+
 export async function getOpenOrders(symbol) {
   try {
     return await getOpenOrdersCached(symbol);
