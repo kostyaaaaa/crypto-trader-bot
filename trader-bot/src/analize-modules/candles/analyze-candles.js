@@ -33,9 +33,14 @@ function computeRSISeries(values = [], period = 14) {
 }
 
 export async function analyzeCandles(symbol = 'ETHUSDT', candles = []) {
-  if (!candles || candles.length < 21) {
+  const rsiPeriod = 14;
+  const fast = 9;
+  const slow = 21;
+  const minNeeded = Math.max(rsiPeriod + 1, slow + 1);
+
+  if (!candles || candles.length < minNeeded) {
     logger.info(
-      `⏳ Only ${candles?.length || 0} candles for ${symbol}, need ≥21...`,
+      `⏳ Only ${candles?.length || 0} candles for ${symbol}, need ≥${minNeeded}...`,
     );
     return null;
   }
@@ -44,26 +49,30 @@ export async function analyzeCandles(symbol = 'ETHUSDT', candles = []) {
   const volumes = candles.map((c) => Number(c.volume ?? 0));
 
   // Full RSI-by-candle series and last RSI
-  const rsiSeries = computeRSISeries(closes, 14);
+  const rsiSeries = computeRSISeries(closes, rsiPeriod);
   // Keep backward compatibility: use series last if available, otherwise fallback to single-value util
   let rsi = rsiSeries[rsiSeries.length - 1];
   if (rsi == null || Number.isNaN(rsi)) {
-    rsi = RSI(closes, 14);
+    rsi = RSI(closes, rsiPeriod);
   }
 
-  const emaFast = EMA(closes, 9, { seed: 'sma' });
-  const emaSlow = EMA(closes, 21, { seed: 'sma' });
-  const emaGapPct = ((emaFast - emaSlow) / emaSlow) * 100;
+  const emaFastRaw = EMA(closes, fast, { seed: 'sma' });
+  const emaSlowRaw = EMA(closes, slow, { seed: 'sma' });
+  const emaFast = Array.isArray(emaFastRaw) ? emaFastRaw.at(-1) : emaFastRaw;
+  const emaSlow = Array.isArray(emaSlowRaw) ? emaSlowRaw.at(-1) : emaSlowRaw;
+  const emaGapPct = emaSlow ? ((emaFast - emaSlow) / emaSlow) * 100 : 0;
 
   let longScore = 50;
   let shortScore = 50;
 
+  const gapAbs = Math.abs(emaGapPct);
+  const gapEff = gapAbs < 0.1 ? 0 : gapAbs; // 0.1% dead zone to avoid flip-flop
   if (emaGapPct > 0) {
-    longScore += Math.min(30, Math.abs(emaGapPct) * 5);
-    shortScore -= Math.min(30, Math.abs(emaGapPct) * 5);
-  } else {
-    shortScore += Math.min(30, Math.abs(emaGapPct) * 5);
-    longScore -= Math.min(30, Math.abs(emaGapPct) * 5);
+    longScore += Math.min(30, gapEff * 5);
+    shortScore -= Math.min(30, gapEff * 5);
+  } else if (emaGapPct < 0) {
+    shortScore += Math.min(30, gapEff * 5);
+    longScore -= Math.min(30, gapEff * 5);
   }
 
   if (rsi < 30) {
@@ -89,11 +98,11 @@ export async function analyzeCandles(symbol = 'ETHUSDT', candles = []) {
     meta: {
       LONG: longScore,
       SHORT: shortScore,
-      emaFast: parseFloat(emaFast.toFixed(2)),
-      emaSlow: parseFloat(emaSlow.toFixed(2)),
-      emaGapPct: parseFloat(emaGapPct.toFixed(2)),
+      emaFast: Number(emaFast?.toFixed?.(2) ?? emaFast),
+      emaSlow: Number(emaSlow?.toFixed?.(2) ?? emaSlow),
+      emaGapPct: Number(emaGapPct.toFixed(2)),
       // RSI (single value for backward compatibility)
-      rsi: parseFloat(rsi.toFixed(2)),
+      rsi: Number(rsi.toFixed(2)),
       // RSI by candles (aligned to input candles; null while seed not complete)
       rsiSeries,
       lastRSI: rsi != null ? parseFloat(rsi.toFixed(2)) : null,

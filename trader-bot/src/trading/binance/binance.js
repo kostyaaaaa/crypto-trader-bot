@@ -12,6 +12,12 @@ export const client = Binance({
   futures: true,
 });
 
+// --- Tiny per-process caches to reduce REST load ---
+const _posRiskCache = { data: null, ts: 0, inflight: null }; // for futuresPositionRisk()
+const _openOrdersCache = new Map(); // key: symbol -> { data, ts, inflight }
+const POS_RISK_TTL_MS = 1200; // ~1.2s
+const OPEN_ORD_TTL_MS = 2000; // ~2s
+
 /* ========= Helpers ========= */
 
 function normalizeOrderSide(side) {
@@ -23,6 +29,53 @@ function normalizeOrderSide(side) {
 
 function oppositeOrderSide(side) {
   return normalizeOrderSide(side) === 'BUY' ? 'SELL' : 'BUY';
+}
+
+/* ========= Lightweight caches (TTL + in-flight dedup) ========= */
+async function getPositionRiskCached() {
+  const now = Date.now();
+  if (_posRiskCache.inflight) return _posRiskCache.inflight;
+  if (_posRiskCache.data && now - _posRiskCache.ts < POS_RISK_TTL_MS) {
+    return _posRiskCache.data;
+  }
+  _posRiskCache.inflight = client
+    .futuresPositionRisk()
+    .then((res) => {
+      _posRiskCache.data = res;
+      _posRiskCache.ts = Date.now();
+      _posRiskCache.inflight = null;
+      return res;
+    })
+    .catch((err) => {
+      _posRiskCache.inflight = null;
+      throw err;
+    });
+  return _posRiskCache.inflight;
+}
+
+async function getOpenOrdersCached(symbol) {
+  const now = Date.now();
+  const entry = _openOrdersCache.get(symbol) || {};
+  if (entry.inflight) return entry.inflight;
+  if (entry.data && now - entry.ts < OPEN_ORD_TTL_MS) return entry.data;
+
+  const inflight = client
+    .futuresOpenOrders({ symbol })
+    .then((res) => {
+      _openOrdersCache.set(symbol, {
+        data: res,
+        ts: Date.now(),
+        inflight: null,
+      });
+      return res;
+    })
+    .catch((err) => {
+      _openOrdersCache.set(symbol, { data: null, ts: 0, inflight: null });
+      throw err;
+    });
+
+  _openOrdersCache.set(symbol, { ...entry, inflight });
+  return inflight;
 }
 
 /* ========= Exchange info / filters ========= */
@@ -98,7 +151,7 @@ export async function getFuturesBalance(asset = 'USDT') {
 
 export async function getPosition(symbol) {
   try {
-    const positions = await client.futuresPositionRisk();
+    const positions = await getPositionRiskCached();
     return positions.find((p) => p.symbol === symbol) || null;
   } catch (err) {
     logger.error(`❌ getPosition failed for ${symbol}:`, err.message);
@@ -108,7 +161,7 @@ export async function getPosition(symbol) {
 
 export async function getOpenOrders(symbol) {
   try {
-    return await client.futuresOpenOrders({ symbol });
+    return await getOpenOrdersCached(symbol);
   } catch (err) {
     logger.error(`❌ getOpenOrders failed for ${symbol}:`, err.message);
     return [];
@@ -238,7 +291,7 @@ export async function cancelAllOrders(symbol) {
 
 export async function getLiveState(symbol) {
   try {
-    const positions = await client.futuresPositionRisk();
+    const positions = await getPositionRiskCached();
     const pos = positions.find((p) => p.symbol === symbol);
 
     let position = { side: null, size: 0, entryPrice: null };
@@ -251,7 +304,7 @@ export async function getLiveState(symbol) {
       };
     }
 
-    const openOrders = await client.futuresOpenOrders({ symbol });
+    const openOrders = await getOpenOrdersCached(symbol);
     const orders = openOrders
       .map((o) => {
         const qty = parseFloat(o.origQty);

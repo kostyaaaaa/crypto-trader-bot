@@ -13,9 +13,21 @@ import {
   cancelAllOrders,
   cancelStopOrders,
   getPosition,
+  getPositionFresh,
   openMarketOrder,
   placeStopLoss,
 } from './binance.js';
+
+// --- Dedup storage for ORDER_TRADE_UPDATE events to avoid double-processing
+const _processedOrderEvents = new Map(); // key -> ts
+const DEDUP_TTL_MS = 5 * 60 * 1000; // 5 minutes
+function isDuplicateOrderEvent(key) {
+  const now = Date.now();
+  const ts = _processedOrderEvents.get(key);
+  if (ts && now - ts < DEDUP_TTL_MS) return true;
+  _processedOrderEvents.set(key, now);
+  return false;
+}
 
 // -------------------------
 // 1. Отримання listenKey
@@ -90,11 +102,12 @@ export async function startUserStream() {
 // -------------------------
 async function forceCloseIfLeftover(symbol) {
   try {
-    const live = await getPosition(symbol);
+    // ⚠️ IMPORTANT: use fresh read to avoid cache staleness right after FILLED
+    const live = await getPositionFresh(symbol);
     if (!live) return;
 
     const amt = Number(live.positionAmt);
-    if (amt === 0) return;
+    if (!Number.isFinite(amt) || Math.abs(amt) === 0) return;
 
     const side = amt > 0 ? 'SELL' : 'BUY';
     await openMarketOrder(symbol, side, Math.abs(amt));
@@ -155,30 +168,24 @@ async function handleEvent(msg) {
         `📦 Order update: ${symbol} ${side} status=${status}, type=${type}, lastPx=${lastPx}, lastQty=${lastQty}, orderId=${o.i}`,
       );
 
-      if (status !== 'FILLED') {
-        // 🔹 Нас цікавлять тільки повністю виконані ордери.
-        // Якщо ордер ще не FILLED → виходимо.
+      // Deduplicate identical updates (e.g., WS reconnects / repeats)
+      const dedupKey = `${o.i}:${status}:${o.z || o.l || 0}:${msg.T || msg.E || ''}`;
+      if (isDuplicateOrderEvent(dedupKey)) {
+        logger.info(`↩️ Skipping duplicate order update ${dedupKey}`);
         break;
+      }
+
+      if (!pos && (type === 'STOP_MARKET' || type === 'TAKE_PROFIT_MARKET')) {
+        logger.warn(
+          `⚠️ ${symbol}: FILLED ${type} but no OPEN position in DB. Skipping DB close; cleaning leftovers only.`,
+        );
+        await cancelAllOrders(symbol);
+        await forceCloseIfLeftover(symbol);
+        return;
       }
 
       // Перевіряємо чи є у нас відкрита позиція по цьому символу в БД
       const pos = await getOpenPosition(symbol);
-
-      // =======================
-      // 🛑 Випадок: закриваючий ордер (SL/TP), але в БД немає відкритої позиції
-      // =======================
-      if (!pos && (type === 'STOP_MARKET' || type === 'TAKE_PROFIT_MARKET')) {
-        logger.warn(
-          `⚠️ ${symbol}: FILLED ${type} but no OPEN position in DB. Forcing close.`,
-        );
-        const closed = await closePositionHistory(symbol, {
-          closedBy: type === 'STOP_MARKET' ? 'SL' : 'TP', // маркуємо чим закрилось
-        });
-        await cancelAllOrders(symbol); // прибираємо всі інші ордери
-        await forceCloseIfLeftover(symbol); // підстраховка: якщо щось залишилось на біржі
-        if (closed) notifyTrade(closed, 'CLOSED'); // пушимо в нотифікації
-        return;
-      }
 
       // =======================
       // 🛑 Stop-loss (STOP_MARKET)
@@ -194,7 +201,8 @@ async function handleEvent(msg) {
           const realizedFromTP = sumTpRealizedPnl(pos);
           // 2) дельта від поточного SL-філа (за lastQty/lastPx)
           //    Примітка: side з позиції, qty = o.l
-          const slFillQty = Number(o.l) || 0;
+          // Use cumulative filled qty if available (`o.z`), fallback to last fill `o.l`
+          const slFillQty = Number(o.z) || Number(o.l) || 0;
           const slDelta = calcFillPnl(
             Number(pos.entryPrice) || 0,
             lastPx,
@@ -272,8 +280,10 @@ async function handleEvent(msg) {
             // fallback: кидаємо у найближчий по ціні
             let nearest = null;
             let best = Infinity;
-            for (const tp of updatedTps) {
-              const d = Math.abs(Number(tp.price) - fillPx);
+            for (const tp of updatedTps || []) {
+              const tpPriceNum = Number(tp?.price);
+              if (!Number.isFinite(tpPriceNum)) continue;
+              const d = Math.abs(tpPriceNum - fillPx);
               if (d < best) {
                 best = d;
                 nearest = tp;

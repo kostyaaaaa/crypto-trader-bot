@@ -22,14 +22,24 @@ function getAnaSide(a) {
   return (a && (a.bias ?? a.signal)) || null;
 }
 
+// --- Tiny in-memory cache for mark prices to reduce REST calls ---
+const markPriceCache = new Map(); // symbol -> { price, ts }
+
 // === API Binance ===
 async function getMarkPrice(symbol) {
   try {
+    const now = Date.now();
+    const cached = markPriceCache.get(symbol);
+    if (cached && now - cached.ts < 5000) {
+      return cached.price;
+    }
     const res = await axios.get(
       'https://fapi.binance.com/fapi/v1/premiumIndex',
       { params: { symbol } },
     );
-    return parseFloat(res.data.markPrice);
+    const price = parseFloat(res.data.markPrice);
+    markPriceCache.set(symbol, { price, ts: now });
+    return price;
   } catch {
     return null;
   }
@@ -67,6 +77,10 @@ async function getOpenHistoryDoc(symbol) {
 
 // === Основний моніторинг ===
 export async function monitorPositions({ symbol, strategy }) {
+  // ⛔ Fast pre-check: if there is no OPEN position in DB, skip any REST calls
+  const openDoc = await getOpenHistoryDoc(symbol);
+  if (!openDoc) return;
+
   let positions = [];
   try {
     positions = await getActivePositions(symbol);
@@ -156,7 +170,6 @@ export async function monitorPositions({ symbol, strategy }) {
       ? (orders.find((o) => o.type === 'SL')?.price ?? null)
       : null;
 
-    const openDoc = await getOpenHistoryDoc(symbol);
     const addsCount = openDoc?.adds?.length || 0;
 
     /* ===== 1) TRAILING (PnL-anchored) ===== */
