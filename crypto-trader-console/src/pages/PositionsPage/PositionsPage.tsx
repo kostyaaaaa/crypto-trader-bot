@@ -103,9 +103,6 @@ const LongShortBar: FC<{ long: number; short: number }> = ({ long, short }) => {
 const PositionsPage: FC = () => {
   const [scrolled, setScrolled] = useState<boolean>(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [analysisExpanded, setAnalysisExpanded] = useState<
-    Record<string, boolean>
-  >({});
   const {
     period,
     setPeriod,
@@ -157,22 +154,6 @@ const PositionsPage: FC = () => {
     },
     [setUrlParam],
   );
-
-  const toggleAnalysisExpand = useCallback((rowId: string) => {
-    setAnalysisExpanded((prev) => {
-      const willOpen = !prev[rowId];
-      const next = willOpen ? { [rowId]: true } : {};
-      if (willOpen) {
-        requestAnimationFrame(() => {
-          const el = document.querySelector(`[data-analysis-id="${rowId}"]`);
-          if (el instanceof HTMLElement) {
-            el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-          }
-        });
-      }
-      return next;
-    });
-  }, []);
 
   // Open row from URL on first load / when positions fetched
   useEffect(() => {
@@ -355,13 +336,7 @@ const PositionsPage: FC = () => {
               onClick={() => toggleExpand(id)}
               className={styles.wrapper__actionButton}
             >
-              {isOpen ? 'Hide' : 'History'}
-            </UnstyledButton>
-            <UnstyledButton
-              onClick={() => toggleAnalysisExpand(id)}
-              className={styles.wrapper__actionButton}
-            >
-              {analysisExpanded[id] ? 'Hide' : 'Analysis'}
+              {isOpen ? 'Hide' : 'Details'}
             </UnstyledButton>
           </Group>
         </Table.Td>
@@ -373,7 +348,7 @@ const PositionsPage: FC = () => {
       <Table.Tr key={`${id}-details`}>
         <Table.Td colSpan={10}>
           <Paper withBorder p="sm">
-            <Stack gap={8}>
+            <Stack gap={16}>
               {/* TP summary */}
               <Group gap={8} wrap="wrap">
                 {Array.isArray(pos.takeProfits) &&
@@ -388,106 +363,113 @@ const PositionsPage: FC = () => {
 
               <Divider my={4} />
 
-              {/* Timeline */}
-              <Text fw={600}>Events timeline</Text>
-              <Table withRowBorders={false} verticalSpacing="xs" miw={600}>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th style={{ width: 180 }}>Time</Table.Th>
-                    <Table.Th style={{ width: 160 }}>Event</Table.Th>
-                    <Table.Th>Details</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {events.map((e, idx) => (
-                    <Table.Tr key={`ev-${id}-${idx}`}>
-                      <Table.Td>
-                        {e.t ? dayjs(e.t).format('DD,MMM HH:mm:ss') : '-'}
-                      </Table.Td>
-                      <Table.Td>
-                        <Badge
-                          variant="light"
-                          color={eventBadgeColor(e.label, e.desc)}
-                        >
-                          {e.label}
-                        </Badge>
-                      </Table.Td>
-                      <Table.Td>
-                        <Text size="sm">{e.desc}</Text>
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
-                </Table.Tbody>
-              </Table>
-            </Stack>
-          </Paper>
-        </Table.Td>
-      </Table.Tr>
-    );
-
-    // Analysis details row
-    const analysisDetails = !analysisExpanded[id] ? null : (
-      <Table.Tr key={`${id}-analysis`} data-analysis-id={id}>
-        <Table.Td colSpan={10}>
-          <Paper withBorder p="sm">
-            <Stack gap={8}>
-              <Text fw={600}>Analysis Breakdown</Text>
-              {pos.analysis &&
-              typeof pos.analysis === 'object' &&
-              'modules' in pos.analysis ? (
-                <Table withRowBorders={false} verticalSpacing="xs" miw={600}>
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>Module</Table.Th>
-                      <Table.Th>Signal</Table.Th>
-                      <Table.Th style={{ width: 200 }}>LONG / SHORT</Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {Object.entries(
-                      (pos.analysis as IAnalysis).modules || {},
-                    ).map(([key, mod]) => {
-                      // All modules extend IModuleBase with signal and meta containing LONG/SHORT
-                      const module = mod as ModuleWithScores;
-                      const signal = module?.signal || 'NO DATA';
-                      const meta = module?.meta || { LONG: 0, SHORT: 0 };
-                      const long = Number(meta.LONG ?? 0);
-                      const short = Number(meta.SHORT ?? 0);
-
-                      return (
-                        <Table.Tr key={key}>
-                          <Table.Td>{key}</Table.Td>
+              {/* History and Analysis side by side */}
+              <Group align="flex-start" gap="md" wrap="nowrap">
+                {/* History Timeline */}
+                <div style={{ flex: 1 }}>
+                  <Text fw={600} mb="sm">
+                    Events Timeline
+                  </Text>
+                  <Table withRowBorders={false} verticalSpacing="xs" miw={400}>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th style={{ width: 180 }}>Time</Table.Th>
+                        <Table.Th style={{ width: 160 }}>Event</Table.Th>
+                        <Table.Th>Details</Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {events.map((e, idx) => (
+                        <Table.Tr key={`ev-${id}-${idx}`}>
+                          <Table.Td>
+                            {e.t ? dayjs(e.t).format('DD,MMM HH:mm:ss') : '-'}
+                          </Table.Td>
                           <Table.Td>
                             <Badge
-                              color={
-                                signal === 'LONG'
-                                  ? 'green'
-                                  : signal === 'SHORT'
-                                    ? 'red'
-                                    : 'gray'
-                              }
+                              variant="light"
+                              color={eventBadgeColor(e.label, e.desc)}
                             >
-                              {signal}
+                              {e.label}
                             </Badge>
                           </Table.Td>
                           <Table.Td>
-                            <LongShortBar long={long} short={short} />
+                            <Text size="sm">{e.desc}</Text>
                           </Table.Td>
                         </Table.Tr>
-                      );
-                    })}
-                  </Table.Tbody>
-                </Table>
-              ) : (
-                <Text c="dimmed">No analysis data available</Text>
-              )}
+                      ))}
+                    </Table.Tbody>
+                  </Table>
+                </div>
+
+                {/* Analysis Breakdown */}
+                <div style={{ flex: 1 }}>
+                  <Text fw={600} mb="sm">
+                    Analysis Breakdown
+                  </Text>
+                  {pos.analysis &&
+                  typeof pos.analysis === 'object' &&
+                  'modules' in pos.analysis ? (
+                    <Table
+                      withRowBorders={false}
+                      verticalSpacing="xs"
+                      miw={400}
+                    >
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th>Module</Table.Th>
+                          <Table.Th>Signal</Table.Th>
+                          <Table.Th style={{ width: 200 }}>
+                            LONG / SHORT
+                          </Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {Object.entries(
+                          (pos.analysis as IAnalysis).modules || {},
+                        ).map(([key, mod]) => {
+                          // All modules extend IModuleBase with signal and meta containing LONG/SHORT
+                          const module = mod as ModuleWithScores;
+                          const signal = module?.signal || 'NO DATA';
+                          const meta = module?.meta || { LONG: 0, SHORT: 0 };
+                          const long = Number(meta.LONG ?? 0);
+                          const short = Number(meta.SHORT ?? 0);
+
+                          return (
+                            <Table.Tr key={key}>
+                              <Table.Td>{key}</Table.Td>
+                              <Table.Td>
+                                <Badge
+                                  color={
+                                    signal === 'LONG'
+                                      ? 'green'
+                                      : signal === 'SHORT'
+                                        ? 'red'
+                                        : 'gray'
+                                  }
+                                >
+                                  {signal}
+                                </Badge>
+                              </Table.Td>
+                              <Table.Td>
+                                <LongShortBar long={long} short={short} />
+                              </Table.Td>
+                            </Table.Tr>
+                          );
+                        })}
+                      </Table.Tbody>
+                    </Table>
+                  ) : (
+                    <Text c="dimmed">No analysis data available</Text>
+                  )}
+                </div>
+              </Group>
             </Stack>
           </Paper>
         </Table.Td>
       </Table.Tr>
     );
 
-    return [main, details, analysisDetails].filter(Boolean);
+    return [main, details].filter(Boolean);
   });
 
   return (
