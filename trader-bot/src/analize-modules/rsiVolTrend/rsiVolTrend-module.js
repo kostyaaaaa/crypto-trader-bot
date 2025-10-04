@@ -1,12 +1,8 @@
 // src/analize-modules/custom/custom-module.js
-// RSI + Volume + Trend (MA7/MA25) scoring module (standardized, hardcoded params)
-// - No fetching inside: candles are provided by the analyzer
-// - No config arguments: everything is hardcoded below
-// - Returns: { module, symbol, signal, strength, meta: { LONG, SHORT, ... } }
+// RSI + Volume + Trend (MA7/MA25) scoring module
 
-// ----- hardcoded params -----
-const RSI_PERIOD = 50;
-const RSI_WARMUP = 100;
+const RSI_PERIOD = 25;
+const RSI_WARMUP = 60;
 const VOL_LOOKBACK = 10;
 const MA_SHORT = 7;
 const MA_LONG = 25;
@@ -20,7 +16,6 @@ function sma(values, period) {
   return sum / period;
 }
 
-// Wilder RSI with warmup
 function rsiWilder(closes, period = 14, warmup = 100) {
   if (!Array.isArray(closes) || closes.length < period + 2) return null;
   const n = closes.length;
@@ -54,13 +49,6 @@ function avg(values) {
   return sum / values.length;
 }
 
-function mapScore(checksCount) {
-  if (checksCount <= 0) return 0;
-  if (checksCount === 1) return 33;
-  if (checksCount === 2) return 66;
-  return 100;
-}
-
 // ---------- main ----------
 export async function analyzeRsiVolumeTrend(symbol, candles = null) {
   const needBars = Math.max(
@@ -74,40 +62,26 @@ export async function analyzeRsiVolumeTrend(symbol, candles = null) {
       symbol,
       signal: 'NEUTRAL',
       strength: 0,
-      meta: {
-        LONG: 0,
-        SHORT: 0,
-        candlesUsed: Array.isArray(candles) ? candles.length : 0,
-        needBars,
-      },
+      meta: { LONG: 0, SHORT: 0, candlesUsed: candles?.length ?? 0, needBars },
     };
   }
 
   const closes = candles.map((c) => Number(c.close) || 0);
   const vols = candles.map((c) => Number(c.volume) || 0);
 
-  const price = closes[closes.length - 1];
+  const price = closes.at(-1);
   const ma7 = sma(closes, MA_SHORT);
   const ma25 = sma(closes, MA_LONG);
-
-  const lastVol = vols[vols.length - 1];
+  const lastVol = vols.at(-1);
   const avgVol = avg(vols.slice(-VOL_LOOKBACK));
+  const volRatio = avgVol ? lastVol / avgVol : 0;
+  const maSlope = ma7 && ma25 ? ma7 - ma25 : 0;
+  const volMomentum = lastVol - avgVol;
 
   const rsi = rsiWilder(closes, RSI_PERIOD, RSI_WARMUP);
 
-  const volAboveAvg =
-    avgVol != null && lastVol != null ? lastVol > avgVol : false;
-  const longTrendOk =
-    price != null && ma7 != null && ma25 != null
-      ? price > ma7 && ma7 > ma25
-      : false;
-  const shortTrendOk =
-    price != null && ma7 != null && ma25 != null
-      ? ma25 > ma7 && ma7 > price
-      : false;
-
-  // Safety: suppress when RSI is extreme
-  if (rsi != null && (rsi > 70 || rsi < 30)) {
+  // ----------------- HARD FILTERS -----------------
+  if (!avgVol || !lastVol || volRatio < 0.7) {
     return {
       module: 'rsiVolTrend',
       symbol,
@@ -117,61 +91,98 @@ export async function analyzeRsiVolumeTrend(symbol, candles = null) {
         LONG: 0,
         SHORT: 0,
         candlesUsed: candles.length,
-        rsi: rsi != null ? Number(rsi.toFixed(2)) : null,
-        price: Number.isFinite(price) ? Number(price) : null,
-        ma7: Number.isFinite(ma7) ? Number(ma7) : null,
-        ma25: Number.isFinite(ma25) ? Number(ma25) : null,
-        volume: Number.isFinite(lastVol) ? Number(lastVol) : null,
-        avgVol: Number.isFinite(avgVol) ? Number(avgVol) : null,
-        rsiPeriod: RSI_PERIOD,
-        rsiWarmup: RSI_WARMUP,
-        volLookback: VOL_LOOKBACK,
-        maShort: MA_SHORT,
-        maLong: MA_LONG,
+        reason: 'LowVolume',
+        volRatio: Number(volRatio.toFixed(2)),
       },
     };
   }
 
-  // LONG checks
-  const longVol = volAboveAvg;
-  const longRsi = rsi != null ? rsi > 55 : false;
-  const longChecks = [longTrendOk, longVol, longRsi].filter(Boolean).length;
-  const LONG = mapScore(longChecks);
+  if (rsi != null && (rsi > 72 || rsi < 28)) {
+    return {
+      module: 'rsiVolTrend',
+      symbol,
+      signal: 'NEUTRAL',
+      strength: 0,
+      meta: {
+        LONG: 0,
+        SHORT: 0,
+        candlesUsed: candles.length,
+        reason: 'RSI extreme',
+        rsi: Number(rsi.toFixed(2)),
+      },
+    };
+  }
 
-  // SHORT checks
-  const shortVol = volAboveAvg;
-  const shortRsi = rsi != null ? rsi < 45 : false;
-  const shortChecks = [shortTrendOk, shortVol, shortRsi].filter(Boolean).length;
-  const SHORT = mapScore(shortChecks);
+  // ----------------- SCORING -----------------
+  // Volume (50%)
+  let volScore = 0;
+  if (Number.isFinite(volRatio)) {
+    volScore = Math.min(100, Math.max(0, ((volRatio - 0.7) / 1.3) * 100));
+  }
 
-  // Decide signal/strength with small dead-zone to avoid flip-flop
-  const deadPts = 5;
+  // Trend (30%)
+  let trendLong = 0,
+    trendShort = 0;
+  if (price && ma7 && ma25) {
+    trendLong =
+      price > ma7 && ma7 >= ma25 * 0.997
+        ? Math.min(100, Math.max(0, (maSlope / ma25) * 100 + 50))
+        : 0;
+    trendShort =
+      price < ma7 && ma7 <= ma25 * 1.003
+        ? Math.min(100, Math.max(0, (-maSlope / ma25) * 100 + 50))
+        : 0;
+  }
+
+  // RSI (20%)
+  let rsiLong = 0,
+    rsiShort = 0;
+  if (rsi != null) {
+    rsiLong = rsi >= 50 ? Math.min(100, ((rsi - 50) / 22) * 100) : 0;
+    rsiShort = rsi <= 50 ? Math.min(100, ((50 - rsi) / 22) * 100) : 0;
+  }
+
+  // Итоговые баллы с весами Volume 0.5, Trend 0.3, RSI 0.2
+  const LONG = volScore * 0.5 + trendLong * 0.3 + rsiLong * 0.2;
+  const SHORT = volScore * 0.5 + trendShort * 0.3 + rsiShort * 0.2;
+
+  // Dead zone адаптивная
+  const deadZone = volRatio > 1.5 ? 5 : 15;
   let signal = 'NEUTRAL';
-  if (Math.abs(LONG - SHORT) > deadPts) {
+  if (Math.abs(LONG - SHORT) >= deadZone) {
     signal = LONG > SHORT ? 'LONG' : 'SHORT';
   }
+
   const strength = Math.max(LONG, SHORT);
 
   return {
     module: 'rsiVolTrend',
     symbol,
     signal,
-    strength,
+    strength: Number(strength.toFixed(2)),
     meta: {
-      LONG,
-      SHORT,
+      LONG: Number(LONG.toFixed(2)),
+      SHORT: Number(SHORT.toFixed(2)),
       candlesUsed: candles.length,
       rsi: rsi != null ? Number(rsi.toFixed(2)) : null,
-      price: Number.isFinite(price) ? Number(price) : null,
-      ma7: Number.isFinite(ma7) ? Number(ma7) : null,
-      ma25: Number.isFinite(ma25) ? Number(ma25) : null,
-      volume: Number.isFinite(lastVol) ? Number(lastVol) : null,
-      avgVol: Number.isFinite(avgVol) ? Number(avgVol) : null,
+      rsiLongScore: Number(rsiLong.toFixed(2)),
+      rsiShortScore: Number(rsiShort.toFixed(2)),
+      volRatio: Number(volRatio.toFixed(2)),
+      trendLong: Number(trendLong.toFixed(2)),
+      trendShort: Number(trendShort.toFixed(2)),
+      price: Number(price.toFixed(2)),
+      ma7: Number(ma7.toFixed(2)),
+      ma25: Number(ma25.toFixed(2)),
+      maSlope: Number(maSlope.toFixed(4)),
+      volume: Number(lastVol.toFixed(2)),
+      avgVol: Number(avgVol.toFixed(2)),
+      volMomentum: Number(volMomentum.toFixed(2)),
       rsiPeriod: RSI_PERIOD,
       rsiWarmup: RSI_WARMUP,
       volLookback: VOL_LOOKBACK,
       maShort: MA_SHORT,
       maLong: MA_LONG,
+      deadZone,
     },
   };
 }
