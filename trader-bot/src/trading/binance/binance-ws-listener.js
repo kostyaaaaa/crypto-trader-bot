@@ -3,6 +3,7 @@ import axios from 'axios';
 import WebSocket from 'ws';
 import logger from '../../utils/db-logger.js';
 import { notifyTrade } from '../../utils/notify.js';
+
 import {
   closePositionHistory,
   getOpenPosition,
@@ -140,6 +141,23 @@ function sumTpRealizedPnl(pos) {
   return sum;
 }
 
+// ---- TP cum helpers ----
+function sumFillsQty(fills) {
+  if (!Array.isArray(fills)) return 0;
+  let s = 0;
+  for (const f of fills) s += Number(f?.qty) || 0;
+  return s;
+}
+function nextMonotonicCum(prevCum, evCum, deltaQty, fills) {
+  const prev = Number(prevCum) || 0;
+  const ev = Number(evCum);
+  const hasEv = Number.isFinite(ev) && ev > 0;
+  const sumF = sumFillsQty(fills);
+  const candidate = hasEv ? ev : prev + (Number(deltaQty) || 0);
+  // never allow cum to shrink; also never below sum of recorded fills
+  return Math.max(prev, candidate, sumF);
+}
+
 // -------------------------
 // 4. Обробка івентів
 // -------------------------
@@ -237,7 +255,7 @@ async function handleEvent(msg) {
 
             // Відправляємо нотифікацію
             if (closed) {
-              notifyTrade(closed, 'CLOSED');
+              await notifyTrade(closed, 'CLOSED');
             }
           } catch (err) {
             logger.error(
@@ -276,11 +294,20 @@ async function handleEvent(msg) {
             if (priceMatch) {
               if (!Array.isArray(tp.fills)) tp.fills = [];
               // Використовуємо кумулятивну кількість з івента, щоб уникати дублю філів
-              const cum = Number(o.z) || 0; // cumulative filled for this order at exchange
+              const evCum = Number(o.z);
               const prevCum = Number(tp.cum) || 0; // what we've already accounted for this TP
-              const deltaQty = cum > 0 ? Math.max(0, cum - prevCum) : fillQty;
-              // Оновлюємо лічильники на TP
-              tp.cum = cum > 0 ? cum : prevCum + deltaQty;
+              const deltaQty =
+                Number.isFinite(evCum) && evCum > 0
+                  ? Math.max(0, evCum - prevCum)
+                  : fillQty;
+              // Оновлюємо лічильники на TP (монотонно)
+              const before = prevCum;
+              tp.cum = nextMonotonicCum(prevCum, evCum, deltaQty, tp.fills);
+              if (Number.isFinite(evCum) && evCum > 0 && evCum < before) {
+                logger.warn(
+                  `↪️ ${symbol}: TP o.z(${evCum}) < prevCum(${before}) — keeping monotonic cum=${tp.cum}`,
+                );
+              }
               tp.orderId = tp.orderId || o.i;
               // Додаємо тільки дельту, якщо вона > 0
               if (deltaQty > 0) {
@@ -317,10 +344,24 @@ async function handleEvent(msg) {
             }
             if (nearest) {
               if (!Array.isArray(nearest.fills)) nearest.fills = [];
-              const cum = Number(o.z) || 0;
+              const evCum = Number(o.z);
               const prevCum = Number(nearest.cum) || 0;
-              const deltaQty = cum > 0 ? Math.max(0, cum - prevCum) : fillQty;
-              nearest.cum = cum > 0 ? cum : prevCum + deltaQty;
+              const deltaQty =
+                Number.isFinite(evCum) && evCum > 0
+                  ? Math.max(0, evCum - prevCum)
+                  : fillQty;
+              const before = prevCum;
+              nearest.cum = nextMonotonicCum(
+                prevCum,
+                evCum,
+                deltaQty,
+                nearest.fills,
+              );
+              if (Number.isFinite(evCum) && evCum > 0 && evCum < before) {
+                logger.warn(
+                  `↪️ ${symbol}: TP(nearest) o.z(${evCum}) < prevCum(${before}) — keeping monotonic cum=${nearest.cum}`,
+                );
+              }
               nearest.orderId = nearest.orderId || o.i;
               if (deltaQty > 0) {
                 nearest.fills.push({
@@ -334,6 +375,14 @@ async function handleEvent(msg) {
               nearest.filled = true;
             }
           }
+
+          // Ensure cum never below sum of recorded fills (final guard)
+          for (const tp of updatedTps) {
+            const prev = Number(tp.cum) || 0;
+            const fixed = Math.max(prev, sumFillsQty(tp.fills));
+            if (fixed !== prev) tp.cum = fixed;
+          }
+
           try {
             // Оновлюємо список тейків у БД (з новими полями fills[])
             await updateTakeProfits(
@@ -366,7 +415,7 @@ async function handleEvent(msg) {
               await cancelAllOrders(symbol);
               await forceCloseIfLeftover(symbol);
               if (closed) {
-                notifyTrade(closed, 'CLOSED');
+                await notifyTrade(closed, 'CLOSED');
               }
             } catch (err) {
               logger.error(
