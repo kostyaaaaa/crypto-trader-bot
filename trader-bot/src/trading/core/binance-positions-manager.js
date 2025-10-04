@@ -10,6 +10,7 @@ import {
   placeStopLoss,
   placeTakeProfit,
 } from '../binance/binance.js';
+import { getOpenHistoryDoc } from './historyStore.js';
 
 function oppositeSide(side) {
   return side === 'LONG' ? 'SHORT' : 'LONG';
@@ -19,6 +20,10 @@ export async function getActivePositions(symbol) {
   if (!symbol) {
     throw new Error('getActivePositions requires a symbol');
   }
+
+  // ⚡ Fast DB pre-check: if there's no OPEN doc for this symbol, skip REST calls entirely
+  const openDoc = await getOpenHistoryDoc(symbol);
+  if (!openDoc) return [];
 
   const { position, orders } = await getLiveState(symbol);
   return position?.side ? [{ ...position, orders }] : [];

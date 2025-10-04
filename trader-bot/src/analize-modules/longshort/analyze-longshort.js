@@ -12,7 +12,7 @@ export async function analyzeLongShort(symbol = 'ETHUSDT', window = 5) {
     const res = await axios.get(url, {
       params: {
         symbol,
-        period: '5m', // 5-хвилинні дані
+        period: '5m',
         limit: window,
       },
     });
