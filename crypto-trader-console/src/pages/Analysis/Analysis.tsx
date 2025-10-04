@@ -44,6 +44,45 @@ const OVERALL_TAB = 'overall';
 const fmt = (n: number, d = 2) =>
   Number.isFinite(n) ? Number(n).toFixed(d) : '-';
 
+// Component for displaying LONG/SHORT values with colored bars and numbers
+const LongShortBar: FC<{ long: number; short: number }> = ({ long, short }) => {
+  const total = long + short;
+  const longPercentage = total > 0 ? (long / total) * 100 : 0;
+  const shortPercentage = total > 0 ? (short / total) * 100 : 0;
+
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '24px' }}>
+      {/* Progress bar */}
+      <Progress.Root size="xl" style={{ height: '100%' }} radius="lg" bg="gray">
+        <Progress.Section value={longPercentage} color="green" />
+        <Progress.Section value={shortPercentage} color="red" />
+      </Progress.Root>
+
+      {/* Numbers overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 8px',
+          fontSize: '14px',
+          fontWeight: 600,
+          color: '#ffffff', // White color
+          pointerEvents: 'none', // Allow clicks to pass through
+        }}
+      >
+        <span>{fmt(long, 1)}</span>
+        <span>{fmt(short, 1)}</span>
+      </div>
+    </div>
+  );
+};
+
 const timeHHMM = (iso: string, timeZone?: string) => {
   const dt = new Date(iso);
   return dt.toLocaleTimeString('en-GB', {
@@ -131,6 +170,22 @@ const Analysis: FC = () => {
   );
   useEffect(() => {
     setSelectedIdx(Math.max(0, (rows.length || 1) - 1));
+  }, [rows.length]);
+
+  // Keyboard navigation for time intervals
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        setSelectedIdx((prev) => Math.max(0, prev - 1));
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        setSelectedIdx((prev) => Math.min(rows.length - 1, prev + 1));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [rows.length]);
 
   const selected: IAnalysis | undefined = rows[selectedIdx];
@@ -393,267 +448,251 @@ const Analysis: FC = () => {
 
       {/* Scores over time (combined) */}
 
-      {/* Per-module strength over time */}
-      <Card withBorder padding="md" mb="md" w={'100%'}>
-        <Group justify="space-between" mb="xs">
-          <Text fw={600}>Scores &amp; Modules — LONG vs SHORT</Text>
-          {activeModule === OVERALL_TAB ? (
-            <Group gap={12} key={`overall-head-${selectedIdx}`}>
-              <Text c="dimmed" size="sm">
-                Selected L: {fmt(selected.scores.LONG, 1)}
-              </Text>
-              <Text c="dimmed" size="sm">
-                Selected S: {fmt(selected.scores.SHORT, 1)}
-              </Text>
-            </Group>
-          ) : (
-            activeModule && (
-              <Group gap={12} key={`mod-head-${selectedIdx}-${activeModule}`}>
-                <Badge variant="light">{activeModule}</Badge>
+      {/* Charts and Table side by side */}
+      <Group align="flex-start" gap="md" wrap="nowrap">
+        {/* Per-module strength over time */}
+        <Card withBorder padding="md" style={{ flex: 1 }}>
+          <Group justify="space-between" mb="xs">
+            <Text fw={600}>Scores &amp; Modules — LONG vs SHORT</Text>
+            {activeModule === OVERALL_TAB ? (
+              <Group gap={12} key={`overall-head-${selectedIdx}`}>
                 <Text c="dimmed" size="sm">
-                  Selected L:{' '}
-                  {fmt(
-                    Number(
-                      (selected.modules as unknown as ModulesMap)?.[
-                        activeModule
-                      ]?.meta?.LONG ?? 0,
-                    ),
-                    3,
-                  )}
+                  Selected L: {fmt(selected.scores.LONG, 1)}
                 </Text>
                 <Text c="dimmed" size="sm">
-                  Selected S:{' '}
-                  {fmt(
-                    Number(
-                      (selected.modules as unknown as ModulesMap)?.[
-                        activeModule
-                      ]?.meta?.SHORT ?? 0,
-                    ),
-                    3,
-                  )}
-                </Text>
-                <Text c="dimmed" size="sm">
-                  Signal:{' '}
-                  {String(
-                    (selected.modules as unknown as ModulesMap)?.[activeModule]
-                      ?.signal ?? '-',
-                  )}
+                  Selected S: {fmt(selected.scores.SHORT, 1)}
                 </Text>
               </Group>
-            )
-          )}
-        </Group>
-        <Group align="flex-start" gap="md" wrap="nowrap">
-          {/* Left: tabs + chart + time badges */}
-          <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
-            <Tabs
-              value={activeModule}
-              onChange={(v) => setActiveModule(v || '')}
-            >
-              <Tabs.List>
-                <Tabs.Tab key={OVERALL_TAB} value={OVERALL_TAB}>
-                  overall
-                </Tabs.Tab>
-                {allModuleKeys.map((m) => (
-                  <Tabs.Tab key={m} value={m}>
-                    {m}
+            ) : (
+              activeModule && (
+                <Group gap={12} key={`mod-head-${selectedIdx}-${activeModule}`}>
+                  <Badge variant="light">{activeModule}</Badge>
+                  <Text c="dimmed" size="sm">
+                    Selected L:{' '}
+                    {fmt(
+                      Number(
+                        (selected.modules as unknown as ModulesMap)?.[
+                          activeModule
+                        ]?.meta?.LONG ?? 0,
+                      ),
+                      3,
+                    )}
+                  </Text>
+                  <Text c="dimmed" size="sm">
+                    Selected S:{' '}
+                    {fmt(
+                      Number(
+                        (selected.modules as unknown as ModulesMap)?.[
+                          activeModule
+                        ]?.meta?.SHORT ?? 0,
+                      ),
+                      3,
+                    )}
+                  </Text>
+                  <Text c="dimmed" size="sm">
+                    Signal:{' '}
+                    {String(
+                      (selected.modules as unknown as ModulesMap)?.[
+                        activeModule
+                      ]?.signal ?? '-',
+                    )}
+                  </Text>
+                </Group>
+              )
+            )}
+          </Group>
+          <Group align="flex-start" gap="md" wrap="nowrap">
+            {/* Left: tabs + chart + time badges */}
+            <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
+              <Tabs
+                value={activeModule}
+                onChange={(v) => setActiveModule(v || '')}
+              >
+                <Tabs.List>
+                  <Tabs.Tab key={OVERALL_TAB} value={OVERALL_TAB}>
+                    overall
                   </Tabs.Tab>
-                ))}
-              </Tabs.List>
+                  {allModuleKeys.map((m) => (
+                    <Tabs.Tab key={m} value={m}>
+                      {m}
+                    </Tabs.Tab>
+                  ))}
+                </Tabs.List>
 
-              <Tabs.Panel value={OVERALL_TAB} pt="sm">
-                <ReactApexChart
-                  options={apexOptions}
-                  series={apexSeries}
-                  type="line"
-                  height={200}
-                />
-              </Tabs.Panel>
-
-              {allModuleKeys.map((m) => (
-                <Tabs.Panel key={`panel-${m}`} value={m} pt="sm">
+                <Tabs.Panel value={OVERALL_TAB} pt="sm">
                   <ReactApexChart
-                    options={moduleOptions}
-                    series={[
-                      {
-                        name: 'LONG',
-                        data: rows.map((r) => ({
-                          x: new Date(r.time).getTime(),
-                          y: Number(
-                            ((r.modules as unknown as ModulesMap) ?? {})[m]
-                              ?.meta?.LONG ?? 0,
-                          ),
-                        })),
-                      },
-                      {
-                        name: 'SHORT',
-                        data: rows.map((r) => ({
-                          x: new Date(r.time).getTime(),
-                          y: Number(
-                            ((r.modules as unknown as ModulesMap) ?? {})[m]
-                              ?.meta?.SHORT ?? 0,
-                          ),
-                        })),
-                      },
-                    ]}
+                    options={apexOptions}
+                    series={apexSeries}
                     type="line"
-                    height={220}
+                    height={200}
                   />
                 </Tabs.Panel>
-              ))}
-            </Tabs>
 
-            {/* time badges */}
-            <Group gap={6} mt="xs" key={`times-${selectedIdx}`} wrap="wrap">
-              {rows.map((r, i) => (
-                <Badge
-                  key={r.time.toString()}
-                  size="xs"
-                  variant={i === selectedIdx ? 'filled' : 'outline'}
-                  color={i === selectedIdx ? 'blue' : 'gray'}
-                  onClick={() => setSelectedIdx(i)}
-                  style={{ cursor: 'pointer' }}
-                  title={
-                    new Date(r.time).toLocaleString('en-GB', {
-                      year: 'numeric',
-                      month: '2-digit',
-                      day: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
-                      hour12: false,
-                      timeZone: activeTz,
-                    }) + ` ${tzBadgeLabel}`
-                  }
-                >
-                  {timeHHMM(r.time.toString(), activeTz)}
-                </Badge>
-              ))}
-            </Group>
-          </Stack>
+                {allModuleKeys.map((m) => (
+                  <Tabs.Panel key={`panel-${m}`} value={m} pt="sm">
+                    <ReactApexChart
+                      options={moduleOptions}
+                      series={[
+                        {
+                          name: 'LONG',
+                          data: rows.map((r) => ({
+                            x: new Date(r.time).getTime(),
+                            y: Number(
+                              ((r.modules as unknown as ModulesMap) ?? {})[m]
+                                ?.meta?.LONG ?? 0,
+                            ),
+                          })),
+                        },
+                        {
+                          name: 'SHORT',
+                          data: rows.map((r) => ({
+                            x: new Date(r.time).getTime(),
+                            y: Number(
+                              ((r.modules as unknown as ModulesMap) ?? {})[m]
+                                ?.meta?.SHORT ?? 0,
+                            ),
+                          })),
+                        },
+                      ]}
+                      type="line"
+                      height={220}
+                    />
+                  </Tabs.Panel>
+                ))}
+              </Tabs>
 
-          {/* Right: meta key-value list for active module */}
-          {selectedModule && metaEntries.length > 0 && (
-            <Paper shadow="sm" withBorder p="xs" style={{ width: 320 }}>
-              <Stack gap={6}>
-                <Group gap={6} justify="space-between" align="center">
-                  <Badge variant="light">{activeModule}</Badge>
-                  <Group gap={8}>
-                    <Badge color="green" variant="outline">
-                      L: {fmt(Number(selectedModule.meta?.LONG ?? 0), 3)}
-                    </Badge>
-                    <Badge color="red" variant="outline">
-                      S: {fmt(Number(selectedModule.meta?.SHORT ?? 0), 3)}
-                    </Badge>
-                  </Group>
-                </Group>
-                <Table
-                  withRowBorders={false}
-                  verticalSpacing="xs"
-                  highlightOnHover
-                >
-                  <Table.Tbody>
-                    {metaEntries.map((e) => (
-                      <Table.Tr key={`meta-${String(e.k)}`}>
-                        <Table.Td style={{ width: 140 }}>
-                          <Text size="xs" c="dimmed">
-                            {e.k}
-                          </Text>
-                        </Table.Td>
-                        <Table.Td>
-                          <Text size="sm">{fmtAny(e.v)}</Text>
-                        </Table.Td>
-                      </Table.Tr>
-                    ))}
-                  </Table.Tbody>
-                </Table>
-              </Stack>
-            </Paper>
-          )}
-        </Group>
-      </Card>
-
-      {/* Module scoreboard */}
-      <Paper withBorder p="md" key={`table-${selectedIdx}`} w={'100%'}>
-        <Group justify="space-between" mb="sm">
-          <Text fw={600}>Latest module breakdown</Text>
-          <Text c="dimmed" size="sm">
-            {new Date(selected.time).toLocaleString('en-GB', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-              hour12: false,
-              timeZone: activeTz,
-            })}{' '}
-            {tzBadgeLabel}
-          </Text>
-        </Group>
-        <Table
-          highlightOnHover
-          withRowBorders={false}
-          verticalSpacing="xs"
-          style={{ width: '100%' }}
-        >
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Module</Table.Th>
-              <Table.Th>Signal</Table.Th>
-              <Table.Th style={{ width: 120 }}>Strength</Table.Th>
-              <Table.Th style={{ width: 260 }}>LONG / SHORT</Table.Th>
-              <Table.Th style={{ width: 80 }} ta="right">
-                L
-              </Table.Th>
-              <Table.Th style={{ width: 80 }} ta="right">
-                S
-              </Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {moduleRows.map((r) => (
-              <Table.Tr key={r.key}>
-                <Table.Td>{r.key}</Table.Td>
-                <Table.Td>
+              {/* time badges */}
+              <Group gap={6} mt="xs" key={`times-${selectedIdx}`} wrap="wrap">
+                {rows.map((r, i) => (
                   <Badge
-                    color={
-                      r.signal === 'LONG'
-                        ? 'green'
-                        : r.signal === 'SHORT'
-                          ? 'red'
-                          : 'gray'
+                    key={r.time.toString()}
+                    size="xs"
+                    variant={i === selectedIdx ? 'filled' : 'outline'}
+                    color={i === selectedIdx ? 'blue' : 'gray'}
+                    onClick={() => setSelectedIdx(i)}
+                    style={{ cursor: 'pointer' }}
+                    title={
+                      new Date(r.time).toLocaleString('en-GB', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false,
+                        timeZone: activeTz,
+                      }) + ` ${tzBadgeLabel}`
                     }
                   >
-                    {r.signal}
+                    {timeHHMM(r.time.toString(), activeTz)}
                   </Badge>
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm" ta="right">
-                    {fmt(r.strength, 3)}
-                  </Text>
-                </Table.Td>
-                <Table.Td>
-                  <Group gap="xs">
-                    <Progress
-                      value={Math.max(0, Math.min(100, r.long))}
-                      color="green"
-                      style={{ flex: 1 }}
-                    />
-                    <Progress
-                      value={Math.max(0, Math.min(100, r.short))}
-                      color="red"
-                      style={{ flex: 1 }}
-                    />
+                ))}
+              </Group>
+            </Stack>
+
+            {/* Right: meta key-value list for active module */}
+            {selectedModule && metaEntries.length > 0 && (
+              <Paper shadow="sm" withBorder p="xs" style={{ width: 320 }}>
+                <Stack gap={6}>
+                  <Group gap={6} justify="space-between" align="center">
+                    <Badge variant="light">{activeModule}</Badge>
+                    <Group gap={8}>
+                      <Badge color="green" variant="outline">
+                        L: {fmt(Number(selectedModule.meta?.LONG ?? 0), 3)}
+                      </Badge>
+                      <Badge color="red" variant="outline">
+                        S: {fmt(Number(selectedModule.meta?.SHORT ?? 0), 3)}
+                      </Badge>
+                    </Group>
                   </Group>
-                </Table.Td>
-                <Table.Td ta="right">{fmt(r.long, 3)}</Table.Td>
-                <Table.Td ta="right">{fmt(r.short, 3)}</Table.Td>
+                  <Table
+                    withRowBorders={false}
+                    verticalSpacing="xs"
+                    highlightOnHover
+                  >
+                    <Table.Tbody>
+                      {metaEntries.map((e) => (
+                        <Table.Tr key={`meta-${String(e.k)}`}>
+                          <Table.Td style={{ width: 140 }}>
+                            <Text size="xs" c="dimmed">
+                              {e.k}
+                            </Text>
+                          </Table.Td>
+                          <Table.Td>
+                            <Text size="sm">{fmtAny(e.v)}</Text>
+                          </Table.Td>
+                        </Table.Tr>
+                      ))}
+                    </Table.Tbody>
+                  </Table>
+                </Stack>
+              </Paper>
+            )}
+          </Group>
+        </Card>
+
+        {/* Module scoreboard */}
+        <Paper
+          withBorder
+          p="md"
+          key={`table-${selectedIdx}`}
+          style={{ width: '35%', minWidth: '300px' }}
+        >
+          <Group justify="space-between" mb="sm">
+            <Text fw={600}>Latest module breakdown</Text>
+            <Text c="dimmed" size="sm">
+              {new Date(selected.time).toLocaleString('en-GB', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+                timeZone: activeTz,
+              })}{' '}
+              {tzBadgeLabel}
+            </Text>
+          </Group>
+          <Table
+            highlightOnHover
+            withRowBorders={false}
+            verticalSpacing="xs"
+            style={{ width: '100%' }}
+          >
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Module</Table.Th>
+                <Table.Th>Signal</Table.Th>
+                <Table.Th style={{ width: 200 }}>LONG / SHORT</Table.Th>
               </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
-      </Paper>
+            </Table.Thead>
+            <Table.Tbody>
+              {moduleRows.map((r) => (
+                <Table.Tr key={r.key}>
+                  <Table.Td>{r.key}</Table.Td>
+                  <Table.Td>
+                    <Badge
+                      color={
+                        r.signal === 'LONG'
+                          ? 'green'
+                          : r.signal === 'SHORT'
+                            ? 'red'
+                            : 'gray'
+                      }
+                    >
+                      {r.signal}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td>
+                    <LongShortBar long={r.long} short={r.short} />
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </Paper>
+      </Group>
     </Container>
   );
 };

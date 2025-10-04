@@ -121,7 +121,7 @@ export async function preparePosition(symbol, cfg, analysis, side, entryPrice) {
     initialTPs: takeProfits.map((tp) => ({ ...tp })),
     rrrToFirstTp,
     updates: [{ time: nowIso, action: 'OPEN', price: entryPrice }],
-    analysisRefs: analysis?.time ? [analysis.time] : [],
+    analysis: analysis?._id || null,
     context: {
       volatilityStatus: analysis?.modules?.volatility?.meta?.regime ?? null,
       trendRegimeSignal: analysis?.modules?.trendRegime?.signal ?? null,

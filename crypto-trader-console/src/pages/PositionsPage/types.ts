@@ -1,3 +1,29 @@
+// Analysis Types for PositionsPage
+export interface IAnalysis {
+  _id?: string;
+  time: Date | string;
+  symbol: string;
+  timeframe: string;
+  modules: IAnalysisModules;
+  scores: {
+    LONG: number;
+    SHORT: number;
+  };
+  coverage?: string;
+  bias: string;
+  decision?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface IModuleBase {
+  module: string;
+  symbol: string;
+  signal: string;
+  strength: number;
+}
+
+// Meta interfaces with LONG/SHORT scores
 export interface ITrendMeta {
   LONG: number;
   SHORT: number;
@@ -77,7 +103,7 @@ export interface IHigherMAMeta {
   LONG: number;
   SHORT: number;
   timeframe: string;
-  type: string; // 'SMA' | 'EMA'
+  type: string;
   maShort: number;
   maLong: number;
   maShortVal: number;
@@ -87,7 +113,7 @@ export interface IHigherMAMeta {
   closesUsed: number;
   thresholdPct: number;
   scale: number;
-  emaSeed: string; // 'sma' | 'first'
+  emaSeed: string;
 }
 
 export interface IRsiVolTrendMeta {
@@ -108,13 +134,6 @@ export interface IRsiVolTrendMeta {
 }
 
 // Module interfaces
-export interface IModuleBase {
-  module: string;
-  symbol: string;
-  signal: string;
-  strength: number;
-}
-
 export interface ITrendModule extends IModuleBase {
   meta: ITrendMeta;
 }
@@ -156,12 +175,12 @@ export interface ICorrelationModule extends IModuleBase {
   meta: ICorrelationMeta;
 }
 
-export interface IHigherMAModule extends IModuleBase {
-  meta: IHigherMAMeta;
-}
-
 export interface ILongShortModule extends IModuleBase {
   meta: ILongShortMeta;
+}
+
+export interface IHigherMAModule extends IModuleBase {
+  meta: IHigherMAMeta;
 }
 
 export interface IRsiVolTrendModule extends IModuleBase {
@@ -181,24 +200,4 @@ export interface IAnalysisModules {
   longShort: ILongShortModule;
   higherMA: IHigherMAModule;
   rsiVolTrend: IRsiVolTrendModule;
-}
-
-// Scores interface
-export interface IScores {
-  LONG: number;
-  SHORT: number;
-}
-
-// Main Analysis interface
-export interface IAnalysis {
-  time: Date | string;
-  symbol: string;
-  timeframe: string;
-  modules: IAnalysisModules;
-  scores: IScores;
-  coverage: string;
-  bias: string;
-  decision: string;
-  createdAt?: Date;
-  updatedAt?: Date;
 }

@@ -96,6 +96,32 @@
     color: #ef4444;
     font-weight: bold;
   }
+
+  &__actionButton {
+    padding: 6px 12px;
+    border-radius: 6px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    color: #6c757d;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+
+    &:hover {
+      background-color: #e9ecef;
+      border-color: #dee2e6;
+      color: #495057;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    &:active {
+      background-color: #dee2e6;
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+  }
 }
 
 @media (max-width: 768px) {

@@ -1,4 +1,5 @@
 import axiosInterceptor from '../../axiosClient';
+import type { IAnalysis } from './types';
 
 export const getPositionsByTimeAndSymbol = async (
   dateFrom: string,
@@ -81,12 +82,6 @@ export type Adjustment =
       [k: string]: unknown;
     };
 
-export interface AnalysisRef {
-  analysisId?: { $oid?: string } | string;
-  bias?: PositionSide;
-  scores: { LONG: number; SHORT: number };
-}
-
 export interface PositionMeta {
   leverage: number;
   openedBy: string; // e.g. 'BOT' | 'MANUAL'
@@ -122,7 +117,7 @@ export interface Position {
   adds?: unknown[];
   adjustments?: Adjustment[];
 
-  analysisRef?: AnalysisRef;
+  analysis?: IAnalysis;
   meta: PositionMeta;
 
   // Closing info
