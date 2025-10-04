@@ -3,6 +3,7 @@ import {
   Divider,
   Group,
   Paper,
+  Progress,
   ScrollArea,
   Select,
   Stack,
@@ -12,6 +13,7 @@ import {
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import clsx from 'clsx';
+import type { IAnalysis } from 'crypto-trader-db';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useState, type FC } from 'react';
 import type {
@@ -26,9 +28,55 @@ import CoinIcon from '../../components/SymbolIcon';
 import styles from './PositionsPage.module.scss';
 import usePositionsPage from './usePositionsPage';
 
+// Helper function for formatting numbers
+const fmt = (n: number, d = 2) =>
+  Number.isFinite(n) ? Number(n).toFixed(d) : '-';
+
+// Component for displaying LONG/SHORT values with colored bars and numbers
+const LongShortBar: FC<{ long: number; short: number }> = ({ long, short }) => {
+  const total = long + short;
+  const longPercentage = total > 0 ? (long / total) * 100 : 0;
+  const shortPercentage = total > 0 ? (short / total) * 100 : 0;
+
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '24px' }}>
+      {/* Progress bar */}
+      <Progress.Root size="xl" style={{ height: '100%' }} radius="lg" bg="gray">
+        <Progress.Section value={longPercentage} color="green" />
+        <Progress.Section value={shortPercentage} color="red" />
+      </Progress.Root>
+
+      {/* Numbers overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 8px',
+          fontSize: '14px',
+          fontWeight: 600,
+          color: '#ffffff', // White color
+          pointerEvents: 'none', // Allow clicks to pass through
+        }}
+      >
+        <span>{fmt(long, 1)}</span>
+        <span>{fmt(short, 1)}</span>
+      </div>
+    </div>
+  );
+};
+
 const PositionsPage: FC = () => {
   const [scrolled, setScrolled] = useState<boolean>(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [analysisExpanded, setAnalysisExpanded] = useState<
+    Record<string, boolean>
+  >({});
   const {
     period,
     setPeriod,
@@ -80,6 +128,22 @@ const PositionsPage: FC = () => {
     },
     [setUrlParam],
   );
+
+  const toggleAnalysisExpand = useCallback((rowId: string) => {
+    setAnalysisExpanded((prev) => {
+      const willOpen = !prev[rowId];
+      const next = willOpen ? { [rowId]: true } : {};
+      if (willOpen) {
+        requestAnimationFrame(() => {
+          const el = document.querySelector(`[data-analysis-id="${rowId}"]`);
+          if (el instanceof HTMLElement) {
+            el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          }
+        });
+      }
+      return next;
+    });
+  }, []);
 
   // Open row from URL on first load / when positions fetched
   useEffect(() => {
@@ -245,8 +309,8 @@ const PositionsPage: FC = () => {
         <Table.Td>{pos.size.toFixed(3)}</Table.Td>
         <Table.Td>
           <div className={styles.wrapper__scores}>
-            <span>L: {pos?.analysisRef?.scores?.LONG || 0}</span>
-            <span>S: {pos?.analysisRef?.scores?.SHORT || 0}</span>
+            <span>L: {pos.analysis?.scores?.LONG || 0}</span>
+            <span>S: {pos.analysis?.scores?.SHORT || 0}</span>
           </div>
         </Table.Td>
         <Table.Td>x{pos.meta.leverage}</Table.Td>
@@ -257,9 +321,20 @@ const PositionsPage: FC = () => {
           {dayjs(new Date(pos.closedAt)).format('DD,MMM HH:mm')}
         </Table.Td>
         <Table.Td>
-          <UnstyledButton onClick={() => toggleExpand(id)}>
-            {isOpen ? 'Hide' : 'View'}
-          </UnstyledButton>
+          <Group gap="xs">
+            <UnstyledButton
+              onClick={() => toggleExpand(id)}
+              className={styles.wrapper__actionButton}
+            >
+              {isOpen ? 'Hide' : 'History'}
+            </UnstyledButton>
+            <UnstyledButton
+              onClick={() => toggleAnalysisExpand(id)}
+              className={styles.wrapper__actionButton}
+            >
+              {analysisExpanded[id] ? 'Hide' : 'Analysis'}
+            </UnstyledButton>
+          </Group>
         </Table.Td>
       </Table.Tr>
     );
@@ -321,7 +396,68 @@ const PositionsPage: FC = () => {
       </Table.Tr>
     );
 
-    return [main, details].filter(Boolean);
+    // Analysis details row
+    const analysisDetails = !analysisExpanded[id] ? null : (
+      <Table.Tr key={`${id}-analysis`} data-analysis-id={id}>
+        <Table.Td colSpan={10}>
+          <Paper withBorder p="sm">
+            <Stack gap={8}>
+              <Text fw={600}>Analysis Breakdown</Text>
+              {pos.analysis &&
+              typeof pos.analysis === 'object' &&
+              'modules' in pos.analysis ? (
+                <Table withRowBorders={false} verticalSpacing="xs" miw={600}>
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>Module</Table.Th>
+                      <Table.Th>Signal</Table.Th>
+                      <Table.Th style={{ width: 200 }}>LONG / SHORT</Table.Th>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {Object.entries(
+                      (pos.analysis as IAnalysis).modules || {},
+                    ).map(([key, mod]) => {
+                      // Handle different module types - all have signal and meta with LONG/SHORT
+                      const signal = mod?.signal || 'NO DATA';
+                      const meta = mod?.meta || {};
+                      const long = Number(meta.LONG ?? 0);
+                      const short = Number(meta.SHORT ?? 0);
+
+                      return (
+                        <Table.Tr key={key}>
+                          <Table.Td>{key}</Table.Td>
+                          <Table.Td>
+                            <Badge
+                              color={
+                                signal === 'LONG'
+                                  ? 'green'
+                                  : signal === 'SHORT'
+                                    ? 'red'
+                                    : 'gray'
+                              }
+                            >
+                              {signal}
+                            </Badge>
+                          </Table.Td>
+                          <Table.Td>
+                            <LongShortBar long={long} short={short} />
+                          </Table.Td>
+                        </Table.Tr>
+                      );
+                    })}
+                  </Table.Tbody>
+                </Table>
+              ) : (
+                <Text c="dimmed">No analysis data available</Text>
+              )}
+            </Stack>
+          </Paper>
+        </Table.Td>
+      </Table.Tr>
+    );
+
+    return [main, details, analysisDetails].filter(Boolean);
   });
 
   return (
@@ -367,8 +503,7 @@ const PositionsPage: FC = () => {
               ]
             }
           >
-            $
-            {positions.reduce((sum, item) => sum + item.finalPnl, 0).toFixed(3)}
+            {` $${positions.reduce((sum, item) => sum + item.finalPnl, 0).toFixed(3)}`}
           </span>
         </Text>
 
@@ -493,7 +628,7 @@ const PositionsPage: FC = () => {
                       </Text>
                     </UnstyledButton>
                   </Table.Th>
-                  <Table.Th>Details</Table.Th>
+                  <Table.Th>Actions</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>{rows}</Table.Tbody>

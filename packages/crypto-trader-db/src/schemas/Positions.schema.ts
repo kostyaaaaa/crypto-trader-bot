@@ -29,16 +29,6 @@ export interface IAdjustment {
   ts: number;
 }
 
-// Analysis reference interface
-export interface IAnalysisRef {
-  analysisId: Schema.Types.ObjectId;
-  bias: string;
-  scores: {
-    LONG: number;
-    SHORT: number;
-  };
-}
-
 // Position meta interface
 export interface IMeta {
   leverage: number;
@@ -62,7 +52,7 @@ export interface IPosition {
   trailing: ITrailing;
   adds: any[];
   adjustments: IAdjustment[];
-  analysisRef: IAnalysisRef;
+  analysis: Schema.Types.ObjectId;
   meta: IMeta;
   closedAt?: number;
   closedBy?: string;
@@ -105,23 +95,6 @@ const adjustmentSchema = new Schema(
     price: { type: Number, required: true },
     reason: { type: String, required: true },
     ts: { type: Number, required: true },
-  },
-  { _id: false },
-);
-
-const scoresSchema = new Schema(
-  {
-    LONG: { type: Number, required: true },
-    SHORT: { type: Number, required: true },
-  },
-  { _id: false },
-);
-
-const analysisRefSchema = new Schema(
-  {
-    analysisId: { type: Schema.Types.ObjectId, required: true },
-    bias: { type: String, required: true },
-    scores: { type: scoresSchema, required: true },
   },
   { _id: false },
 );
@@ -195,9 +168,10 @@ export const PositionSchema = new Schema<IPosition>(
       type: [adjustmentSchema],
       default: [],
     },
-    analysisRef: {
-      type: analysisRefSchema,
+    analysis: {
+      type: Schema.Types.ObjectId,
       required: true,
+      ref: 'Analysis',
     },
     meta: {
       type: metaSchema,

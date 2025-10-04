@@ -81,13 +81,7 @@ export async function openPosition(
     adds: [],
     adjustments: [],
 
-    analysisRef: analysis
-      ? {
-          analysisId: analysis._id,
-          bias: analysis.bias,
-          scores: analysis.scores,
-        }
-      : null,
+    analysis: analysis?._id || null,
 
     meta: {
       leverage: strategyMeta?.leverage ?? null,
