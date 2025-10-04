@@ -4,6 +4,7 @@ import { OrderBookStepWS } from './analize-modules/orderbook/order-book-step.js'
 import connectDB from './config/database.js';
 import { startUserStream } from './trading/binance/binance-ws-listener.js';
 import { tradingEngine } from './trading/core/engine.js';
+import markPriceHub from './trading/core/mark-price-hub.js';
 import { monitorPositions } from './trading/core/monitor.js';
 import logger from './utils/db-logger.js';
 import { finalAnalyzer } from './utils/final-analyzer.js';
@@ -106,6 +107,8 @@ export async function subscribeCoinConfigs() {
 }
 if (isBotActive) {
   connectDB();
+  // init WS mark-price hub once per process
+  markPriceHub.init();
   startUserStream();
   subscribeCoinConfigs();
 }

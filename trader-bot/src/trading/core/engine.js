@@ -1,5 +1,4 @@
 // trading/core/engine.js
-import axios from 'axios';
 import { loadDocs } from '../../storage/storage.js';
 import { notifyTrade } from '../../utils/notify.js';
 import { getUserTrades } from '../binance/binance.js';
@@ -9,13 +8,21 @@ import { preparePosition } from './prepare.js';
 
 import logger from '../../utils/db-logger.js';
 import { openPosition } from './historyStore.js';
+import markPriceHub from './mark-price-hub.js';
+
+async function getRealtimeMark(symbol) {
+  const m = markPriceHub.getMark(symbol);
+  if (m && !m.stale) return m.markPrice;
+  const first = await markPriceHub.waitForMark(symbol);
+  return first?.markPrice ?? null;
+}
 
 const TRADE_MODE = process.env.TRADE_MODE || 'paper';
 
 export async function tradingEngine(symbol, config) {
   const lookback = 3;
   const analysisHistory = await loadDocs('analysis', symbol, lookback);
-
+  const entryPrice = await getRealtimeMark(symbol);
   // 0. Перевіряємо відкриті позиції
   const activePositions = await getActivePositions(symbol);
   if (activePositions.length > 0) {
@@ -186,11 +193,10 @@ export async function tradingEngine(symbol, config) {
     logger.info(`ℹ️ ${symbol}: ADX regime NEUTRAL (no trend)`);
   }
 
-  const lastPriceRes = await axios.get(
-    'https://fapi.binance.com/fapi/v1/ticker/price',
-    { params: { symbol } },
-  );
-  const entryPrice = parseFloat(lastPriceRes.data.price);
+  if (entryPrice == null || !Number.isFinite(entryPrice)) {
+    logger.warn(`⚠️ ${symbol}: skip, no fresh mark price available`);
+    return;
+  }
 
   // Build a per-trade config without mutating the original
   const runConfig = JSON.parse(JSON.stringify(config));
