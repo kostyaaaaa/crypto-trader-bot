@@ -59,9 +59,11 @@ const getPositionsByDateRangeAndSymbol = async (
       query.symbol = symbol;
     }
 
-    const positionsData = await PositionModel.find(query).sort({
-      closedAt: -1,
-    });
+    const positionsData = await PositionModel.find(query)
+      .populate('analysis')
+      .sort({
+        closedAt: -1,
+      });
 
     logger.success(
       `Successfully fetched ${positionsData.length} closed position records for symbol: ${symbol || 'all'} between ${dateFrom} and ${dateTo}`,
