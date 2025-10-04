@@ -74,23 +74,32 @@ const usePositionsPage = () => {
           bValue = new Date(b.openedAt).getTime();
           break;
         case 'closedAt':
-          aValue = new Date(a.closedAt).getTime();
-          bValue = new Date(b.closedAt).getTime();
+          aValue = a.closedAt ? new Date(a.closedAt).getTime() : 0;
+          bValue = b.closedAt ? new Date(b.closedAt).getTime() : 0;
           break;
         case 'leverage':
           aValue = a.meta.leverage;
           bValue = b.meta.leverage;
           break;
         case 'finalPnl':
+          aValue = a.finalPnl ?? 0;
+          bValue = b.finalPnl ?? 0;
+          break;
         case 'size':
-          aValue = a[sortField];
-          bValue = b[sortField];
+          aValue = a.size ?? 0;
+          bValue = b.size ?? 0;
           break;
         case 'side':
+          aValue = a.side;
+          bValue = b.side;
+          break;
         case 'closedBy':
+          aValue = a.closedBy ?? '';
+          bValue = b.closedBy ?? '';
+          break;
         case 'symbol':
-          aValue = a[sortField];
-          bValue = b[sortField];
+          aValue = a.symbol;
+          bValue = b.symbol;
           break;
         default:
           aValue = 0;

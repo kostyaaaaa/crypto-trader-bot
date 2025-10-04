@@ -1,7 +1,11 @@
 import {
+  Badge,
+  Divider,
   Group,
+  Paper,
   ScrollArea,
   Select,
+  Stack,
   Table,
   Text,
   UnstyledButton,
@@ -9,13 +13,22 @@ import {
 import { DatePickerInput } from '@mantine/dates';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
-import { useState, type FC } from 'react';
+import { useCallback, useEffect, useState, type FC } from 'react';
+import type {
+  Adjustment,
+  Position,
+  SLUpdateAdjustment,
+  TakeProfit,
+  TakeProfitFill,
+  TPUpdateAdjustment,
+} from '../../api/positions/getPositionsByTimeAndSymbol';
 import CoinIcon from '../../components/SymbolIcon';
 import styles from './PositionsPage.module.scss';
 import usePositionsPage from './usePositionsPage';
 
 const PositionsPage: FC = () => {
   const [scrolled, setScrolled] = useState<boolean>(false);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const {
     period,
     setPeriod,
@@ -28,61 +41,288 @@ const PositionsPage: FC = () => {
     sortDirection,
   } = usePositionsPage();
 
-  const rows = positions?.map((pos) => (
-    <Table.Tr key={pos._id}>
-      <Table.Td className={styles.wrapper__symbol_icon}>
-        {' '}
-        <CoinIcon symbol={pos.symbol} size={16} />
-        {pos.symbol}
-      </Table.Td>
-      <Table.Td>
-        {(() => {
-          const pnl = Number(pos.finalPnl ?? 0);
-          const lev = Number(pos.meta?.leverage ?? 1);
+  // --- URL <-> expanded row sync ---
+  const setUrlParam = useCallback((key: string, value: string | null) => {
+    try {
+      const url = new URL(window.location.href);
+      if (!value) url.searchParams.delete(key);
+      else url.searchParams.set(key, value);
+      window.history.replaceState({}, '', url.toString());
+    } catch {
+      console.log('error');
+    }
+  }, []);
 
-          // інтерпретуємо size як USD-ноціонал
-          const notionalUSD = Number(pos.size ?? 0);
+  const getUrlParam = useCallback((key: string): string | null => {
+    try {
+      return new URL(window.location.href).searchParams.get(key);
+    } catch {
+      return null;
+    }
+  }, []);
 
-          // маржа = ноціонал / плече
-          const margin = lev ? notionalUSD / lev : 0;
+  const toggleExpand = useCallback(
+    (rowId: string) => {
+      setExpanded((prev) => {
+        const willOpen = !prev[rowId];
+        const next = willOpen ? { [rowId]: true } : {};
+        setUrlParam('pos', willOpen ? rowId : null);
+        if (willOpen) {
+          requestAnimationFrame(() => {
+            const el = document.querySelector(`[data-pos-id="${rowId}"]`);
+            if (el instanceof HTMLElement) {
+              el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            }
+          });
+        }
+        return next;
+      });
+    },
+    [setUrlParam],
+  );
 
-          const pct = margin > 0 ? (pnl / margin) * 100 : null;
-          const pctStr =
-            pct === null ? '' : ` (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
+  // Open row from URL on first load / when positions fetched
+  useEffect(() => {
+    const qsId = getUrlParam('pos');
+    if (!qsId || !positions?.length) return;
+    const has = positions.some((p) => String(p._id) === qsId);
+    if (has) {
+      setExpanded({ [qsId]: true });
+      // Scroll to the row once it is rendered
+      setTimeout(() => {
+        const el = document.querySelector(
+          `[data-pos-id="${qsId}"]`,
+        ) as HTMLElement | null;
+        if (el) el.scrollIntoView({ block: 'center' });
+      }, 0);
+    }
+  }, [positions, getUrlParam]);
 
-          return (
-            <span
-              className={
-                styles[
-                  pnl >= 0 ? 'wrapper__pnlPositive' : 'wrapper__pnlNegative'
-                ]
-              }
-            >
-              ${pnl.toFixed(3)}
-              {pctStr}
-            </span>
-          );
-        })()}
-      </Table.Td>
-      <Table.Td>{pos.side}</Table.Td>
-      <Table.Td>{pos.closedBy || 'Manually'}</Table.Td>
+  // Helper: choose badge color by event semantics
+  const eventBadgeColor = useCallback((label: string, desc?: string) => {
+    const L = (label || '').toUpperCase();
+    const D = (desc || '').toUpperCase();
+    const T = `${L} ${D}`;
 
-      <Table.Td>{pos.size.toFixed(3)}</Table.Td>
-      <Table.Td>
-        <div className={styles.wrapper__scores}>
-          <span>L: {pos.analysisRef.scores.LONG}</span>
-          <span>S: {pos.analysisRef.scores.SHORT}</span>
-        </div>
-      </Table.Td>
-      <Table.Td>x{pos.meta.leverage}</Table.Td>
-      <Table.Td>
-        {dayjs(new Date(pos.openedAt)).format('DD,MMM HH:mm')}
-      </Table.Td>
-      <Table.Td>
-        {dayjs(new Date(pos.closedAt)).format('DD,MMM HH:mm')}
-      </Table.Td>
-    </Table.Tr>
-  ));
+    // Any take-profit related
+    if (T.includes('TP') || T.includes('TAKE_PROFIT')) return 'green';
+
+    // SL updates: trail/move/breakeven should look neutral (blue)
+    if (L.includes('SL_UPDATE')) {
+      if (D.includes('FILLED')) return 'red'; // actual stop execution
+      // trail/move/open/breakeven → blue
+      if (D.includes('TRAIL') || D.includes('OPEN') || D.includes('BREAKEVEN'))
+        return 'blue';
+      return 'blue';
+    }
+
+    // Closed by SL (or any explicit stop close)
+    if (L.includes('CLOSED') && (T.includes(' SL') || T.includes('STOP')))
+      return 'red';
+
+    // Fallback: any generic stop keyword → red
+    if (T.includes(' SL') || T.includes('STOP')) return 'red';
+
+    return 'blue';
+  }, []);
+
+  const rows = positions?.flatMap((pos: Position) => {
+    const id = String(pos._id);
+    const isOpen = !!expanded[id];
+
+    // build a simple timeline from position data
+    type Ev = { t: number; label: string; desc: string };
+    const events: Ev[] = [];
+    const toTs = (v: unknown): number => {
+      if (!v) return 0;
+      try {
+        if (typeof v === 'number') return v;
+        if (typeof v === 'string') return new Date(v).getTime();
+        if (typeof v === 'object' && v !== null && '$date' in v) {
+          return new Date((v as { $date: string }).$date).getTime();
+        }
+        return 0;
+      } catch {
+        return 0;
+      }
+    };
+
+    // OPEN
+    events.push({
+      t: toTs(pos.openedAt),
+      label: 'OPEN',
+      desc: `${pos.side} ${Number(pos.size).toFixed(4)} @ ${Number(pos.entryPrice).toFixed(6)} x${pos?.meta?.leverage ?? 1}`,
+    });
+
+    // TP fills
+    if (Array.isArray(pos.takeProfits)) {
+      pos.takeProfits.forEach((tp, i) => {
+        if (Array.isArray(tp.fills)) {
+          tp.fills.forEach((f: TakeProfitFill) => {
+            events.push({
+              t: toTs(f.time),
+              label: `TP${i + 1} FILL`,
+              desc: `qty ${Number(f.qty).toFixed(4)} @ ${Number(f.price).toFixed(6)}${f.fee ? ` (fee ${Number(f.fee)} ${f.feeAsset || ''})` : ''}`,
+            });
+          });
+        }
+      });
+    }
+
+    // Adjustments
+    if (Array.isArray(pos.adjustments)) {
+      const isSL = (x: Adjustment): x is SLUpdateAdjustment =>
+        x?.type === 'SL_UPDATE';
+      const isTPU = (x: Adjustment): x is TPUpdateAdjustment =>
+        x?.type === 'TP_UPDATE';
+
+      pos.adjustments.forEach((a: Adjustment) => {
+        if (isSL(a)) {
+          const desc =
+            `${String(a.reason ?? '')}${a.price != null ? ` → ${Number(a.price).toFixed(6)}` : ''}`.trim();
+          events.push({
+            t: toTs(a.ts),
+            label: 'SL_UPDATE',
+            desc,
+          });
+        } else if (isTPU(a)) {
+          events.push({
+            t: toTs(a.ts),
+            label: String(a.reason ?? 'TP_UPDATE'),
+            desc: 'TPs updated',
+          });
+        } else {
+          const label = a.type || 'ADJ';
+          const reason = (a as { reason?: unknown }).reason;
+          events.push({ t: toTs(a.ts), label, desc: String(reason ?? '') });
+        }
+      });
+    }
+
+    // CLOSED
+    if (pos.status === 'CLOSED') {
+      events.push({
+        t: toTs(pos.closedAt),
+        label: `CLOSED → ${pos.closedBy || ''}`.trim(),
+        desc: `finalPnL ${Number(pos.finalPnl ?? 0).toFixed(4)}`,
+      });
+    }
+
+    events.sort((a, b) => a.t - b.t);
+
+    // main row
+    const main = (
+      <Table.Tr key={id} data-pos-id={id}>
+        <Table.Td className={styles.wrapper__symbol_icon}>
+          <CoinIcon symbol={pos.symbol} size={16} />
+          {pos.symbol}
+        </Table.Td>
+        <Table.Td>
+          {(() => {
+            const pnl = Number(pos.finalPnl ?? 0);
+            const lev = Number(pos.meta?.leverage ?? 1);
+            const notionalUSD = Number(pos.size ?? 0);
+            const margin = lev ? notionalUSD / lev : 0;
+            const pct = margin > 0 ? (pnl / margin) * 100 : null;
+            const pctStr =
+              pct === null ? '' : ` (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
+            return (
+              <span
+                className={
+                  styles[
+                    pnl >= 0 ? 'wrapper__pnlPositive' : 'wrapper__pnlNegative'
+                  ]
+                }
+              >
+                ${pnl.toFixed(3)}
+                {pctStr}
+              </span>
+            );
+          })()}
+        </Table.Td>
+        <Table.Td>{pos.side}</Table.Td>
+        <Table.Td>{pos.closedBy || 'Manually'}</Table.Td>
+        <Table.Td>{pos.size.toFixed(3)}</Table.Td>
+        <Table.Td>
+          <div className={styles.wrapper__scores}>
+            <span>L: {pos?.analysisRef?.scores?.LONG || 0}</span>
+            <span>S: {pos?.analysisRef?.scores?.SHORT || 0}</span>
+          </div>
+        </Table.Td>
+        <Table.Td>x{pos.meta.leverage}</Table.Td>
+        <Table.Td>
+          {dayjs(new Date(pos.openedAt)).format('DD,MMM HH:mm')}
+        </Table.Td>
+        <Table.Td>
+          {dayjs(new Date(pos.closedAt)).format('DD,MMM HH:mm')}
+        </Table.Td>
+        <Table.Td>
+          <UnstyledButton onClick={() => toggleExpand(id)}>
+            {isOpen ? 'Hide' : 'View'}
+          </UnstyledButton>
+        </Table.Td>
+      </Table.Tr>
+    );
+
+    // details row
+    const details = !isOpen ? null : (
+      <Table.Tr key={`${id}-details`}>
+        <Table.Td colSpan={10}>
+          <Paper withBorder p="sm">
+            <Stack gap={8}>
+              {/* TP summary */}
+              <Group gap={8} wrap="wrap">
+                {Array.isArray(pos.takeProfits) &&
+                  pos.takeProfits.map((tp: TakeProfit, i: number) => (
+                    <Badge key={`tp-badge-${id}-${i}`} color="green">
+                      TP{i + 1}: {tp.sizePct}% @{' '}
+                      {Number(tp.price ?? 0).toFixed(6)}{' '}
+                      {tp.cum != null ? `(cum ${Number(tp.cum)})` : ''}
+                    </Badge>
+                  ))}
+              </Group>
+
+              <Divider my={4} />
+
+              {/* Timeline */}
+              <Text fw={600}>Events timeline</Text>
+              <Table withRowBorders={false} verticalSpacing="xs" miw={600}>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th style={{ width: 180 }}>Time</Table.Th>
+                    <Table.Th style={{ width: 160 }}>Event</Table.Th>
+                    <Table.Th>Details</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {events.map((e, idx) => (
+                    <Table.Tr key={`ev-${id}-${idx}`}>
+                      <Table.Td>
+                        {e.t ? dayjs(e.t).format('DD,MMM HH:mm:ss') : '-'}
+                      </Table.Td>
+                      <Table.Td>
+                        <Badge
+                          variant="light"
+                          color={eventBadgeColor(e.label, e.desc)}
+                        >
+                          {e.label}
+                        </Badge>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm">{e.desc}</Text>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </Stack>
+          </Paper>
+        </Table.Td>
+      </Table.Tr>
+    );
+
+    return [main, details].filter(Boolean);
+  });
 
   return (
     <div className={styles.wrapper}>
@@ -253,6 +493,7 @@ const PositionsPage: FC = () => {
                       </Text>
                     </UnstyledButton>
                   </Table.Th>
+                  <Table.Th>Details</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>{rows}</Table.Tbody>

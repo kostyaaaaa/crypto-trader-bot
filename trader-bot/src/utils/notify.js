@@ -2,6 +2,18 @@
 import axios from 'axios';
 import logger from './db-logger.js';
 
+// Builds a link to the console Positions page with opened row (?pos=<id>)
+function buildPositionLink(pos) {
+  try {
+    const base = process.env.FRONTEND_URL || '';
+    if (!base || !pos || !pos._id) return null;
+    const clean = base.replace(/\/+$/, '');
+    return `${clean}/positions?pos=${pos._id}`;
+  } catch (e) {
+    return null;
+  }
+}
+
 /**
  * Відправляє повідомлення в Telegram (або лог)
  * Потрібні env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
@@ -82,20 +94,27 @@ export async function notifyTrade(position = {}, action = 'UPDATE') {
     // message depending on action
     let header = '';
     if (action === 'CLOSED') {
-      if (closedBy === 'TP') {
-        header = `✅ *${symbol}* — *CLOSED* (${closedBy ?? 'UNKNOWN'})\n`;
-      } else if (closedBy === 'SL' && entryPrice != null && stopLoss != null) {
-        if (
-          (side === 'LONG' && stopLoss > entryPrice) ||
-          (side === 'SHORT' && stopLoss < entryPrice)
-        ) {
-          header = `✅ *${symbol}* — *CLOSED* (SL Trailed Profit)\n`;
-        } else {
-          header = `❌ *${symbol}* — *CLOSED* (${closedBy ?? 'UNKNOWN'})\n`;
-        }
-      } else {
-        header = `❌ *${symbol}* — *CLOSED* (${closedBy ?? 'UNKNOWN'})\n`;
+      const pnlNum = Number(position.finalPnl ?? position.realizedPnl ?? 0);
+      const emoji = pnlNum > 0 ? '✅' : pnlNum < 0 ? '❌' : '➖';
+
+      let reason = closedBy ?? 'CLOSED';
+      const hadTrail = Array.isArray(position.adjustments)
+        ? position.adjustments.some(
+            (a) =>
+              a?.type === 'SL_UPDATE' &&
+              /TRAIL|BREAKEVEN/i.test(a?.reason || ''),
+          )
+        : false;
+      const beByPrice =
+        entryPrice != null &&
+        stopLoss != null &&
+        ((side === 'LONG' && stopLoss >= entryPrice) ||
+          (side === 'SHORT' && stopLoss <= entryPrice));
+      if (reason === 'SL' && (hadTrail || beByPrice)) {
+        reason = 'SL (trail)';
       }
+
+      header = `${emoji} *${symbol}* — *CLOSED* (${reason})\n`;
     } else if (action === 'OPEN') {
       header = `🟢 *${symbol}* — *OPENED* (${side})\n`;
     } else {
@@ -114,7 +133,9 @@ export async function notifyTrade(position = {}, action = 'UPDATE') {
       `Closed: ${closedAt}`,
     ].join('\n');
 
-    const text = `${header}\n${body}`;
+    const link = buildPositionLink(position);
+    const linkLine = link ? `\n🔗 ${link}` : '';
+    const text = `${header}\n${body}${linkLine}`;
 
     await sendTelegram(text);
   } catch (err) {
@@ -123,3 +144,5 @@ export async function notifyTrade(position = {}, action = 'UPDATE') {
 }
 
 export default notifyTrade;
+
+export { buildPositionLink };
