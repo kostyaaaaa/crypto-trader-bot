@@ -1,5 +1,4 @@
 // trading/core/monitor.js
-import axios from 'axios';
 import { loadDocs } from '../../storage/storage.js';
 import logger from '../../utils/db-logger.js';
 import {
@@ -15,35 +14,7 @@ import {
   updateStopPrice,
 } from './historyStore.js';
 
-const TRADE_MODE = process.env.TRADE_MODE || 'paper';
-
-// Нормалізуємо сторону з аналізу: пріоритетно bias, інакше signal
-function getAnaSide(a) {
-  return (a && (a.bias ?? a.signal)) || null;
-}
-
-// --- Tiny in-memory cache for mark prices to reduce REST calls ---
-const markPriceCache = new Map(); // symbol -> { price, ts }
-
-// === API Binance ===
-async function getMarkPrice(symbol) {
-  try {
-    const now = Date.now();
-    const cached = markPriceCache.get(symbol);
-    if (cached && now - cached.ts < 5000) {
-      return cached.price;
-    }
-    const res = await axios.get(
-      'https://fapi.binance.com/fapi/v1/premiumIndex',
-      { params: { symbol } },
-    );
-    const price = parseFloat(res.data.markPrice);
-    markPriceCache.set(symbol, { price, ts: now });
-    return price;
-  } catch {
-    return null;
-  }
-}
+import markPriceHub from './mark-price-hub.js';
 
 // Витягуємо OPEN-док з історії (БД)
 async function getOpenHistoryDoc(symbol) {
@@ -57,23 +28,20 @@ async function getOpenHistoryDoc(symbol) {
   }
 }
 
-// Обчислюємо один референсний TP у % (беремо перший або зважений середній)
-// Використовується для простого "TP-anchored trailing"
-// function getTpReferencePct(tpCfg) {
-//   if (!tpCfg || !tpCfg.use) return null;
-//   const arr = Array.isArray(tpCfg.tpGridPct) ? tpCfg.tpGridPct : [];
-//   if (!arr.length) return null;
+// === Mark price from WS hub (no REST) ===
+async function getMarkFromHub(symbol) {
+  const m = markPriceHub.getMark(symbol);
+  if (m && !m.stale) return m.markPrice;
+  const first = await markPriceHub.waitForMark(symbol);
+  return first?.markPrice ?? null;
+}
 
-//   const sizes = Array.isArray(tpCfg.tpGridSizePct) ? tpCfg.tpGridSizePct : null;
-//   if (sizes && sizes.length === arr.length) {
-//     const wSum = sizes.reduce((s, v) => s + Number(v || 0), 0) || 1;
-//     return arr.reduce(
-//       (acc, p, i) => acc + Number(p || 0) * (Number(sizes[i] || 0) / wSum),
-//       0,
-//     );
-//   }
-//   return Number(arr[0] || 0);
-// }
+const TRADE_MODE = process.env.TRADE_MODE || 'paper';
+
+// Нормалізуємо сторону з аналізу: пріоритетно bias, інакше signal
+function getAnaSide(a) {
+  return (a && (a.bias ?? a.signal)) || null;
+}
 
 // === Основний моніторинг ===
 export async function monitorPositions({ symbol, strategy }) {
@@ -90,7 +58,7 @@ export async function monitorPositions({ symbol, strategy }) {
 
   if (!positions.length) return;
 
-  const price = await getMarkPrice(symbol);
+  const price = await getMarkFromHub(symbol);
   if (price == null) return;
 
   // Правило виходу за N послідовних протилежних сигналів: 0 => вимкнено

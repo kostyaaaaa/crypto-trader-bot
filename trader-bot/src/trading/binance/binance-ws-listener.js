@@ -65,7 +65,7 @@ export async function startUserStream() {
       const msg = JSON.parse(raw.toString());
       await handleEvent(msg);
     } catch (err) {
-      logger.error('❌ Failed to parse WS message:', err);
+      logger.error('❌ WS message handling error:', err?.message || err);
     }
   });
 
@@ -175,6 +175,12 @@ async function handleEvent(msg) {
         break;
       }
 
+      // Act only on FILLED; ignore NEW/EXPIRED/PARTIALLY_FILLED, etc.
+      if (status !== 'FILLED') break;
+
+      // Fetch current DB position once (before using `pos`)
+      const pos = await getOpenPosition(symbol);
+
       if (!pos && (type === 'STOP_MARKET' || type === 'TAKE_PROFIT_MARKET')) {
         logger.warn(
           `⚠️ ${symbol}: FILLED ${type} but no OPEN position in DB. Skipping DB close; cleaning leftovers only.`,
@@ -183,9 +189,6 @@ async function handleEvent(msg) {
         await forceCloseIfLeftover(symbol);
         return;
       }
-
-      // Перевіряємо чи є у нас відкрита позиція по цьому символу в БД
-      const pos = await getOpenPosition(symbol);
 
       // =======================
       // 🛑 Stop-loss (STOP_MARKET)
@@ -271,17 +274,25 @@ async function handleEvent(msg) {
               Number.isFinite(tpPrice) &&
               Math.abs(tpPrice - fillPx) <= tolerance;
             if (priceMatch) {
-              // ініціалізуємо пул філів
               if (!Array.isArray(tp.fills)) tp.fills = [];
-              // додаємо філ
-              tp.fills.push({
-                qty: fillQty,
-                price: fillPx,
-                time: fillAt,
-                fee: feeAmt,
-                feeAsset,
-              });
-              // позначаємо TP як виконаний (якщо на біржі стоїть окремий ордер на весь цей partial/повний обсяг — подія фіксить його)
+              // Використовуємо кумулятивну кількість з івента, щоб уникати дублю філів
+              const cum = Number(o.z) || 0; // cumulative filled for this order at exchange
+              const prevCum = Number(tp.cum) || 0; // what we've already accounted for this TP
+              const deltaQty = cum > 0 ? Math.max(0, cum - prevCum) : fillQty;
+              // Оновлюємо лічильники на TP
+              tp.cum = cum > 0 ? cum : prevCum + deltaQty;
+              tp.orderId = tp.orderId || o.i;
+              // Додаємо тільки дельту, якщо вона > 0
+              if (deltaQty > 0) {
+                tp.fills.push({
+                  qty: deltaQty,
+                  price: fillPx,
+                  time: fillAt,
+                  fee: feeAmt,
+                  feeAsset,
+                });
+              }
+              // Позначаємо TP як виконаний (біржа повертає FILLED коли ордер добрав свій обсяг)
               tp.filled = true;
               matched = tp;
               break;
@@ -306,13 +317,20 @@ async function handleEvent(msg) {
             }
             if (nearest) {
               if (!Array.isArray(nearest.fills)) nearest.fills = [];
-              nearest.fills.push({
-                qty: fillQty,
-                price: fillPx,
-                time: fillAt,
-                fee: feeAmt,
-                feeAsset,
-              });
+              const cum = Number(o.z) || 0;
+              const prevCum = Number(nearest.cum) || 0;
+              const deltaQty = cum > 0 ? Math.max(0, cum - prevCum) : fillQty;
+              nearest.cum = cum > 0 ? cum : prevCum + deltaQty;
+              nearest.orderId = nearest.orderId || o.i;
+              if (deltaQty > 0) {
+                nearest.fills.push({
+                  qty: deltaQty,
+                  price: fillPx,
+                  time: fillAt,
+                  fee: feeAmt,
+                  feeAsset,
+                });
+              }
               nearest.filled = true;
             }
           }
