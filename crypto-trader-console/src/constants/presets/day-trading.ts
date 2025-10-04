@@ -31,6 +31,7 @@ export const dayTradingPreset: TCoinConfig = {
       correlation: 0.03,
       longShort: 0.03,
       higherMA: 0.05,
+      rsiVolTrend: 0,
     },
     moduleThresholds: {
       trend: 50,
@@ -42,6 +43,7 @@ export const dayTradingPreset: TCoinConfig = {
       correlation: 8,
       longShort: 25,
       higherMA: 8,
+      rsiVolTrend: 0,
     },
   },
   strategy: {

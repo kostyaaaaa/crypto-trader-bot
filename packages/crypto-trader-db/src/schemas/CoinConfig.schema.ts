@@ -20,6 +20,7 @@ export interface IAnalysisConfig {
     correlation: number;
     longShort: number;
     higherMA: number;
+    rsiVolTrend: number;
   };
   moduleThresholds: {
     trend: number;
@@ -31,6 +32,7 @@ export interface IAnalysisConfig {
     correlation: number;
     longShort: number;
     higherMA: number;
+    rsiVolTrend: number;
   };
   higherMA: IHigherMAConfig;
 }
@@ -157,6 +159,7 @@ const weightsSchema = new Schema(
     correlation: { type: Number, required: true },
     longShort: { type: Number, required: true },
     higherMA: { type: Number, required: true },
+    rsiVolTrend: { type: Number, required: true },
   },
   { _id: false },
 );
@@ -172,6 +175,7 @@ const moduleThresholdsSchema = new Schema(
     correlation: { type: Number, required: true },
     longShort: { type: Number, required: true },
     higherMA: { type: Number, required: true },
+    rsiVolTrend: { type: Number, required: true },
   },
   { _id: false },
 );

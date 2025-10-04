@@ -31,6 +31,7 @@ export const defaultPreset: TCoinConfig = {
       correlation: 0.03,
       longShort: 0.02,
       higherMA: 0.08,
+      rsiVolTrend: 0,
     },
     moduleThresholds: {
       trend: 50,
@@ -42,6 +43,7 @@ export const defaultPreset: TCoinConfig = {
       correlation: 12,
       longShort: 12,
       higherMA: 7,
+      rsiVolTrend: 0,
     },
   },
   strategy: {

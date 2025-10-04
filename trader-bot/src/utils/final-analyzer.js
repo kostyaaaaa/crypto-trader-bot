@@ -8,9 +8,11 @@ import {
   analyzeLiquidity,
   analyzeLongShort,
   analyzeOpenInterest,
+  analyzeRsiVolumeTrend,
   analyzeTrendRegime,
   analyzeVolatility,
 } from '../analize-modules/index.js';
+
 import { saveDoc } from '../storage/storage.js';
 import logger from './db-logger.js';
 
@@ -31,6 +33,12 @@ export async function finalAnalyzer({
     weights = {},
     moduleThresholds = {},
   } = analysisConfig;
+  // Required candles for RSI+Volume+Trend (module uses hardcoded params)
+  // RSI_WARMUP=100, RSI_PERIOD=50, MA_LONG=25, VOL_LOOKBACK=10
+  const neededRsiVol = Math.max(
+    100 + 50 + 5, // warmup + rsi + safety
+    25 + 10 + 5, // maLong + volLookback + safety
+  );
   const needed =
     Math.max(
       21,
@@ -39,6 +47,7 @@ export async function finalAnalyzer({
       oiWindow,
       fundingWindow,
       longShortWindow,
+      neededRsiVol,
     ) + 5;
   // --- свічки напряму з Binance ---
   let klineRes;
@@ -77,6 +86,8 @@ export async function finalAnalyzer({
     period: 14,
     adxSignalMin: moduleThresholds.trendRegime ?? 20,
   });
+  // RSI + Volume + Trend module (uses provided candles, no REST, hardcoded params)
+  modules.rsiVolTrend = await analyzeRsiVolumeTrend(symbol, candles);
 
   modules.liquidity = await analyzeLiquidity(symbol, liqWindow, lastPrice);
   modules.funding = await analyzeFunding(symbol, fundingWindow);

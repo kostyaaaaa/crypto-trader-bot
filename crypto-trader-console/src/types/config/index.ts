@@ -102,6 +102,7 @@ type TAnalysisModule = {
   correlation: number;
   longShort: number;
   higherMA: number;
+  rsiVolTrend: number;
 };
 
 export type TCoinConfigResponse = TCoinConfig & {

@@ -93,6 +93,23 @@ export interface IHigherMAMeta {
   emaSeed: string; // 'sma' | 'first'
 }
 
+export interface IRsiVolTrendMeta {
+  LONG: number;
+  SHORT: number;
+  candlesUsed: number;
+  rsi: number;
+  price: number;
+  ma7: number;
+  ma25: number;
+  volume: number;
+  avgVol: number;
+  rsiPeriod: number;
+  rsiWarmup: number;
+  volLookback: number;
+  maShort: number;
+  maLong: number;
+}
+
 // Module interfaces
 export interface IModuleBase {
   module: string;
@@ -150,6 +167,10 @@ export interface IHigherMAModule extends IModuleBase {
   meta: IHigherMAMeta;
 }
 
+export interface IRsiVolTrendModule extends IModuleBase {
+  meta: IRsiVolTrendMeta;
+}
+
 // Analysis modules container
 export interface IAnalysisModules {
   trend: ITrendModule;
@@ -162,6 +183,7 @@ export interface IAnalysisModules {
   correlation: ICorrelationModule;
   longShort: ILongShortModule;
   higherMA: IHigherMAModule;
+  rsiVolTrend: IRsiVolTrendModule;
 }
 
 // Scores interface
@@ -309,6 +331,26 @@ const higherMAMetaSchema = new Schema(
   { _id: false },
 );
 
+const rsiVolTrendMetaSchema = new Schema(
+  {
+    LONG: { type: Number, required: true },
+    SHORT: { type: Number, required: true },
+    candlesUsed: { type: Number, required: true },
+    rsi: { type: Number, required: true },
+    price: { type: Number, required: true },
+    ma7: { type: Number, required: true },
+    ma25: { type: Number, required: true },
+    volume: { type: Number, required: true },
+    avgVol: { type: Number, required: true },
+    rsiPeriod: { type: Number, required: true },
+    rsiWarmup: { type: Number, required: true },
+    volLookback: { type: Number, required: true },
+    maShort: { type: Number, required: true },
+    maLong: { type: Number, required: true },
+  },
+  { _id: false },
+);
+
 // Module schemas
 const trendModuleSchema = new Schema(
   {
@@ -425,6 +467,17 @@ const higherMAModuleSchema = new Schema(
   { _id: false },
 );
 
+const rsiVolTrendModuleSchema = new Schema(
+  {
+    module: { type: String, required: true },
+    symbol: { type: String, required: true },
+    signal: { type: String, required: true },
+    strength: { type: Number, required: true },
+    meta: { type: rsiVolTrendMetaSchema, required: true },
+  },
+  { _id: false },
+);
+
 const analysisModulesSchema = new Schema(
   {
     trend: { type: trendModuleSchema, required: true },
@@ -437,6 +490,7 @@ const analysisModulesSchema = new Schema(
     correlation: { type: correlationModuleSchema, required: true },
     longShort: { type: longShortModuleSchema, required: true },
     higherMA: { type: higherMAModuleSchema, required: true },
+    rsiVolTrend: { type: rsiVolTrendModuleSchema, required: true },
   },
   { _id: false },
 );
