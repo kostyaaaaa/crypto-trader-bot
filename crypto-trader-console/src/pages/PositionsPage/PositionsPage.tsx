@@ -13,6 +13,18 @@ import {
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import clsx from 'clsx';
+import dayjs from 'dayjs';
+import { useCallback, useEffect, useState, type FC } from 'react';
+import type {
+  Adjustment,
+  Position,
+  SLUpdateAdjustment,
+  TakeProfit,
+  TakeProfitFill,
+  TPUpdateAdjustment,
+} from '../../api/positions/getPositionsByTimeAndSymbol';
+import CoinIcon from '../../components/SymbolIcon';
+import styles from './PositionsPage.module.scss';
 import type {
   IAnalysis,
   ICorrelationMeta,
@@ -26,19 +38,7 @@ import type {
   ITrendMeta,
   ITrendRegimeMeta,
   IVolatilityMeta,
-} from 'crypto-trader-db';
-import dayjs from 'dayjs';
-import { useCallback, useEffect, useState, type FC } from 'react';
-import type {
-  Adjustment,
-  Position,
-  SLUpdateAdjustment,
-  TakeProfit,
-  TakeProfitFill,
-  TPUpdateAdjustment,
-} from '../../api/positions/getPositionsByTimeAndSymbol';
-import CoinIcon from '../../components/SymbolIcon';
-import styles from './PositionsPage.module.scss';
+} from './types';
 import usePositionsPage from './usePositionsPage';
 
 // Union type for all meta interfaces that have LONG/SHORT properties

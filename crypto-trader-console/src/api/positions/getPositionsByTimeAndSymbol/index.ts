@@ -1,5 +1,5 @@
-import type { IAnalysis } from 'crypto-trader-db';
 import axiosInterceptor from '../../axiosClient';
+import type { IAnalysis } from './types';
 
 export const getPositionsByTimeAndSymbol = async (
   dateFrom: string,
