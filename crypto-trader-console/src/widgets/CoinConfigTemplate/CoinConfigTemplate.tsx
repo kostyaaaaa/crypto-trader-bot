@@ -669,4 +669,5 @@ const moduleKeys = [
   'correlation',
   'longShort',
   'higherMA',
+  'rsiVolTrend',
 ] as const;

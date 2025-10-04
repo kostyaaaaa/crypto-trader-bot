@@ -6,6 +6,7 @@ import { analyzeLiquidations } from './liquidations/analyze-liquidations.js';
 import { analyzeLongShort } from './longshort/analyze-longshort.js';
 import { analyzeOpenInterest } from './openinterest/analyze-openinterest.js';
 import { analyzeLiquidity } from './orderbook/analyze-liquidity.js';
+import { analyzeRsiVolumeTrend } from './rsiVolTrend/rsiVolTrend-module.js';
 import { analyzeTrendRegime } from './trendRegime/analyze-trend-regime.js';
 import { analyzeVolatility } from './volatility/analyze-volatility.js';
 
@@ -18,6 +19,7 @@ export {
   analyzeLiquidity,
   analyzeLongShort,
   analyzeOpenInterest,
+  analyzeRsiVolumeTrend,
   analyzeTrendRegime,
   analyzeVolatility,
 };

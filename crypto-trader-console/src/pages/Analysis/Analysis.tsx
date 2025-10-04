@@ -30,6 +30,15 @@ type ModuleMeta = { LONG?: number; SHORT?: number };
 type ModuleShape = { signal?: string; strength?: number; meta?: ModuleMeta };
 type ModulesMap = Record<string, ModuleShape>;
 
+type AnyMeta = Record<string, unknown>;
+const fmtAny = (v: unknown, d = 3) => {
+  if (v == null) return '-';
+  if (typeof v === 'number')
+    return Number.isFinite(v) ? Number(v).toFixed(d) : String(v);
+  if (typeof v === 'boolean') return v ? 'true' : 'false';
+  return String(v);
+};
+
 const OVERALL_TAB = 'overall';
 
 const fmt = (n: number, d = 2) =>
@@ -270,6 +279,29 @@ const Analysis: FC = () => {
     [activeModule, tzMode],
   );
 
+  // Active module instance & its meta entries (for the floating panel)
+  const selectedModule = useMemo(() => {
+    if (!selected) return null;
+    const mods = (selected.modules as unknown as ModulesMap) || {};
+    return activeModule && activeModule !== OVERALL_TAB
+      ? mods[activeModule] || null
+      : null;
+  }, [selected, activeModule]);
+
+  const metaEntries = useMemo(() => {
+    if (!selectedModule?.meta) return [] as Array<{ k: string; v: unknown }>;
+    const meta = selectedModule.meta as unknown as AnyMeta;
+    const entries = Object.entries(meta);
+    // LONG/SHORT first, others alphabetical
+    entries.sort((a, b) => {
+      const order = (s: string) => (s === 'LONG' ? 0 : s === 'SHORT' ? 1 : 2);
+      const oa = order(a[0]);
+      const ob = order(b[0]);
+      return oa !== ob ? oa - ob : a[0].localeCompare(b[0]);
+    });
+    return entries.map(([k, v]) => ({ k, v }));
+  }, [selectedModule]);
+
   if (isLoading) {
     return (
       <div className={styles.loaderOverlay}>
@@ -411,85 +443,133 @@ const Analysis: FC = () => {
             )
           )}
         </Group>
-
-        <Tabs value={activeModule} onChange={(v) => setActiveModule(v || '')}>
-          <Tabs.List>
-            <Tabs.Tab key={OVERALL_TAB} value={OVERALL_TAB}>
-              overall
-            </Tabs.Tab>
-            {allModuleKeys.map((m) => (
-              <Tabs.Tab key={m} value={m}>
-                {m}
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
-
-          <Tabs.Panel value={OVERALL_TAB} pt="sm">
-            <ReactApexChart
-              options={apexOptions}
-              series={apexSeries}
-              type="line"
-              height={200}
-            />
-          </Tabs.Panel>
-
-          {allModuleKeys.map((m) => (
-            <Tabs.Panel key={`panel-${m}`} value={m} pt="sm">
-              <ReactApexChart
-                options={moduleOptions}
-                series={[
-                  {
-                    name: 'LONG',
-                    data: rows.map((r) => ({
-                      x: new Date(r.time).getTime(),
-                      y: Number(
-                        ((r.modules as unknown as ModulesMap) ?? {})[m]?.meta
-                          ?.LONG ?? 0,
-                      ),
-                    })),
-                  },
-                  {
-                    name: 'SHORT',
-                    data: rows.map((r) => ({
-                      x: new Date(r.time).getTime(),
-                      y: Number(
-                        ((r.modules as unknown as ModulesMap) ?? {})[m]?.meta
-                          ?.SHORT ?? 0,
-                      ),
-                    })),
-                  },
-                ]}
-                type="line"
-                height={220}
-              />
-            </Tabs.Panel>
-          ))}
-        </Tabs>
-        <Group gap={6} mt="xs" key={`times-${selectedIdx}`} wrap="wrap">
-          {rows.map((r, i) => (
-            <Badge
-              key={r.time.toString()}
-              size="xs"
-              variant={i === selectedIdx ? 'filled' : 'outline'}
-              color={i === selectedIdx ? 'blue' : 'gray'}
-              onClick={() => setSelectedIdx(i)}
-              style={{ cursor: 'pointer' }}
-              title={
-                new Date(r.time).toLocaleString('en-GB', {
-                  year: 'numeric',
-                  month: '2-digit',
-                  day: '2-digit',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                  hour12: false,
-                  timeZone: activeTz,
-                }) + ` ${tzBadgeLabel}`
-              }
+        <Group align="flex-start" gap="md" wrap="nowrap">
+          {/* Left: tabs + chart + time badges */}
+          <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
+            <Tabs
+              value={activeModule}
+              onChange={(v) => setActiveModule(v || '')}
             >
-              {timeHHMM(r.time.toString(), activeTz)}
-            </Badge>
-          ))}
+              <Tabs.List>
+                <Tabs.Tab key={OVERALL_TAB} value={OVERALL_TAB}>
+                  overall
+                </Tabs.Tab>
+                {allModuleKeys.map((m) => (
+                  <Tabs.Tab key={m} value={m}>
+                    {m}
+                  </Tabs.Tab>
+                ))}
+              </Tabs.List>
+
+              <Tabs.Panel value={OVERALL_TAB} pt="sm">
+                <ReactApexChart
+                  options={apexOptions}
+                  series={apexSeries}
+                  type="line"
+                  height={200}
+                />
+              </Tabs.Panel>
+
+              {allModuleKeys.map((m) => (
+                <Tabs.Panel key={`panel-${m}`} value={m} pt="sm">
+                  <ReactApexChart
+                    options={moduleOptions}
+                    series={[
+                      {
+                        name: 'LONG',
+                        data: rows.map((r) => ({
+                          x: new Date(r.time).getTime(),
+                          y: Number(
+                            ((r.modules as unknown as ModulesMap) ?? {})[m]
+                              ?.meta?.LONG ?? 0,
+                          ),
+                        })),
+                      },
+                      {
+                        name: 'SHORT',
+                        data: rows.map((r) => ({
+                          x: new Date(r.time).getTime(),
+                          y: Number(
+                            ((r.modules as unknown as ModulesMap) ?? {})[m]
+                              ?.meta?.SHORT ?? 0,
+                          ),
+                        })),
+                      },
+                    ]}
+                    type="line"
+                    height={220}
+                  />
+                </Tabs.Panel>
+              ))}
+            </Tabs>
+
+            {/* time badges */}
+            <Group gap={6} mt="xs" key={`times-${selectedIdx}`} wrap="wrap">
+              {rows.map((r, i) => (
+                <Badge
+                  key={r.time.toString()}
+                  size="xs"
+                  variant={i === selectedIdx ? 'filled' : 'outline'}
+                  color={i === selectedIdx ? 'blue' : 'gray'}
+                  onClick={() => setSelectedIdx(i)}
+                  style={{ cursor: 'pointer' }}
+                  title={
+                    new Date(r.time).toLocaleString('en-GB', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: false,
+                      timeZone: activeTz,
+                    }) + ` ${tzBadgeLabel}`
+                  }
+                >
+                  {timeHHMM(r.time.toString(), activeTz)}
+                </Badge>
+              ))}
+            </Group>
+          </Stack>
+
+          {/* Right: meta key-value list for active module */}
+          {selectedModule && metaEntries.length > 0 && (
+            <Paper shadow="sm" withBorder p="xs" style={{ width: 320 }}>
+              <Stack gap={6}>
+                <Group gap={6} justify="space-between" align="center">
+                  <Badge variant="light">{activeModule}</Badge>
+                  <Group gap={8}>
+                    <Badge color="green" variant="outline">
+                      L: {fmt(Number(selectedModule.meta?.LONG ?? 0), 3)}
+                    </Badge>
+                    <Badge color="red" variant="outline">
+                      S: {fmt(Number(selectedModule.meta?.SHORT ?? 0), 3)}
+                    </Badge>
+                  </Group>
+                </Group>
+                <Table
+                  withRowBorders={false}
+                  verticalSpacing="xs"
+                  highlightOnHover
+                >
+                  <Table.Tbody>
+                    {metaEntries.map((e) => (
+                      <Table.Tr key={`meta-${String(e.k)}`}>
+                        <Table.Td style={{ width: 140 }}>
+                          <Text size="xs" c="dimmed">
+                            {e.k}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm">{fmtAny(e.v)}</Text>
+                        </Table.Td>
+                      </Table.Tr>
+                    ))}
+                  </Table.Tbody>
+                </Table>
+              </Stack>
+            </Paper>
+          )}
         </Group>
       </Card>
 
