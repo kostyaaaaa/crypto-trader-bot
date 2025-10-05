@@ -6,6 +6,7 @@ const RSI_WARMUP = 60;
 const VOL_LOOKBACK = 10;
 const MA_SHORT = 7;
 const MA_LONG = 25;
+const CANDLE_DURATION_MS = 15 * 60 * 1000;
 
 // ---------- math helpers ----------
 function sma(values, period) {
@@ -68,12 +69,21 @@ export async function analyzeRsiVolumeTrend(symbol, candles = null) {
 
   const closes = candles.map((c) => Number(c.close) || 0);
   const vols = candles.map((c) => Number(c.volume) || 0);
-
   const price = closes.at(-1);
   const ma7 = sma(closes, MA_SHORT);
   const ma25 = sma(closes, MA_LONG);
-  const lastVol = vols.at(-1);
-  const avgVol = avg(vols.slice(-VOL_LOOKBACK));
+
+  // --- Volume handling with progress adjustment ---
+  const lastCandle = candles.at(-1);
+  const elapsedMs =
+    Date.now() -
+    (Number(lastCandle.timestamp_open) || Number(lastCandle.time_open) || 0);
+  const progress = Math.min(1, Math.max(0.1, elapsedMs / CANDLE_DURATION_MS));
+
+  const lastVol = (vols.at(-1) || 0) / progress;
+
+  const avgVol = avg(vols.slice(-VOL_LOOKBACK - 1, -1));
+
   const volRatio = avgVol ? lastVol / avgVol : 0;
   const maSlope = ma7 && ma25 ? ma7 - ma25 : 0;
   const volMomentum = lastVol - avgVol;
@@ -93,6 +103,7 @@ export async function analyzeRsiVolumeTrend(symbol, candles = null) {
         candlesUsed: candles.length,
         reason: 'LowVolume',
         volRatio: Number(volRatio.toFixed(2)),
+        progress: Number((progress * 100).toFixed(1)) + '%',
       },
     };
   }
@@ -109,6 +120,7 @@ export async function analyzeRsiVolumeTrend(symbol, candles = null) {
         candlesUsed: candles.length,
         reason: 'RSI extreme',
         rsi: Number(rsi.toFixed(2)),
+        progress: Number((progress * 100).toFixed(1)) + '%',
       },
     };
   }
@@ -155,6 +167,7 @@ export async function analyzeRsiVolumeTrend(symbol, candles = null) {
 
   const strength = Math.max(LONG, SHORT);
 
+  // ----------------- OUTPUT -----------------
   return {
     module: 'rsiVolTrend',
     symbol,
@@ -164,6 +177,7 @@ export async function analyzeRsiVolumeTrend(symbol, candles = null) {
       LONG: Number(LONG.toFixed(2)),
       SHORT: Number(SHORT.toFixed(2)),
       candlesUsed: candles.length,
+      progress: Number((progress * 100).toFixed(1)) + '%',
       rsi: rsi != null ? Number(rsi.toFixed(2)) : null,
       rsiLongScore: Number(rsiLong.toFixed(2)),
       rsiShortScore: Number(rsiShort.toFixed(2)),
