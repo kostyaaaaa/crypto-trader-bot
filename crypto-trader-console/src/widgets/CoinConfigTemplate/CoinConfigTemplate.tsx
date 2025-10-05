@@ -405,6 +405,13 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
               control={control}
             />
             <FormField
+              name="strategy.entry.lookback"
+              label="Lookback"
+              type="number"
+              register={register}
+              control={control}
+            />
+            <FormField
               name="strategy.entry.sideBiasTolerance"
               label="Side Bias Tolerance"
               type="number"

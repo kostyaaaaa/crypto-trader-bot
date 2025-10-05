@@ -20,7 +20,7 @@ async function getRealtimeMark(symbol) {
 const TRADE_MODE = process.env.TRADE_MODE || 'paper';
 
 export async function tradingEngine(symbol, config) {
-  const lookback = 3;
+  const lookback = config?.entry?.lookback || 3;
   const analysisHistory = await loadDocs('analysis', symbol, lookback);
   const entryPrice = await getRealtimeMark(symbol);
   // 0. Перевіряємо відкриті позиції

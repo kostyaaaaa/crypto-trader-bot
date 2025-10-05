@@ -55,6 +55,7 @@ export const dayTradingPreset: TCoinConfig = {
       cooldownMin: 10,
       avoidWhen: { volatility: 'DEAD', fundingExtreme: { absOver: 0.0008 } },
       sideBiasTolerance: 8,
+      lookback: 3,
     },
     volatilityFilter: { deadBelow: 0.3, extremeAbove: 2.2 },
     capital: {
