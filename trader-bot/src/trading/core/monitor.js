@@ -43,6 +43,11 @@ function getAnaSide(a) {
   return (a && (a.bias ?? a.signal)) || null;
 }
 
+function roundQty(q) {
+  const n = Number(q) || 0;
+  return Number(n.toFixed(3)); // adhere to 3-decimal qty granularity
+}
+
 // === Основний моніторинг ===
 export async function monitorPositions({ symbol, strategy }) {
   // ⛔ Fast pre-check: if there is no OPEN position in DB, skip any REST calls
@@ -59,6 +64,7 @@ export async function monitorPositions({ symbol, strategy }) {
   if (!positions.length) return;
 
   const price = await getMarkFromHub(symbol);
+  console.log(price, 'price', symbol);
   if (price == null) return;
 
   // Правило виходу за N послідовних протилежних сигналів: 0 => вимкнено
@@ -110,11 +116,7 @@ export async function monitorPositions({ symbol, strategy }) {
           } catch {}
           const closeSide = side === 'LONG' ? 'SELL' : 'BUY';
           try {
-            await openMarketOrder(
-              symbol,
-              closeSide,
-              Number(liveQty).toFixed(3),
-            );
+            await openMarketOrder(symbol, closeSide, roundQty(liveQty));
           } catch {}
         }
         try {
@@ -142,13 +144,17 @@ export async function monitorPositions({ symbol, strategy }) {
 
     /* ===== 1) TRAILING (PnL-anchored) ===== */
     const trailingCfg = strategy?.exits?.trailing;
+    console.log(trailingCfg, 'trailingCfg', symbol);
 
     // Єдиний режим:
     // - startAfterPct: PnL% від entry, з якого активуємо трейл
     // - trailStepPct: PnL% від entry, на якій відстані від max PnL тримаємо SL
     if (trailingCfg?.use && entryPrice) {
+      console.log(entryPrice, 'entryPrice', symbol);
+
       try {
         let trailingState = openDoc?.trailing || null;
+        console.log(trailingState, 'trailingState', symbol);
 
         // Значення у конфізі задаються у ROI% (PnL%)
         const lev = Math.max(1, Number(strategy?.capital?.leverage) || 1);
@@ -211,7 +217,7 @@ export async function monitorPositions({ symbol, strategy }) {
           if (needUpdate) {
             if (TRADE_MODE === 'live') {
               await cancelStopOrders(symbol, { onlySL: true }); // TP не чіпаємо
-              await placeStopLoss(symbol, side, newStop, Number(liveQty));
+              await placeStopLoss(symbol, side, newStop, roundQty(liveQty));
             }
 
             await adjustPosition(symbol, {
@@ -261,11 +267,7 @@ export async function monitorPositions({ symbol, strategy }) {
 
         if (TRADE_MODE === 'live') {
           try {
-            await openMarketOrder(
-              symbol,
-              binanceSide,
-              Number(addQty.toFixed(3)),
-            );
+            await openMarketOrder(symbol, binanceSide, roundQty(addQty));
 
             // ❌ SL/TP більше не чіпаємо
             // ⚠️ Запис у ІСТОРІЮ (БД): просто фіксуємо долив
