@@ -418,9 +418,15 @@ export async function cancelStopOrders(symbol, opts = {}) {
     if (!Array.isArray(res)) return;
 
     for (let o of res) {
+      const type = o.type;
+      const origType = o.origType;
       const isSL =
-        o.type.includes('STOP') || o.type.includes('TRAILING_STOP_MARKET');
-      const isTP = o.type.includes('TAKE_PROFIT');
+        type === 'STOP_MARKET' ||
+        origType === 'STOP_MARKET' ||
+        type === 'TRAILING_STOP_MARKET' ||
+        origType === 'TRAILING_STOP_MARKET';
+      const isTP =
+        type === 'TAKE_PROFIT_MARKET' || origType === 'TAKE_PROFIT_MARKET';
 
       // фільтрація
       if (onlySL && !isSL) continue;
