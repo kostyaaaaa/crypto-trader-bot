@@ -6,7 +6,8 @@ const RSI_WARMUP = 60;
 const VOL_LOOKBACK = 10;
 const MA_SHORT = 7;
 const MA_LONG = 25;
-const CANDLE_DURATION_MS = 15 * 60 * 1000;
+// fallback, якщо не вдасться інферити з масиву свічок (напр. 15m):
+const CANDLE_DURATION_MS_FALLBACK = 15 * 60 * 1000;
 
 // ---------- math helpers ----------
 function sma(values, period) {
@@ -50,6 +51,23 @@ function avg(values) {
   return sum / values.length;
 }
 
+// Інференс тривалості свічки з масиву (за різницею openTime двох останніх)
+// Якщо не вдається — повертаємо fallback.
+function inferCandleDurationMs(
+  candles,
+  fallback = CANDLE_DURATION_MS_FALLBACK,
+) {
+  try {
+    if (Array.isArray(candles) && candles.length >= 2) {
+      const t1 = Date.parse(candles[candles.length - 1].time);
+      const t0 = Date.parse(candles[candles.length - 2].time);
+      const diff = t1 - t0;
+      if (Number.isFinite(diff) && diff > 0) return diff;
+    }
+  } catch {}
+  return fallback;
+}
+
 // ---------- main ----------
 export async function analyzeRsiVolumeTrend(symbol, candles = null) {
   const needBars = Math.max(
@@ -75,18 +93,25 @@ export async function analyzeRsiVolumeTrend(symbol, candles = null) {
 
   // --- Volume handling with progress adjustment ---
   const lastCandle = candles.at(-1);
-  const elapsedMs =
-    Date.now() -
-    (Number(lastCandle.timestamp_open) || Number(lastCandle.time_open) || 0);
-  const progress = Math.min(1, Math.max(0.1, elapsedMs / CANDLE_DURATION_MS));
+  const openTimeMs = Date.parse(lastCandle.time) || 0; // last candle openTime (ISO)
+  const durationMs = inferCandleDurationMs(
+    candles,
+    CANDLE_DURATION_MS_FALLBACK,
+  );
+  const elapsedMs = Math.max(0, Date.now() - openTimeMs);
 
+  // Прогрес формування останньої свічки (0..1). Клепаємо нижню межу, щоб не дико роздувати volume.
+  let progress = durationMs > 0 ? elapsedMs / durationMs : 1;
+  progress = Math.max(0.1, Math.min(1, progress)); // clamp [10%, 100%]
+
+  // Нормуємо останній обсяг до повної свічки
   const lastVol = (vols.at(-1) || 0) / progress;
 
+  // Середній обсяг по попередніх повних свічках (без останньої)
   const avgVol = avg(vols.slice(-VOL_LOOKBACK - 1, -1));
 
   const volRatio = avgVol ? lastVol / avgVol : 0;
   const maSlope = ma7 && ma25 ? ma7 - ma25 : 0;
-  const volMomentum = lastVol - avgVol;
 
   const rsi = rsiWilder(closes, RSI_PERIOD, RSI_WARMUP);
 
@@ -184,19 +209,20 @@ export async function analyzeRsiVolumeTrend(symbol, candles = null) {
       volRatio: Number(volRatio.toFixed(2)),
       trendLong: Number(trendLong.toFixed(2)),
       trendShort: Number(trendShort.toFixed(2)),
-      price: Number(price.toFixed(2)),
-      ma7: Number(ma7.toFixed(2)),
-      ma25: Number(ma25.toFixed(2)),
-      maSlope: Number(maSlope.toFixed(4)),
+      price: Number(price.toFixed(6)),
+      ma7: Number(ma7?.toFixed(6)),
+      ma25: Number(ma25?.toFixed(6)),
+      maSlope: Number(maSlope?.toFixed(6)),
       volume: Number(lastVol.toFixed(2)),
       avgVol: Number(avgVol.toFixed(2)),
-      volMomentum: Number(volMomentum.toFixed(2)),
       rsiPeriod: RSI_PERIOD,
       rsiWarmup: RSI_WARMUP,
       volLookback: VOL_LOOKBACK,
       maShort: MA_SHORT,
       maLong: MA_LONG,
       deadZone,
+      candleOpen: lastCandle.time,
+      candleDurationMs: durationMs,
     },
   };
 }

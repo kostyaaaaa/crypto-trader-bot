@@ -34,6 +34,7 @@ export type TCoinConfig = {
       requiredModules: string[];
       maxSpreadPct: number;
       cooldownMin: number;
+      lookback: number;
       avoidWhen: {
         volatility: string;
         fundingExtreme: {

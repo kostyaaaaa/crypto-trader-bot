@@ -53,6 +53,7 @@ export const swingTradingPreset: TCoinConfig = {
       requiredModules: ['trend', 'trendRegime'],
       maxSpreadPct: 0.04,
       cooldownMin: 60,
+      lookback: 3,
       avoidWhen: { volatility: 'DEAD', fundingExtreme: { absOver: 0.08 } },
       sideBiasTolerance: 8,
     },

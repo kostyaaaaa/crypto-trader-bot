@@ -53,6 +53,7 @@ export const scalpingPreset: TCoinConfig = {
       requiredModules: ['liquidity', 'openInterest'],
       maxSpreadPct: 0.02,
       cooldownMin: 2,
+      lookback: 3,
       avoidWhen: { volatility: 'DEAD', fundingExtreme: { absOver: 0.08 } },
       sideBiasTolerance: 2,
     },

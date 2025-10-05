@@ -132,7 +132,6 @@ export async function notifyTrade(position = {}, action = 'UPDATE') {
       `TPs:\n${tpText}`,
       `Opened: ${openedAt}`,
       `Closed: ${closedAt}`,
-      `Link: ${linkLine}`,
     ].join('\n');
 
     const text = `${header}\n${body}${linkLine}`;

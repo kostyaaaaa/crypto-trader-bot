@@ -66,6 +66,7 @@ export interface IEntryConfig {
   requiredModules: string[];
   maxSpreadPct: number;
   cooldownMin: number;
+  lookback: number;
   avoidWhen: IAvoidWhen;
   sideBiasTolerance: number;
 }
@@ -240,6 +241,7 @@ const entryConfigSchema = new Schema(
     requiredModules: { type: [String], required: true },
     maxSpreadPct: { type: Number, required: true },
     cooldownMin: { type: Number, required: true },
+    lookback: { type: Number, required: true },
     avoidWhen: { type: avoidWhenSchema, required: true },
     sideBiasTolerance: { type: Number, required: true },
   },

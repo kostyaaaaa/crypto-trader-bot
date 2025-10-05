@@ -53,6 +53,7 @@ export const positionTradingPreset: TCoinConfig = {
       requiredModules: ['trend', 'trendRegime'],
       maxSpreadPct: 0.05,
       cooldownMin: 1440,
+      lookback: 3,
       avoidWhen: { volatility: 'DEAD', fundingExtreme: { absOver: 0.0008 } },
       sideBiasTolerance: 10,
     },

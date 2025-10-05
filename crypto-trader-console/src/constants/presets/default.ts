@@ -56,6 +56,7 @@ export const defaultPreset: TCoinConfig = {
       requiredModules: ['trend', 'trendRegime'],
       maxSpreadPct: 0.05,
       cooldownMin: 5,
+      lookback: 3,
       avoidWhen: {
         volatility: 'DEAD',
         fundingExtreme: {
