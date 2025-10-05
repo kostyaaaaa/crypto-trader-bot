@@ -16,8 +16,26 @@ export async function preparePosition(symbol, cfg, analysis, side, entryPrice) {
   const qty = sizeUsd / entryPrice;
 
   const volMeta = analysis?.modules?.volatility?.meta || {};
-  const atr = Number(volMeta.atr ?? 0);
-  const atrPct = Number(volMeta.atrPct ?? 0);
+  const atrAbsRaw = Number(volMeta.atrAbs ?? volMeta.atr ?? NaN);
+  const atrPctRaw = Number(volMeta.atrPct ?? NaN);
+  const atr =
+    Number.isFinite(atrAbsRaw) && atrAbsRaw > 0
+      ? atrAbsRaw
+      : Number.isFinite(atrPctRaw) &&
+          atrPctRaw > 0 &&
+          Number.isFinite(entryPrice) &&
+          entryPrice > 0
+        ? (entryPrice * atrPctRaw) / 100
+        : 0;
+  const atrPct =
+    Number.isFinite(atr) &&
+    atr > 0 &&
+    Number.isFinite(entryPrice) &&
+    entryPrice > 0
+      ? (atr / entryPrice) * 100
+      : Number.isFinite(atrPctRaw)
+        ? atrPctRaw
+        : 0;
   const atrWindow = Number(volMeta.window ?? 0);
 
   let stopPrice = null;
@@ -56,18 +74,15 @@ export async function preparePosition(symbol, cfg, analysis, side, entryPrice) {
       for (let i = 0; i < exits.tp.tpGridPct.length; i++) {
         const pct = Number(exits.tp.tpGridPct[i]);
         if (!Number.isFinite(pct)) continue;
+        const rel = pct / 100;
 
-        const profitUsd = marginUsd * (pct / 100);
-        const tpDist = profitUsd / qty;
         const tpPrice =
-          side === 'LONG' ? entryPrice + tpDist : entryPrice - tpDist;
+          side === 'LONG' ? entryPrice * (1 + rel) : entryPrice * (1 - rel);
 
         const sizePct = Number(exits.tp.tpGridSizePct?.[i] ?? 0);
-
-        const pctChange =
-          side === 'LONG'
-            ? Number((((tpPrice - entryPrice) / entryPrice) * 100).toFixed(3))
-            : Number((((entryPrice - tpPrice) / entryPrice) * 100).toFixed(3));
+        const pctChange = Number(
+          (Math.abs((tpPrice - entryPrice) / entryPrice) * 100).toFixed(3),
+        );
 
         takeProfits.push({ price: tpPrice, sizePct, pct: pctChange });
       }
@@ -126,6 +141,7 @@ export async function preparePosition(symbol, cfg, analysis, side, entryPrice) {
       volatilityStatus: analysis?.modules?.volatility?.meta?.regime ?? null,
       trendRegimeSignal: analysis?.modules?.trendRegime?.signal ?? null,
       atr: Number.isFinite(atr) ? atr : null,
+      atrAbs: Number.isFinite(atr) ? atr : null,
       atrPct: Number.isFinite(atrPct) ? atrPct : null,
       atrWindow: Number.isFinite(atrWindow) ? atrWindow : null,
       volatilityThresholds: volMeta.thresholds || null,

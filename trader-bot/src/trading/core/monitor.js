@@ -64,7 +64,6 @@ export async function monitorPositions({ symbol, strategy }) {
   if (!positions.length) return;
 
   const price = await getMarkFromHub(symbol);
-  console.log(price, 'price', symbol);
   if (price == null) return;
 
   // Правило виходу за N послідовних протилежних сигналів: 0 => вимкнено
@@ -144,17 +143,13 @@ export async function monitorPositions({ symbol, strategy }) {
 
     /* ===== 1) TRAILING (PnL-anchored) ===== */
     const trailingCfg = strategy?.exits?.trailing;
-    console.log(trailingCfg, 'trailingCfg', symbol);
 
     // Єдиний режим:
     // - startAfterPct: PnL% від entry, з якого активуємо трейл
     // - trailStepPct: PnL% від entry, на якій відстані від max PnL тримаємо SL
     if (trailingCfg?.use && entryPrice) {
-      console.log(entryPrice, 'entryPrice', symbol);
-
       try {
         let trailingState = openDoc?.trailing || null;
-        console.log(trailingState, 'trailingState', symbol);
 
         // Значення у конфізі задаються у ROI% (PnL%)
         const lev = Math.max(1, Number(strategy?.capital?.leverage) || 1);
