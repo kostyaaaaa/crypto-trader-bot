@@ -74,10 +74,11 @@ export async function preparePosition(symbol, cfg, analysis, side, entryPrice) {
       for (let i = 0; i < exits.tp.tpGridPct.length; i++) {
         const pct = Number(exits.tp.tpGridPct[i]);
         if (!Number.isFinite(pct)) continue;
-        const rel = pct / 100;
-
+        // ROI-based TP: pct is desired ROI on margin, not price %
+        const profitUsd = marginUsd * (pct / 100);
+        const tpDist = profitUsd / qty; // price distance that yields profitUsd on current qty
         const tpPrice =
-          side === 'LONG' ? entryPrice * (1 + rel) : entryPrice * (1 - rel);
+          side === 'LONG' ? entryPrice + tpDist : entryPrice - tpDist;
 
         const sizePct = Number(exits.tp.tpGridSizePct?.[i] ?? 0);
         const pctChange = Number(
