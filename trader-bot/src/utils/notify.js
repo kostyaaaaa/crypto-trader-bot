@@ -120,7 +120,8 @@ export async function notifyTrade(position = {}, action = 'UPDATE') {
     } else {
       header = `ℹ️ *${symbol}* — ${status}\n`;
     }
-
+    const link = buildPositionLink(position);
+    const linkLine = link ? `\n🔗 ${link}` : '';
     const body = [
       `Side: *${side}*`,
       !!PNL ? `PNL: ${PNL}$` : '',
@@ -131,10 +132,9 @@ export async function notifyTrade(position = {}, action = 'UPDATE') {
       `TPs:\n${tpText}`,
       `Opened: ${openedAt}`,
       `Closed: ${closedAt}`,
+      `Link: ${linkLine}`,
     ].join('\n');
 
-    const link = buildPositionLink(position);
-    const linkLine = link ? `\n🔗 ${link}` : '';
     const text = `${header}\n${body}${linkLine}`;
 
     await sendTelegram(text);
