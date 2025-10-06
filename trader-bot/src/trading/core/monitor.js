@@ -151,17 +151,36 @@ export async function monitorPositions({ symbol, strategy }) {
       try {
         let trailingState = openDoc?.trailing || null;
 
-        // Значення у конфізі задаються у ROI% (PnL%)
-        const lev = Math.max(1, Number(strategy?.capital?.leverage) || 1);
+        const levCfg = Math.max(1, Number(strategy?.capital?.leverage) || 1);
+        const levLive = Math.max(
+          1,
+          Number(pos?.leverage) || Number(openDoc?.meta?.leverage) || levCfg,
+        );
+        const lev = levLive;
+
         const startAfterRoiPct = Math.max(
           0,
           Number(trailingCfg.startAfterPct) || 0,
         ); // ROI%
         const gapRoiPct = Math.max(0, Number(trailingCfg.trailStepPct) || 0); // ROI%
 
-        // Поточний рух ціни (% від entry) та відповідний ROI%
+        // Обчислюємо ROI% максимально близько до Binance UI
         const priceMovePct = ((price - entryPrice) / entryPrice) * 100 * dir;
-        const pnlRoiPct = priceMovePct * lev;
+        const unreal = Number(pos?.unRealizedProfit);
+        const initMargin = Number(
+          pos?.isolatedMargin ?? pos?.initialMargin ?? NaN,
+        );
+        let pnlRoiPct =
+          Number.isFinite(unreal) &&
+          Number.isFinite(initMargin) &&
+          initMargin > 0
+            ? (unreal / initMargin) * 100
+            : priceMovePct * lev;
+
+        // Діагностика трейла (можна відключити, якщо шумно)
+        logger.info(
+          `🔍 TRAIL ${symbol}: side=${side} ROI=${pnlRoiPct.toFixed(2)}% (move=${priceMovePct.toFixed(3)}% * lev=${lev}) start=${startAfterRoiPct}% gap=${gapRoiPct}% active=${!!openDoc?.trailing?.active}`,
+        );
 
         // 1) Активуємо трейл один раз, коли ROI% досяг порогу
         if (!trailingState?.active && pnlRoiPct >= startAfterRoiPct) {
@@ -228,49 +247,70 @@ export async function monitorPositions({ symbol, strategy }) {
     /* ===== 2) DCA / Adds ===== */
     const { sizing } = strategy || {};
     if (sizing && sizing.maxAdds > 0 && entryPrice) {
-      const movePct = (Number(sizing.addOnAdverseMovePct) || 0) / 100;
-      const adversePrice =
-        side === 'LONG'
-          ? entryPrice * (1 - movePct)
-          : entryPrice * (1 + movePct);
+      // === ROI-based adds (aligned with trailing/TP/SL semantics) ===
+      // Trigger when ROI% falls to -addOnAdverseMovePct (negative ROI)
+      const roiTrigger = Math.max(0, Number(sizing.addOnAdverseMovePct) || 0);
 
-      const condition =
-        (side === 'LONG' && price <= adversePrice) ||
-        (side === 'SHORT' && price >= adversePrice);
+      // Compute ROI% similar to trailing block (prefer Binance fields)
+      const levCfg2 = Math.max(1, Number(strategy?.capital?.leverage) || 1);
+      const levLive2 = Math.max(
+        1,
+        Number(pos?.leverage) || Number(openDoc?.meta?.leverage) || levCfg2,
+      );
+      const lev2 = levLive2;
 
-      // Перевірка аналізу: використовуємо bias (або signal як fallback), щоб було консистентно з рештою логіки
+      const priceMovePct2 = ((price - entryPrice) / entryPrice) * 100 * dir;
+      const unreal2 = Number(pos?.unRealizedProfit);
+      const initMargin2 = Number(
+        pos?.isolatedMargin ?? pos?.initialMargin ?? NaN,
+      );
+      const pnlRoiPct2 =
+        Number.isFinite(unreal2) &&
+        Number.isFinite(initMargin2) &&
+        initMargin2 > 0
+          ? (unreal2 / initMargin2) * 100
+          : priceMovePct2 * lev2;
+
+      // Skip add if latest analysis flips against our side
       const ana = getAnaSide(lastAnalysis);
       if (
         ana &&
         ((side === 'LONG' && ana === 'SHORT') ||
           (side === 'SHORT' && ana === 'LONG'))
       ) {
-        // Останній аналіз протилежний поточній позиції — долив не робимо
-        continue;
-      }
+        // Opposite bias — no averaging down
+        // continue to next position iteration
+      } else {
+        const shouldAdd = pnlRoiPct2 <= -roiTrigger;
 
-      if (condition && addsCount < sizing.maxAdds) {
-        // Беремо поточний нотіонал з live-даних: qty * entryPrice
-        const notionalUsd = entryPrice * liveQty; // $-обсяг
-        const mult = Number(sizing.addMultiplier) || 1;
-        const addSizeUsd = notionalUsd * mult;
-        const addQty = addSizeUsd / price; // монети
+        if (shouldAdd && addsCount < sizing.maxAdds) {
+          // Fixed-size add based on the FIRST margin (notional = baseMargin * lev)
+          const levForNotional = lev2;
+          const baseMarginUsd =
+            Number(openDoc?.marginUsd) ||
+            (Number(openDoc?.initialSizeUsd) && levForNotional > 0
+              ? Number(openDoc.initialSizeUsd) / levForNotional
+              : 0);
 
-        if (!Number.isFinite(addQty) || addQty <= 0) {
-          continue;
-        }
+          const mult = Number(sizing.addMultiplier) || 1; // e.g., 0.5 => add 50% of first margin
+          const addMarginUsd = baseMarginUsd * mult;
+          const addNotionalUsd = addMarginUsd * levForNotional;
+          const addQty = addNotionalUsd / price;
 
-        if (TRADE_MODE === 'live') {
-          try {
-            await openMarketOrder(symbol, binanceSide, roundQty(addQty));
+          if (Number.isFinite(addQty) && addQty > 0) {
+            logger.info(
+              `➕ ADD ${symbol}: ROI=${pnlRoiPct2.toFixed(2)}% ≤ -${roiTrigger}% | baseMargin=${baseMarginUsd.toFixed(2)}$ mult=${mult} lev=${levForNotional} -> notional=${addNotionalUsd.toFixed(2)}$ qty=${addQty.toFixed(6)}`,
+            );
 
-            // ❌ SL/TP більше не чіпаємо
-            // ⚠️ Запис у ІСТОРІЮ (БД): просто фіксуємо долив
-            await addToPosition(symbol, { qty: Number(addQty), price });
-          } catch {}
-        } else {
-          // Симуляція — теж не чіпаємо SL/TP
-          await addToPosition(symbol, { qty: Number(addQty), price });
+            if (TRADE_MODE === 'live') {
+              try {
+                await openMarketOrder(symbol, binanceSide, roundQty(addQty));
+                await addToPosition(symbol, { qty: Number(addQty), price });
+              } catch {}
+            } else {
+              await addToPosition(symbol, { qty: Number(addQty), price });
+            }
+          }
         }
       }
     }
