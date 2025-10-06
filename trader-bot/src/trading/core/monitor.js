@@ -95,6 +95,20 @@ export async function monitorPositions({ symbol, strategy }) {
     const binanceSide = side === 'LONG' ? 'BUY' : 'SELL';
 
     // === Exit on consecutive opposite signals (strict last-N) ===
+    // Prefer DB stopPrice (ми його точно оновлюємо), fallback до live orders
+    let currentSL = Number.isFinite(Number(openDoc?.stopPrice))
+      ? Number(openDoc.stopPrice)
+      : null;
+    if (currentSL == null && Array.isArray(orders)) {
+      const slOrder = orders.find(
+        (o) =>
+          o?.type === 'SL' ||
+          o?.type === 'STOP' ||
+          /STOP/i.test(String(o?.type || '')),
+      );
+      if (slOrder) currentSL = Number(slOrder.price) || null;
+    }
+
     if (oppExitN > 0) {
       const anaSideFn = getAnaSide;
       const isOppositeToPos = (s) =>
@@ -134,10 +148,6 @@ export async function monitorPositions({ symbol, strategy }) {
         continue; // не виконуємо інший менеджмент на цій ітерації
       }
     }
-
-    const currentSL = Array.isArray(orders)
-      ? (orders.find((o) => o.type === 'SL')?.price ?? null)
-      : null;
 
     const addsCount = openDoc?.adds?.length || 0;
 
@@ -198,6 +208,18 @@ export async function monitorPositions({ symbol, strategy }) {
             size: liveQty,
             meta: { startAfterRoiPct, gapRoiPct, lev },
           });
+        }
+        // Persist trailing state to history even якщо ще не рухали SL
+        if (trailingState?.active) {
+          try {
+            const persistPrice = currentSL ?? entryPrice; // не змінюємо stopPrice, якщо його ще не було
+            await updateStopPrice(
+              symbol,
+              persistPrice,
+              'TRAIL_ON',
+              trailingState,
+            );
+          } catch {}
         }
 
         // 2) Тягнемо SL за максимумом ROI у наш бік
