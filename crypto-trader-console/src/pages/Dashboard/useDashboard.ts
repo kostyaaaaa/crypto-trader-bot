@@ -8,8 +8,6 @@ import {
   type IGetFuturesBalanceResponse,
 } from '../../api';
 
-const TEN_SECONDS = 10 * 1000;
-
 const useDashboard = () => {
   const [futuresAssets, setFuturesAssets] =
     useState<IGetFuturesBalanceResponse['assets']>();
@@ -45,7 +43,6 @@ const useDashboard = () => {
       return data;
     },
     refetchOnWindowFocus: false,
-    refetchInterval: TEN_SECONDS,
   });
 
   const { data: allSpotPrices } = useQuery({
