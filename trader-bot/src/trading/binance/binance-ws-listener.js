@@ -13,7 +13,6 @@ import {
 import {
   cancelAllOrders,
   cancelStopOrders,
-  getOpenOrders,
   getPosition,
   getPositionFresh,
   openMarketOrder,
@@ -423,52 +422,6 @@ async function handleEvent(msg) {
             } catch (err) {
               logger.error(
                 `❌ ${symbol}: failed to close position:`,
-                err?.message || err,
-              );
-            }
-          } else {
-            // Додаткова перевірка: якщо позиція на біржі закрита, але в БД ще відкрита
-            // (може статися через дублікати/out-of-order events)
-            try {
-              const live = await getPositionFresh(symbol);
-              const liveAmt = live
-                ? Math.abs(Number(live.positionAmt) || 0)
-                : 0;
-
-              if (liveAmt === 0 && pos) {
-                logger.info(
-                  `🔍 ${symbol}: Live position is 0 but DB shows open. Checking if all TPs should be filled.`,
-                );
-
-                // Перевіряємо чи всі TP ордери на біржі виконані
-                const openOrders = await getOpenOrders(symbol);
-                const tpOrders = openOrders.filter(
-                  (order) =>
-                    order.type === 'TAKE_PROFIT_MARKET' &&
-                    order.status === 'FILLED',
-                );
-
-                // Якщо немає відкритих TP ордерів і позиція закрита - закриваємо в БД
-                if (tpOrders.length === 0) {
-                  logger.info(
-                    `🔧 ${symbol}: No open TP orders found, closing position in DB`,
-                  );
-                  const realizedFromTP = sumTpRealizedPnl(pos);
-                  const closed = await closePositionHistory(symbol, {
-                    closedBy: 'TP',
-                    finalPnl: Number.isFinite(realizedFromTP)
-                      ? Number(realizedFromTP.toFixed(4))
-                      : undefined,
-                  });
-                  await cancelAllOrders(symbol);
-                  if (closed) {
-                    await notifyTrade(closed, 'CLOSED');
-                  }
-                }
-              }
-            } catch (err) {
-              logger.warn(
-                `⚠️ ${symbol}: Failed to check live position for closure:`,
                 err?.message || err,
               );
             }
