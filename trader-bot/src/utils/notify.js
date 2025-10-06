@@ -9,7 +9,7 @@ function buildPositionLink(pos) {
     if (!base || !pos || !pos._id) return null;
     const clean = base.replace(/\/+$/, '');
     return `${clean}/positions?pos=${pos._id}`;
-  } catch (e) {
+  } catch {
     return null;
   }
 }

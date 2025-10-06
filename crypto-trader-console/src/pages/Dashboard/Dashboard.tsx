@@ -1,6 +1,7 @@
 import { Button, ScrollArea, Table } from '@mantine/core';
 import clsx from 'clsx';
 import { useState, type FC } from 'react';
+import { closePosition } from '../../api';
 import { CardWrapper } from '../../components';
 import styles from './Dashboard.module.scss';
 import useDashboard from './useDashboard';
@@ -24,6 +25,20 @@ const Dashboard: FC = () => {
   const isPlusPnl = currentPnl >= 0;
 
   const [scrolled, setScrolled] = useState<boolean>(false);
+  const [isClosingPosition, setIsClosingPosition] = useState<boolean>(false);
+
+  const handleClosePosition = async (symbol: string) => {
+    setIsClosingPosition(true);
+    try {
+      await closePosition(symbol);
+      // Refresh positions after closing
+      refetchFuturesPositions();
+    } catch (error) {
+      console.error('Failed to close position:', error);
+    } finally {
+      setIsClosingPosition(false);
+    }
+  };
 
   const rows = futuresPositions?.map((row) => {
     const isLong = parseFloat(row.positionAmt) > 0;
@@ -51,6 +66,17 @@ const Dashboard: FC = () => {
         </Table.Td>
         <Table.Td>
           ${calcCommission(Math.abs(+row.notional)).toFixed(2)}
+        </Table.Td>
+        <Table.Td>
+          <Button
+            size="xs"
+            color="red"
+            variant="light"
+            onClick={() => handleClosePosition(row.symbol)}
+            disabled={isClosingPosition}
+          >
+            Close
+          </Button>
         </Table.Td>
       </Table.Tr>
     );
@@ -102,6 +128,7 @@ const Dashboard: FC = () => {
                     <Table.Th>Leverage</Table.Th>
                     <Table.Th>Unrealized Profit</Table.Th>
                     <Table.Th>Tax fee</Table.Th>
+                    <Table.Th>Actions</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>{rows}</Table.Tbody>

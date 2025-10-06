@@ -54,7 +54,7 @@ export interface IPosition {
   adjustments: IAdjustment[];
   analysis: Schema.Types.ObjectId;
   meta: IMeta;
-  closedAt?: number;
+  closedAt?: Date;
   closedBy?: string;
   finalPnl?: number;
   createdAt?: Date;

@@ -1,5 +1,11 @@
 import { IPosition, PositionModel } from 'crypto-trader-db';
 import { Request, Response } from 'express';
+import {
+  cancelStopOrders,
+  closePosition as closeBinancePosition,
+  getPosition,
+} from '../api/binance/trading.js';
+import { notifyPositionClosed } from '../services/notificationService.js';
 import logger from '../utils/Logger.js';
 import { ApiErrorResponse } from './common.type.js';
 
@@ -49,7 +55,7 @@ const getPositionsByDateRangeAndSymbol = async (
     }
 
     // Find closed positions data within the timestamp range
-    const query: any = {
+    const query: Record<string, unknown> = {
       status: 'CLOSED',
       closedAt: { $gte: startDate, $lte: endDate },
     };
@@ -76,21 +82,148 @@ const getPositionsByDateRangeAndSymbol = async (
       count: positionsData.length,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(
       `Error fetching closed positions history by date range and symbol for: ${req.query.symbol || 'all'}`,
       {
-        message: error.message,
-        stack: error.stack,
+        message: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined,
       },
     );
 
     res.status(500).json({
       error:
         'Failed to fetch closed positions history by date range and symbol',
-      message: error.message,
+      message: errorMessage,
     });
   }
 };
 
-export { getPositionsByDateRangeAndSymbol };
+// Close position response interface
+interface ClosePositionResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    symbol: string;
+    side: string;
+    size: number;
+    finalPnl: number;
+    binanceOrderId: number;
+  };
+  timestamp: string;
+}
+
+// Close a position
+const closePosition = async (
+  req: Request,
+  res: Response<ClosePositionResponse | ApiErrorResponse>,
+): Promise<void> => {
+  try {
+    const { symbol } = req.body;
+
+    if (!symbol) {
+      res.status(400).json({
+        error: 'Missing parameters',
+        message: 'symbol is required in request body',
+      });
+      return;
+    }
+
+    // Find the open position in MongoDB
+    const openPosition = await PositionModel.findOne({
+      symbol,
+      status: 'OPEN',
+    });
+
+    if (!openPosition) {
+      res.status(404).json({
+        error: 'Position not found',
+        message: `No open position found for symbol ${symbol}`,
+      });
+      return;
+    }
+
+    // Get current position from Binance
+    const binancePosition = await getPosition(symbol);
+    if (!binancePosition || parseFloat(binancePosition.positionAmt) === 0) {
+      res.status(404).json({
+        error: 'Position not found',
+        message: `No active position found on Binance for symbol ${symbol}`,
+      });
+      return;
+    }
+
+    const positionSize = Math.abs(parseFloat(binancePosition.positionAmt));
+    const positionSide =
+      parseFloat(binancePosition.positionAmt) > 0 ? 'LONG' : 'SHORT';
+
+    // Cancel all stop orders first
+    await cancelStopOrders(symbol);
+    logger.info(`Canceled stop orders for ${symbol}`);
+
+    // Close the position on Binance
+    const closeResult = await closeBinancePosition(
+      symbol,
+      positionSide,
+      positionSize,
+    );
+    logger.info(`Closed position on Binance for ${symbol}:`, closeResult);
+
+    // Calculate final PnL (this is a simplified calculation)
+    const entryPrice = parseFloat(binancePosition.entryPrice);
+    const currentPrice = parseFloat(binancePosition.markPrice);
+    const pnl =
+      positionSide === 'LONG'
+        ? (currentPrice - entryPrice) * positionSize
+        : (entryPrice - currentPrice) * positionSize;
+
+    // Update position in MongoDB
+    const updatedPosition = await PositionModel.findByIdAndUpdate(
+      openPosition._id,
+      {
+        status: 'CLOSED',
+        closedAt: new Date(),
+        closedBy: 'MANUAL',
+        finalPnl: pnl,
+      },
+      { new: true },
+    );
+
+    if (!updatedPosition) {
+      throw new Error('Failed to update position in database');
+    }
+
+    // Send Telegram notification
+    await notifyPositionClosed(updatedPosition);
+    logger.info(`Sent Telegram notification for closed position ${symbol}`);
+
+    logger.success(`Successfully closed position for ${symbol}`);
+
+    res.json({
+      success: true,
+      message: `Position ${symbol} closed successfully`,
+      data: {
+        symbol,
+        side: positionSide,
+        size: positionSize,
+        finalPnl: pnl,
+        binanceOrderId: closeResult.orderId,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Error closing position:`, {
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
+    res.status(500).json({
+      error: 'Failed to close position',
+      message: errorMessage,
+    });
+  }
+};
+
+export { closePosition, getPositionsByDateRangeAndSymbol };

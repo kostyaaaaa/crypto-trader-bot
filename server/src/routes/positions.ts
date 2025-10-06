@@ -1,5 +1,8 @@
 import express from 'express';
-import { getPositionsByDateRangeAndSymbol } from '../controllers/positionsController.js';
+import {
+  closePosition,
+  getPositionsByDateRangeAndSymbol,
+} from '../controllers/positionsController.js';
 
 const router = express.Router();
 
@@ -7,5 +10,8 @@ const router = express.Router();
 // Query params: symbol (required), dateFrom (required, ISO timestamp string), dateTo (required, ISO timestamp string)
 // Returns only CLOSED positions within the timestamp range (history endpoint)
 router.get('/', getPositionsByDateRangeAndSymbol);
+
+// POST /positions/close - Close a position
+router.post('/close', closePosition);
 
 export default router;
