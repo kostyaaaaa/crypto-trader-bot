@@ -320,6 +320,7 @@ async function handleEvent(msg) {
                 });
               }
               // Позначаємо TP як виконаний (біржа повертає FILLED коли ордер добрав свій обсяг)
+              // Важливо: позначаємо як filled навіть якщо deltaQty <= 0 (дублікат/out-of-order event)
               tp.filled = true;
               matched = tp;
               break;
@@ -372,6 +373,7 @@ async function handleEvent(msg) {
                   feeAsset,
                 });
               }
+              // Позначаємо TP як виконаний навіть якщо deltaQty <= 0 (дублікат/out-of-order event)
               nearest.filled = true;
             }
           }
@@ -423,46 +425,46 @@ async function handleEvent(msg) {
                 err?.message || err,
               );
             }
-          } else {
-            // ===== BREAK-EVEN після першого TP, якщо трейлінг вимкнено =====
-            try {
-              const tpsTotal = updatedTps.length;
-              const filledCount = updatedTps.filter((tp) => tp.filled).length;
-              const trailingOn = !!pos?.trailingCfg?.use;
+          }
 
-              if (!trailingOn && tpsTotal >= 2 && filledCount === 1) {
-                // перевіряємо поточну live-кількість на біржі
-                const live = await getPosition(symbol);
-                const liveAmt = live
-                  ? Math.abs(Number(live.positionAmt) || 0)
-                  : 0;
+          // ===== BREAK-EVEN після першого TP, якщо трейлінг вимкнено =====
+          try {
+            const tpsTotal = updatedTps.length;
+            const filledCount = updatedTps.filter((tp) => tp.filled).length;
+            const trailingOn = !!pos?.trailingCfg?.use;
 
-                if (liveAmt > 0) {
-                  // скасовуємо лише SL (TP не чіпаємо)
-                  try {
-                    await cancelStopOrders(symbol, { onlySL: true });
-                  } catch {}
+            if (!trailingOn && tpsTotal >= 2 && filledCount === 1) {
+              // перевіряємо поточну live-кількість на біржі
+              const live = await getPosition(symbol);
+              const liveAmt = live
+                ? Math.abs(Number(live.positionAmt) || 0)
+                : 0;
 
-                  // break-even ціна = entryPrice
-                  const bePrice = Number(pos.entryPrice);
+              if (liveAmt > 0) {
+                // скасовуємо лише SL (TP не чіпаємо)
+                try {
+                  await cancelStopOrders(symbol, { onlySL: true });
+                } catch {}
 
-                  // ставимо новий SL на entry для залишкового обсягу
-                  await placeStopLoss(symbol, pos.side, bePrice, liveAmt);
+                // break-even ціна = entryPrice
+                const bePrice = Number(pos.entryPrice);
 
-                  // логімо в історію
-                  await updateStopPrice(symbol, bePrice, 'BREAKEVEN');
+                // ставимо новий SL на entry для залишкового обсягу
+                await placeStopLoss(symbol, pos.side, bePrice, liveAmt);
 
-                  logger.info(
-                    `🟩 ${symbol}: BE set at entry after 1st TP (qty=${liveAmt})`,
-                  );
-                }
+                // логімо в історію
+                await updateStopPrice(symbol, bePrice, 'BREAKEVEN');
+
+                logger.info(
+                  `🟩 ${symbol}: BE set at entry after 1st TP (qty=${liveAmt})`,
+                );
               }
-            } catch (e) {
-              logger.warn(
-                `⚠️ ${symbol}: failed to set BE after 1st TP:`,
-                e?.message || e,
-              );
             }
+          } catch (e) {
+            logger.warn(
+              `⚠️ ${symbol}: failed to set BE after 1st TP:`,
+              e?.message || e,
+            );
           }
           // Інакше — позиція залишається відкритою (частковий TP)
         }
