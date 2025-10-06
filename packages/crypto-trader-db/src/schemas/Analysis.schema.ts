@@ -59,15 +59,6 @@ export interface IOpenInterestMeta {
   priceChangePct: number;
 }
 
-export interface ICorrelationMeta {
-  LONG: number;
-  SHORT: number;
-  candlesUsed: number;
-  btcChangePct: number;
-  group: string;
-  weight: number;
-}
-
 export interface ILongShortMeta {
   LONG: number;
   SHORT: number;
@@ -155,10 +146,6 @@ export interface IOpenInterestModule extends IModuleBase {
   meta: IOpenInterestMeta;
 }
 
-export interface ICorrelationModule extends IModuleBase {
-  meta: ICorrelationMeta;
-}
-
 export interface ILongShortModule extends IModuleBase {
   meta: ILongShortMeta;
 }
@@ -180,7 +167,6 @@ export interface IAnalysisModules {
   funding: IFundingModule;
   liquidations: ILiquidationsModule;
   openInterest: IOpenInterestModule;
-  correlation: ICorrelationModule;
   longShort: ILongShortModule;
   higherMA: IHigherMAModule;
   rsiVolTrend: IRsiVolTrendModule;
@@ -284,18 +270,6 @@ const openInterestMetaSchema = new Schema(
     oiChangePct: { type: Number, required: true },
     oiValueChangePct: { type: Number, required: true },
     priceChangePct: { type: Number, required: true },
-  },
-  { _id: false },
-);
-
-const correlationMetaSchema = new Schema(
-  {
-    LONG: { type: Number, required: true },
-    SHORT: { type: Number, required: true },
-    candlesUsed: { type: Number, required: true },
-    btcChangePct: { type: Number, required: true },
-    group: { type: String, required: true },
-    weight: { type: Number, required: true },
   },
   { _id: false },
 );
@@ -434,17 +408,6 @@ const openInterestModuleSchema = new Schema(
   { _id: false },
 );
 
-const correlationModuleSchema = new Schema(
-  {
-    module: { type: String, required: true },
-    symbol: { type: String, required: true },
-    signal: { type: String, required: true },
-    strength: { type: Number, required: true },
-    meta: { type: correlationMetaSchema, required: true },
-  },
-  { _id: false },
-);
-
 const longShortModuleSchema = new Schema(
   {
     module: { type: String, required: true },
@@ -487,7 +450,6 @@ const analysisModulesSchema = new Schema(
     funding: { type: fundingModuleSchema, required: true },
     liquidations: { type: liquidationsModuleSchema, required: true },
     openInterest: { type: openInterestModuleSchema, required: true },
-    correlation: { type: correlationModuleSchema, required: true },
     longShort: { type: longShortModuleSchema, required: true },
     higherMA: { type: higherMAModuleSchema, required: true },
     rsiVolTrend: { type: rsiVolTrendModuleSchema, required: true },

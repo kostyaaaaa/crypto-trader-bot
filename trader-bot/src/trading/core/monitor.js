@@ -48,9 +48,7 @@ function roundQty(q) {
   return Number(n.toFixed(3)); // adhere to 3-decimal qty granularity
 }
 
-// === Основний моніторинг ===
 export async function monitorPositions({ symbol, strategy }) {
-  // ⛔ Fast pre-check: if there is no OPEN position in DB, skip any REST calls
   const openDoc = await getOpenHistoryDoc(symbol);
   if (!openDoc) return;
 
@@ -64,6 +62,8 @@ export async function monitorPositions({ symbol, strategy }) {
   if (!positions.length) return;
 
   const price = await getMarkFromHub(symbol);
+  console.log(price, 'price');
+
   if (price == null) return;
 
   // Правило виходу за N послідовних протилежних сигналів: 0 => вимкнено
@@ -176,16 +176,59 @@ export async function monitorPositions({ symbol, strategy }) {
 
         // Обчислюємо ROI% максимально близько до Binance UI
         const priceMovePct = ((price - entryPrice) / entryPrice) * 100 * dir;
+
+        // 1) Перевага біржових полів (як у UI)
         const unreal = Number(pos?.unRealizedProfit);
-        const initMargin = Number(
+        const initMarginPos = Number(
           pos?.isolatedMargin ?? pos?.initialMargin ?? NaN,
         );
-        let pnlRoiPct =
+
+        // 2) Якщо біржові поля відсутні/некоректні — рахуємо через qty + margin
+        const qtyFromPos = Number(pos?.qty);
+        const qtyFromDoc = Number(openDoc?.qty);
+        const qtyFromInitialNotional =
+          Number.isFinite(Number(openDoc?.initialSizeUsd)) && entryPrice
+            ? Number(openDoc.initialSizeUsd) / entryPrice
+            : Number.isFinite(Number(openDoc?.size)) && entryPrice
+              ? Number(openDoc.size) / entryPrice
+              : NaN;
+        const qty =
+          [
+            qtyFromPos,
+            qtyFromDoc,
+            qtyFromInitialNotional,
+            Number(liveQty),
+          ].find((v) => Number.isFinite(v) && v > 0) || 0;
+
+        let marginUsd = Number(openDoc?.marginUsd);
+        if (!Number.isFinite(marginUsd) || marginUsd <= 0) {
+          const levForMargin = lev;
+          if (Number.isFinite(qty) && qty > 0 && levForMargin > 0) {
+            marginUsd = (qty * entryPrice) / levForMargin;
+          }
+        }
+
+        let pnlRoiPct;
+        if (
           Number.isFinite(unreal) &&
-          Number.isFinite(initMargin) &&
-          initMargin > 0
-            ? (unreal / initMargin) * 100
-            : priceMovePct * lev;
+          Number.isFinite(initMarginPos) &&
+          initMarginPos > 0
+        ) {
+          // Біржовий спосіб
+          pnlRoiPct = (unreal / initMarginPos) * 100;
+        } else if (
+          Number.isFinite(marginUsd) &&
+          marginUsd > 0 &&
+          Number.isFinite(qty) &&
+          qty > 0
+        ) {
+          // Точний розрахунок через PnL/маржа
+          const pnlUsd = (price - entryPrice) * dir * qty;
+          pnlRoiPct = (pnlUsd / marginUsd) * 100;
+        } else {
+          // Апроксимація через ціновий рух * плече
+          pnlRoiPct = priceMovePct * lev;
+        }
 
         // Діагностика трейла (можна відключити, якщо шумно)
         logger.info(

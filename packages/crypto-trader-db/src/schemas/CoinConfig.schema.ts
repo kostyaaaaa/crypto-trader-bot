@@ -17,7 +17,7 @@ export interface IAnalysisConfig {
     funding: number;
     liquidations: number;
     openInterest: number;
-    correlation: number;
+
     longShort: number;
     higherMA: number;
     rsiVolTrend: number;
@@ -29,7 +29,7 @@ export interface IAnalysisConfig {
     funding: number;
     liquidations: number;
     openInterest: number;
-    correlation: number;
+
     longShort: number;
     higherMA: number;
     rsiVolTrend: number;
@@ -157,7 +157,7 @@ const weightsSchema = new Schema(
     funding: { type: Number, required: true },
     liquidations: { type: Number, required: true },
     openInterest: { type: Number, required: true },
-    correlation: { type: Number, required: true },
+
     longShort: { type: Number, required: true },
     higherMA: { type: Number, required: true },
     rsiVolTrend: { type: Number, required: true },
@@ -173,7 +173,7 @@ const moduleThresholdsSchema = new Schema(
     funding: { type: Number, required: true },
     liquidations: { type: Number, required: true },
     openInterest: { type: Number, required: true },
-    correlation: { type: Number, required: true },
+
     longShort: { type: Number, required: true },
     higherMA: { type: Number, required: true },
     rsiVolTrend: { type: Number, required: true },

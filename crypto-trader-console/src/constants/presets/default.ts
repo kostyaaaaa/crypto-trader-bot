@@ -28,7 +28,7 @@ export const defaultPreset: TCoinConfig = {
       funding: 0.1,
       liquidations: 0.05,
       openInterest: 0.15,
-      correlation: 0.03,
+
       longShort: 0.02,
       higherMA: 0.08,
       rsiVolTrend: 0,
@@ -40,7 +40,7 @@ export const defaultPreset: TCoinConfig = {
       funding: 20,
       liquidations: 30,
       openInterest: 25,
-      correlation: 12,
+
       longShort: 12,
       higherMA: 7,
       rsiVolTrend: 0,

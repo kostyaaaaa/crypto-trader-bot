@@ -58,7 +58,6 @@
 - `funding` → Фандінг.
 - `liquidations` → Ліквідації.
 - `openInterest` → OI зміни.
-- `correlation` → Зв’язок із BTC.
 - `longShort` → Співвідношення лонгів/шортів.
 
 **Рекомендації**:
