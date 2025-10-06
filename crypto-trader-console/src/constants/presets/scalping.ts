@@ -28,7 +28,7 @@ export const scalpingPreset: TCoinConfig = {
       funding: 0.0,
       liquidations: 0.157,
       openInterest: 0.44,
-      correlation: 0.012,
+
       longShort: 0.006,
       higherMA: 0.0,
       rsiVolTrend: 0,
@@ -40,7 +40,7 @@ export const scalpingPreset: TCoinConfig = {
       funding: 10,
       liquidations: 5,
       openInterest: 10,
-      correlation: 15,
+
       longShort: 15,
       higherMA: 5,
       rsiVolTrend: 0,

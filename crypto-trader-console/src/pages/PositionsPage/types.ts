@@ -82,15 +82,6 @@ export interface IOpenInterestMeta {
   priceChangePct: number;
 }
 
-export interface ICorrelationMeta {
-  LONG: number;
-  SHORT: number;
-  candlesUsed: number;
-  btcChangePct: number;
-  group: string;
-  weight: number;
-}
-
 export interface ILongShortMeta {
   LONG: number;
   SHORT: number;
@@ -171,10 +162,6 @@ export interface IOpenInterestModule extends IModuleBase {
   meta: IOpenInterestMeta;
 }
 
-export interface ICorrelationModule extends IModuleBase {
-  meta: ICorrelationMeta;
-}
-
 export interface ILongShortModule extends IModuleBase {
   meta: ILongShortMeta;
 }
@@ -196,7 +183,6 @@ export interface IAnalysisModules {
   funding: IFundingModule;
   liquidations: ILiquidationsModule;
   openInterest: IOpenInterestModule;
-  correlation: ICorrelationModule;
   longShort: ILongShortModule;
   higherMA: IHigherMAModule;
   rsiVolTrend: IRsiVolTrendModule;

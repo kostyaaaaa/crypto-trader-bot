@@ -36,8 +36,6 @@ export const TIPS: Record<string, string> = {
     'Вага ліквідацій (де ріжуть лонги/шорти). Корисно для ловлі імпульсів.',
   'analysisConfig.weights.openInterest':
     'Вага зміни OI (нові позиції/закриття). Часто корелює з продовженням руху.',
-  'analysisConfig.weights.correlation':
-    'Вага кореляції з BTC. Зменшуйте для “самостійних” альтів.',
   'analysisConfig.weights.longShort':
     'Вага біржового Long/Short балансу. Малий обсяг — обережно з довірою.',
   'analysisConfig.weights.higherMA':
@@ -56,8 +54,6 @@ export const TIPS: Record<string, string> = {
     'Поріг для ліквідацій, щоби уникати слабких дисбалансів.',
   'analysisConfig.moduleThresholds.openInterest':
     'Поріг зміни OI. Високі пороги — тільки явні притоки/відтоки.',
-  'analysisConfig.moduleThresholds.correlation':
-    'Поріг значущості кореляції з BTC.',
   'analysisConfig.moduleThresholds.longShort': 'Поріг дисбалансу Long/Short.',
   'analysisConfig.moduleThresholds.higherMA':
     'Поріг для сигналу MA-кросу старшого ТФ.',

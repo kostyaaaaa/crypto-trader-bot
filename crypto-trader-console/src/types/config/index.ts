@@ -100,7 +100,6 @@ type TAnalysisModule = {
   funding: number;
   liquidations: number;
   openInterest: number;
-  correlation: number;
   longShort: number;
   higherMA: number;
   rsiVolTrend: number;

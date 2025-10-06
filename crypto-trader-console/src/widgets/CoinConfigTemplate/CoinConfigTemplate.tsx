@@ -673,7 +673,6 @@ const moduleKeys = [
   'funding',
   'liquidations',
   'openInterest',
-  'correlation',
   'longShort',
   'higherMA',
   'rsiVolTrend',

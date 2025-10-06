@@ -28,7 +28,7 @@ export const dayTradingPreset: TCoinConfig = {
       funding: 0.05,
       liquidations: 0.05,
       openInterest: 0.15,
-      correlation: 0.02,
+
       longShort: 0.03,
       higherMA: 0,
       rsiVolTrend: 0.21,
@@ -40,7 +40,6 @@ export const dayTradingPreset: TCoinConfig = {
       funding: 10,
       liquidations: 15,
       openInterest: 45,
-      correlation: 8,
       longShort: 25,
       higherMA: 8,
       rsiVolTrend: 30,

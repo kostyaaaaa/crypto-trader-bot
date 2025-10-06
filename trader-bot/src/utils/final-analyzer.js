@@ -1,7 +1,6 @@
 import axios from 'axios';
 import {
   analyzeCandles,
-  analyzeCorrelation,
   analyzeFunding,
   analyzeHigherMA,
   analyzeLiquidations,
@@ -93,7 +92,6 @@ export async function finalAnalyzer({
   modules.funding = await analyzeFunding(symbol, fundingWindow);
   modules.liquidations = await analyzeLiquidations(symbol);
   modules.openInterest = await analyzeOpenInterest(symbol, oiWindow);
-  modules.correlation = await analyzeCorrelation(symbol, corrWindow);
   modules.longShort = await analyzeLongShort(symbol, longShortWindow);
   modules.higherMA = await analyzeHigherMA(
     symbol,
