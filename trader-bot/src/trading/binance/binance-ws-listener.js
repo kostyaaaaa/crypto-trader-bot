@@ -449,11 +449,36 @@ async function handleEvent(msg) {
           );
 
           if (allFilled) {
+            // Calculate PnL from actual TP fills in the arrays
             const realizedFromTP = sumTpRealizedPnl({
               ...pos,
               takeProfits: updatedTps,
             });
-            logger.info(`💰 ${symbol}: Calculated TP PnL: ${realizedFromTP}`);
+
+            // If no fills were recorded (due to monotonic violations), calculate from current event
+            let actualPnl = realizedFromTP;
+            if (Math.abs(realizedFromTP) < 0.01) {
+              // Calculate PnL from the current TP fill event
+              const fillQty = Number(o.l) || 0; // last filled quantity
+              const fillPx = Number(o.L) || 0; // last fill price
+              const entry = Number(pos.entryPrice) || 0;
+              const side = pos.side || 'LONG';
+
+              if (fillQty > 0 && fillPx > 0 && entry > 0) {
+                actualPnl = calcFillPnl(entry, fillPx, fillQty, side);
+                logger.info(
+                  `💰 ${symbol}: Calculated PnL from current event - qty=${fillQty}, price=${fillPx}, entry=${entry}, side=${side}, pnl=${actualPnl}`,
+                );
+              } else {
+                logger.warn(
+                  `⚠️ ${symbol}: Cannot calculate PnL from event - qty=${fillQty}, price=${fillPx}, entry=${entry}`,
+                );
+              }
+            }
+
+            logger.info(
+              `💰 ${symbol}: Final TP PnL: ${actualPnl} (from fills: ${realizedFromTP})`,
+            );
 
             try {
               const closed = await closePositionHistory(symbol, {
@@ -462,22 +487,18 @@ async function handleEvent(msg) {
               logger.info(`✅ ${symbol}: Position closed in DB: ${!!closed}`);
 
               // Update the finalPnl after closing to ensure correct PnL is stored
-              if (
-                closed &&
-                Number.isFinite(realizedFromTP) &&
-                realizedFromTP !== 0
-              ) {
+              if (closed && Number.isFinite(actualPnl) && actualPnl !== 0) {
                 await PositionModel.findByIdAndUpdate(
                   closed._id,
-                  { $set: { finalPnl: Number(realizedFromTP.toFixed(8)) } },
+                  { $set: { finalPnl: Number(actualPnl.toFixed(8)) } },
                   { new: true },
                 );
                 logger.info(
-                  `💾 ${symbol}: Updated finalPnl to ${realizedFromTP.toFixed(8)}`,
+                  `💾 ${symbol}: Updated finalPnl to ${actualPnl.toFixed(8)}`,
                 );
 
                 // Update the closed object for notification
-                closed.finalPnl = Number(realizedFromTP.toFixed(8));
+                closed.finalPnl = Number(actualPnl.toFixed(8));
               }
 
               await cancelAllOrders(symbol);
