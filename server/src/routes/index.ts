@@ -3,6 +3,7 @@ import accountRouter from './account.js';
 import analyticsRouter from './analytics.js';
 import coinConfigRouter from './coinConfig.js';
 import positionsRouter from './positions.js';
+import tvWebhookRouter from './tvWebhook.js';
 
 const router = express.Router();
 
@@ -17,5 +18,8 @@ router.use('/analytics', analyticsRouter);
 
 // Mount positions routes
 router.use('/positions', positionsRouter);
+
+// Mount TV webhook routes
+router.use('/', tvWebhookRouter);
 
 export default router;
