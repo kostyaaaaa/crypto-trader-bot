@@ -50,6 +50,7 @@ function roundQty(q) {
 
 export async function monitorPositions({ symbol, strategy }) {
   const openDoc = await getOpenHistoryDoc(symbol);
+  logger.info(`${symbol}:${!!openDoc} - openDoc`);
   if (!openDoc) return;
 
   let positions = [];
@@ -58,10 +59,11 @@ export async function monitorPositions({ symbol, strategy }) {
   } catch {
     return;
   }
-
+  logger.info(`${symbol}:${positions.length} - positions`);
   if (!positions.length) return;
 
   const price = await getMarkFromHub(symbol);
+  logger.info(`${symbol}:${price} - price`);
   if (price == null || !Number.isFinite(Number(price))) {
     logger.warn(
       `⚠️ ${symbol}: no mark price from hub — skip monitor iteration`,
@@ -167,7 +169,8 @@ export async function monitorPositions({ symbol, strategy }) {
 
     /* ===== 1) TRAILING (PnL-anchored) ===== */
     const trailingCfg = strategy?.exits?.trailing;
-
+    logger.info(`${symbol}:${trailingCfg?.use} - trailingCfg?.use`);
+    logger.info(`${symbol}:${entryPrice} - entryPrice`);
     if (trailingCfg?.use && entryPrice) {
       try {
         let trailingState = openDoc?.trailing || null;
