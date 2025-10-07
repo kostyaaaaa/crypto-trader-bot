@@ -318,6 +318,13 @@ async function handleEvent(msg) {
                   fee: feeAmt,
                   feeAsset,
                 });
+                logger.info(
+                  `📝 ${symbol}: Added TP fill - qty=${deltaQty}, price=${fillPx}`,
+                );
+              } else {
+                logger.info(
+                  `🔄 ${symbol}: deltaQty=${deltaQty} (monotonic violation), no fill added but TP marked as filled`,
+                );
               }
               // Позначаємо TP як виконаний (біржа повертає FILLED коли ордер добрав свій обсяг)
               // Важливо: позначаємо як filled навіть якщо deltaQty <= 0 (дублікат/out-of-order event)
@@ -402,11 +409,17 @@ async function handleEvent(msg) {
 
           // Якщо ВСІ тейки виконані → закриваємо позицію і передаємо фінальний PnL (сума по всіх філах TP)
           const allFilled = updatedTps.every((tp) => tp.filled);
+          logger.info(
+            `🔍 ${symbol}: TP status check - allFilled=${allFilled}, filled TPs: ${updatedTps.filter((tp) => tp.filled).length}/${updatedTps.length}`,
+          );
+
           if (allFilled) {
             const realizedFromTP = sumTpRealizedPnl({
               ...pos,
               takeProfits: updatedTps,
             });
+            logger.info(`💰 ${symbol}: Calculated TP PnL: ${realizedFromTP}`);
+
             try {
               const closed = await closePositionHistory(symbol, {
                 closedBy: 'TP',
@@ -414,10 +427,16 @@ async function handleEvent(msg) {
                   ? Number(realizedFromTP.toFixed(4))
                   : undefined,
               });
+              logger.info(`✅ ${symbol}: Position closed in DB: ${!!closed}`);
               await cancelAllOrders(symbol);
               await forceCloseIfLeftover(symbol);
               if (closed) {
                 await notifyTrade(closed, 'CLOSED');
+                logger.info(`📱 ${symbol}: Telegram notification sent`);
+              } else {
+                logger.warn(
+                  `⚠️ ${symbol}: Position closure returned null/undefined`,
+                );
               }
             } catch (err) {
               logger.error(
@@ -425,6 +444,10 @@ async function handleEvent(msg) {
                 err?.message || err,
               );
             }
+          } else {
+            logger.info(
+              `⏳ ${symbol}: Not all TPs filled yet, position remains open`,
+            );
           }
 
           // ===== BREAK-EVEN після першого TP, якщо трейлінг вимкнено =====
