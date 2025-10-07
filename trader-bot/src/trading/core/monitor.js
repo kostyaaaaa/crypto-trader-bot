@@ -62,9 +62,7 @@ export async function monitorPositions({ symbol, strategy }) {
   if (!positions.length) return;
 
   const price = await getMarkFromHub(symbol);
-  console.log(price, 'price');
-
-  if (price == null) return;
+  if (price == null || !Number.isFinite(Number(price))) return;
 
   // Правило виходу за N послідовних протилежних сигналів: 0 => вимкнено
   const oppExitRaw = strategy?.exits?.oppositeCountExit;
@@ -294,6 +292,9 @@ export async function monitorPositions({ symbol, strategy }) {
             (side === 'SHORT' && (!currentSL || newStop < currentSL));
 
           if (needUpdate) {
+            logger.info(
+              `🪢 TRAIL move ${symbol}: SL ${currentSL ?? '—'} → ${newStop.toFixed(6)} (anchorROI=${(trailingState.anchorRoiPct ?? 0).toFixed(2)}%, stepROI=${trailingState.trailStepPct ?? 0}%, lev=${trailingState.lev ?? lev})`,
+            );
             if (TRADE_MODE === 'live') {
               await cancelStopOrders(symbol, { onlySL: true }); // TP не чіпаємо
               await placeStopLoss(symbol, side, newStop, roundQty(liveQty));

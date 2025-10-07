@@ -484,11 +484,11 @@ async function handleEvent(msg) {
             );
           }
 
-          // ===== BREAK-EVEN після першого TP, якщо трейлінг вимкнено =====
+          // ===== BREAK-EVEN після першого TP — ставимо тільки якщо трейлінг ВИМКНЕНО =====
           try {
             const tpsTotal = updatedTps.length;
             const filledCount = updatedTps.filter((tp) => tp.filled).length;
-            const trailingOn = !!pos?.trailingCfg?.use;
+            const trailingOn = !!(pos?.trailing || pos?.trailingCfg?.use);
 
             if (!trailingOn && tpsTotal >= 2 && filledCount === 1) {
               // перевіряємо поточну live-кількість на біржі
