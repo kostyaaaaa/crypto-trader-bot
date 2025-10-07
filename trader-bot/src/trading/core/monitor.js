@@ -62,7 +62,12 @@ export async function monitorPositions({ symbol, strategy }) {
   if (!positions.length) return;
 
   const price = await getMarkFromHub(symbol);
-  if (price == null || !Number.isFinite(Number(price))) return;
+  if (price == null || !Number.isFinite(Number(price))) {
+    logger.warn(
+      `⚠️ ${symbol}: no mark price from hub — skip monitor iteration`,
+    );
+    return;
+  }
 
   // Правило виходу за N послідовних протилежних сигналів: 0 => вимкнено
   const oppExitRaw = strategy?.exits?.oppositeCountExit;
@@ -88,7 +93,14 @@ export async function monitorPositions({ symbol, strategy }) {
   } catch {}
 
   for (let pos of positions) {
-    const { side, entryPrice, size: liveQty, orders } = pos;
+    const { side, entryPrice, qty, orders } = pos;
+    const liveQty = Math.abs(Number(qty));
+    if (!Number.isFinite(liveQty) || liveQty <= 0) {
+      logger.warn(
+        `⚠️ ${symbol}: missing qty in position doc — skip trailing/SL updates`,
+      );
+      continue;
+    }
     const dir = side === 'LONG' ? 1 : -1;
     const binanceSide = side === 'LONG' ? 'BUY' : 'SELL';
 
@@ -106,6 +118,10 @@ export async function monitorPositions({ symbol, strategy }) {
       );
       if (slOrder) currentSL = Number(slOrder.price) || null;
     }
+
+    logger.info(
+      `ℹ️ POS ${symbol}: side=${side} entry=${entryPrice} qty=${liveQty} SL=${currentSL ?? '—'}`,
+    );
 
     if (oppExitN > 0) {
       const anaSideFn = getAnaSide;
@@ -233,6 +249,12 @@ export async function monitorPositions({ symbol, strategy }) {
           `🔍 TRAIL ${symbol}: side=${side} ROI=${pnlRoiPct.toFixed(2)}% (move=${priceMovePct.toFixed(3)}% * lev=${lev}) start=${startAfterRoiPct}% gap=${gapRoiPct}% active=${!!openDoc?.trailing?.active}`,
         );
 
+        if (!trailingState?.active && pnlRoiPct < startAfterRoiPct) {
+          logger.info(
+            `⏸️ TRAIL not active: ROI ${pnlRoiPct.toFixed(2)}% < start ${startAfterRoiPct}%`,
+          );
+        }
+
         // 1) Активуємо трейл один раз, коли ROI% досяг порогу
         if (!trailingState?.active && pnlRoiPct >= startAfterRoiPct) {
           trailingState = {
@@ -249,6 +271,9 @@ export async function monitorPositions({ symbol, strategy }) {
             size: liveQty,
             meta: { startAfterRoiPct, gapRoiPct, lev },
           });
+          logger.info(
+            `▶️ TRAIL_ON ${symbol}: activated at ROI=${pnlRoiPct.toFixed(2)}% (start=${startAfterRoiPct}%)`,
+          );
         }
         // Persist trailing state to history even якщо ще не рухали SL
         if (trailingState?.active) {
@@ -306,9 +331,20 @@ export async function monitorPositions({ symbol, strategy }) {
               size: Number(liveQty),
             });
             await updateStopPrice(symbol, newStop, 'TRAIL', trailingState);
+          } else {
+            logger.info(
+              `⛔ TRAIL no move ${symbol}: newStop=${newStop.toFixed(6)} is not better than currentSL=${currentSL ?? '—'}`,
+            );
           }
         }
-      } catch {}
+      } catch (e) {
+        logger.error(`❌ TRAIL error ${symbol}: ${e?.message || e}`);
+      }
+    } else {
+      if (!trailingCfg?.use)
+        logger.info(`🚫 TRAIL disabled in config for ${symbol}`);
+      if (!entryPrice)
+        logger.warn(`🚫 TRAIL skip: missing entryPrice for ${symbol}`);
     }
     /* ===== 2) DCA / Adds ===== */
     const { sizing } = strategy || {};
