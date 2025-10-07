@@ -4,6 +4,7 @@ import WebSocket from 'ws';
 import logger from '../../utils/db-logger.js';
 import { notifyTrade } from '../../utils/notify.js';
 
+import { PositionModel } from '../../../packages/crypto-trader-db/src/models/Positions.model.js';
 import {
   closePositionHistory,
   getOpenPosition,
@@ -457,11 +458,28 @@ async function handleEvent(msg) {
             try {
               const closed = await closePositionHistory(symbol, {
                 closedBy: 'TP',
-                finalPnl: Number.isFinite(realizedFromTP)
-                  ? Number(realizedFromTP.toFixed(4))
-                  : undefined,
               });
               logger.info(`✅ ${symbol}: Position closed in DB: ${!!closed}`);
+
+              // Update the finalPnl after closing to ensure correct PnL is stored
+              if (
+                closed &&
+                Number.isFinite(realizedFromTP) &&
+                realizedFromTP !== 0
+              ) {
+                await PositionModel.findByIdAndUpdate(
+                  closed._id,
+                  { $set: { finalPnl: Number(realizedFromTP.toFixed(8)) } },
+                  { new: true },
+                );
+                logger.info(
+                  `💾 ${symbol}: Updated finalPnl to ${realizedFromTP.toFixed(8)}`,
+                );
+
+                // Update the closed object for notification
+                closed.finalPnl = Number(realizedFromTP.toFixed(8));
+              }
+
               await cancelAllOrders(symbol);
               await forceCloseIfLeftover(symbol);
               if (closed) {
