@@ -4,7 +4,7 @@ import WebSocket from 'ws';
 import logger from '../../utils/db-logger.js';
 import { notifyTrade } from '../../utils/notify.js';
 
-import { PositionModel } from '../../../packages/crypto-trader-db/src/models/Positions.model.js';
+import { PositionModel } from 'crypto-trader-db';
 import {
   closePositionHistory,
   getOpenPosition,
