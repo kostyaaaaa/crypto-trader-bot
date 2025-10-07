@@ -62,9 +62,12 @@ export async function monitorPositions({ symbol, strategy }) {
   if (!positions.length) return;
 
   const price = await getMarkFromHub(symbol);
-  console.log(price, 'price');
-
-  if (price == null) return;
+  if (price == null || !Number.isFinite(Number(price))) {
+    logger.warn(
+      `⚠️ ${symbol}: no mark price from hub — skip monitor iteration`,
+    );
+    return;
+  }
 
   // Правило виходу за N послідовних протилежних сигналів: 0 => вимкнено
   const oppExitRaw = strategy?.exits?.oppositeCountExit;
@@ -90,7 +93,14 @@ export async function monitorPositions({ symbol, strategy }) {
   } catch {}
 
   for (let pos of positions) {
-    const { side, entryPrice, size: liveQty, orders } = pos;
+    let { side, entryPrice, size: liveQty, orders } = pos;
+    liveQty = Math.abs(Number(liveQty));
+    if (!Number.isFinite(liveQty) || liveQty <= 0) {
+      logger.warn(
+        `⚠️ ${symbol}: missing size in position doc — skip trailing/SL updates`,
+      );
+      continue;
+    }
     const dir = side === 'LONG' ? 1 : -1;
     const binanceSide = side === 'LONG' ? 'BUY' : 'SELL';
 
@@ -108,6 +118,10 @@ export async function monitorPositions({ symbol, strategy }) {
       );
       if (slOrder) currentSL = Number(slOrder.price) || null;
     }
+
+    logger.info(
+      `ℹ️ POS ${symbol}: side=${side} entry=${entryPrice} size=${liveQty} SL=${currentSL ?? '—'}`,
+    );
 
     if (oppExitN > 0) {
       const anaSideFn = getAnaSide;
@@ -154,9 +168,6 @@ export async function monitorPositions({ symbol, strategy }) {
     /* ===== 1) TRAILING (PnL-anchored) ===== */
     const trailingCfg = strategy?.exits?.trailing;
 
-    // Єдиний режим:
-    // - startAfterPct: PnL% від entry, з якого активуємо трейл
-    // - trailStepPct: PnL% від entry, на якій відстані від max PnL тримаємо SL
     if (trailingCfg?.use && entryPrice) {
       try {
         let trailingState = openDoc?.trailing || null;
@@ -183,28 +194,32 @@ export async function monitorPositions({ symbol, strategy }) {
           pos?.isolatedMargin ?? pos?.initialMargin ?? NaN,
         );
 
-        // 2) Якщо біржові поля відсутні/некоректні — рахуємо через qty + margin
-        const qtyFromPos = Number(pos?.qty);
-        const qtyFromDoc = Number(openDoc?.qty);
+        // 2) Якщо біржові поля відсутні/некоректні — рахуємо через size + margin
+        const qtyFromPos = Number(pos?.size);
         const qtyFromInitialNotional =
           Number.isFinite(Number(openDoc?.initialSizeUsd)) && entryPrice
             ? Number(openDoc.initialSizeUsd) / entryPrice
             : Number.isFinite(Number(openDoc?.size)) && entryPrice
               ? Number(openDoc.size) / entryPrice
               : NaN;
-        const qty =
-          [
-            qtyFromPos,
-            qtyFromDoc,
-            qtyFromInitialNotional,
-            Number(liveQty),
-          ].find((v) => Number.isFinite(v) && v > 0) || 0;
+
+        // В БД немає openDoc.qty. Оцінюємо кількість так:
+        // 1) з позиції біржі, 2) з початкового нотіоналу, 3) з поточного liveQty
+        const estQty =
+          [qtyFromPos, qtyFromInitialNotional, Number(liveQty)].find(
+            (v) => Number.isFinite(v) && v > 0,
+          ) || 0;
+
+        // допоміжний лог для діагностики
+        logger.info(
+          `🧮 TRAIL inputs ${symbol}: estQty=${estQty}, entry=${entryPrice}, price=${price}`,
+        );
 
         let marginUsd = Number(openDoc?.marginUsd);
         if (!Number.isFinite(marginUsd) || marginUsd <= 0) {
           const levForMargin = lev;
-          if (Number.isFinite(qty) && qty > 0 && levForMargin > 0) {
-            marginUsd = (qty * entryPrice) / levForMargin;
+          if (Number.isFinite(estQty) && estQty > 0 && levForMargin > 0) {
+            marginUsd = (estQty * entryPrice) / levForMargin;
           }
         }
 
@@ -219,11 +234,11 @@ export async function monitorPositions({ symbol, strategy }) {
         } else if (
           Number.isFinite(marginUsd) &&
           marginUsd > 0 &&
-          Number.isFinite(qty) &&
-          qty > 0
+          Number.isFinite(estQty) &&
+          estQty > 0
         ) {
           // Точний розрахунок через PnL/маржа
-          const pnlUsd = (price - entryPrice) * dir * qty;
+          const pnlUsd = (price - entryPrice) * dir * estQty;
           pnlRoiPct = (pnlUsd / marginUsd) * 100;
         } else {
           // Апроксимація через ціновий рух * плече
@@ -234,6 +249,12 @@ export async function monitorPositions({ symbol, strategy }) {
         logger.info(
           `🔍 TRAIL ${symbol}: side=${side} ROI=${pnlRoiPct.toFixed(2)}% (move=${priceMovePct.toFixed(3)}% * lev=${lev}) start=${startAfterRoiPct}% gap=${gapRoiPct}% active=${!!openDoc?.trailing?.active}`,
         );
+
+        if (!trailingState?.active && pnlRoiPct < startAfterRoiPct) {
+          logger.info(
+            `⏸️ TRAIL not active: ROI ${pnlRoiPct.toFixed(2)}% < start ${startAfterRoiPct}%`,
+          );
+        }
 
         // 1) Активуємо трейл один раз, коли ROI% досяг порогу
         if (!trailingState?.active && pnlRoiPct >= startAfterRoiPct) {
@@ -251,6 +272,9 @@ export async function monitorPositions({ symbol, strategy }) {
             size: liveQty,
             meta: { startAfterRoiPct, gapRoiPct, lev },
           });
+          logger.info(
+            `▶️ TRAIL_ON ${symbol}: activated at ROI=${pnlRoiPct.toFixed(2)}% (start=${startAfterRoiPct}%)`,
+          );
         }
         // Persist trailing state to history even якщо ще не рухали SL
         if (trailingState?.active) {
@@ -294,6 +318,9 @@ export async function monitorPositions({ symbol, strategy }) {
             (side === 'SHORT' && (!currentSL || newStop < currentSL));
 
           if (needUpdate) {
+            logger.info(
+              `🪢 TRAIL move ${symbol}: SL ${currentSL ?? '—'} → ${newStop.toFixed(6)} (anchorROI=${(trailingState.anchorRoiPct ?? 0).toFixed(2)}%, stepROI=${trailingState.trailStepPct ?? 0}%, lev=${trailingState.lev ?? lev})`,
+            );
             if (TRADE_MODE === 'live') {
               await cancelStopOrders(symbol, { onlySL: true }); // TP не чіпаємо
               await placeStopLoss(symbol, side, newStop, roundQty(liveQty));
@@ -305,9 +332,20 @@ export async function monitorPositions({ symbol, strategy }) {
               size: Number(liveQty),
             });
             await updateStopPrice(symbol, newStop, 'TRAIL', trailingState);
+          } else {
+            logger.info(
+              `⛔ TRAIL no move ${symbol}: newStop=${newStop.toFixed(6)} is not better than currentSL=${currentSL ?? '—'}`,
+            );
           }
         }
-      } catch {}
+      } catch (e) {
+        logger.error(`❌ TRAIL error ${symbol}: ${e?.message || e}`);
+      }
+    } else {
+      if (!trailingCfg?.use)
+        logger.info(`🚫 TRAIL disabled in config for ${symbol}`);
+      if (!entryPrice)
+        logger.warn(`🚫 TRAIL skip: missing entryPrice for ${symbol}`);
     }
     /* ===== 2) DCA / Adds ===== */
     const { sizing } = strategy || {};
