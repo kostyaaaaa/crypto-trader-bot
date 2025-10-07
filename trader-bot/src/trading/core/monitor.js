@@ -199,26 +199,30 @@ export async function monitorPositions({ symbol, strategy }) {
 
         // 2) Якщо біржові поля відсутні/некоректні — рахуємо через qty + margin
         const qtyFromPos = Number(pos?.qty);
-        const qtyFromDoc = Number(openDoc?.qty);
         const qtyFromInitialNotional =
           Number.isFinite(Number(openDoc?.initialSizeUsd)) && entryPrice
             ? Number(openDoc.initialSizeUsd) / entryPrice
             : Number.isFinite(Number(openDoc?.size)) && entryPrice
               ? Number(openDoc.size) / entryPrice
               : NaN;
-        const qty =
-          [
-            qtyFromPos,
-            qtyFromDoc,
-            qtyFromInitialNotional,
-            Number(liveQty),
-          ].find((v) => Number.isFinite(v) && v > 0) || 0;
+
+        // В БД немає openDoc.qty. Оцінюємо кількість так:
+        // 1) з позиції біржі, 2) з початкового нотіоналу, 3) з поточного liveQty
+        const estQty =
+          [qtyFromPos, qtyFromInitialNotional, Number(liveQty)].find(
+            (v) => Number.isFinite(v) && v > 0,
+          ) || 0;
+
+        // допоміжний лог для діагностики
+        logger.info(
+          `🧮 TRAIL inputs ${symbol}: estQty=${estQty}, entry=${entryPrice}, price=${price}`,
+        );
 
         let marginUsd = Number(openDoc?.marginUsd);
         if (!Number.isFinite(marginUsd) || marginUsd <= 0) {
           const levForMargin = lev;
-          if (Number.isFinite(qty) && qty > 0 && levForMargin > 0) {
-            marginUsd = (qty * entryPrice) / levForMargin;
+          if (Number.isFinite(estQty) && estQty > 0 && levForMargin > 0) {
+            marginUsd = (estQty * entryPrice) / levForMargin;
           }
         }
 
@@ -233,11 +237,11 @@ export async function monitorPositions({ symbol, strategy }) {
         } else if (
           Number.isFinite(marginUsd) &&
           marginUsd > 0 &&
-          Number.isFinite(qty) &&
-          qty > 0
+          Number.isFinite(estQty) &&
+          estQty > 0
         ) {
           // Точний розрахунок через PnL/маржа
-          const pnlUsd = (price - entryPrice) * dir * qty;
+          const pnlUsd = (price - entryPrice) * dir * estQty;
           pnlRoiPct = (pnlUsd / marginUsd) * 100;
         } else {
           // Апроксимація через ціновий рух * плече

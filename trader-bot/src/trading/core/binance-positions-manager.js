@@ -21,7 +21,6 @@ export async function getActivePositions(symbol) {
     throw new Error('getActivePositions requires a symbol');
   }
 
-  // ⚡ Fast DB pre-check: if there's no OPEN doc for this symbol, skip REST calls entirely
   const openDoc = await getOpenPosition(symbol);
   if (!openDoc) return [];
 
