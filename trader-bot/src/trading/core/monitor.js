@@ -38,7 +38,7 @@ function roundQty(q) {
 
 export async function monitorPositions({ symbol, strategy }) {
   const openDoc = await getOpenPosition(symbol);
-  logger.info(`${symbol}:${!!openDoc} - openDoc`);
+
   if (!openDoc) return;
 
   let positions = [];
@@ -47,11 +47,11 @@ export async function monitorPositions({ symbol, strategy }) {
   } catch {
     return;
   }
-  logger.info(`${symbol}:${positions.length} - positions`);
+
   if (!positions.length) return;
 
   const price = await getMarkFromHub(symbol);
-  logger.info(`${symbol}:${price} - price`);
+
   if (price == null || !Number.isFinite(Number(price))) {
     logger.warn(
       `⚠️ ${symbol}: no mark price from hub — skip monitor iteration`,
@@ -157,8 +157,6 @@ export async function monitorPositions({ symbol, strategy }) {
 
     /* ===== 1) TRAILING (PnL-anchored) ===== */
     const trailingCfg = strategy?.exits?.trailing;
-    logger.info(`${symbol}:${trailingCfg?.use} - trailingCfg?.use`);
-    logger.info(`${symbol}:${entryPrice} - entryPrice`);
     if (trailingCfg?.use && entryPrice) {
       try {
         let trailingState = openDoc?.trailing || null;
@@ -201,11 +199,6 @@ export async function monitorPositions({ symbol, strategy }) {
             (v) => Number.isFinite(v) && v > 0,
           ) || 0;
 
-        // допоміжний лог для діагностики
-        logger.info(
-          `🧮 TRAIL inputs ${symbol}: estQty=${estQty}, entry=${entryPrice}, price=${price}`,
-        );
-
         let marginUsd = Number(openDoc?.marginUsd);
         if (!Number.isFinite(marginUsd) || marginUsd <= 0) {
           const levForMargin = lev;
@@ -236,17 +229,6 @@ export async function monitorPositions({ symbol, strategy }) {
           pnlRoiPct = priceMovePct * lev;
         }
 
-        // Діагностика трейла (можна відключити, якщо шумно)
-        logger.info(
-          `🔍 TRAIL ${symbol}: side=${side} ROI=${pnlRoiPct.toFixed(2)}% (move=${priceMovePct.toFixed(3)}% * lev=${lev}) start=${startAfterRoiPct}% gap=${gapRoiPct}% active=${!!openDoc?.trailing?.active}`,
-        );
-
-        if (!trailingState?.active && pnlRoiPct < startAfterRoiPct) {
-          logger.info(
-            `⏸️ TRAIL not active: ROI ${pnlRoiPct.toFixed(2)}% < start ${startAfterRoiPct}%`,
-          );
-        }
-
         // 1) Активуємо трейл один раз, коли ROI% досяг порогу
         if (!trailingState?.active && pnlRoiPct >= startAfterRoiPct) {
           trailingState = {
@@ -263,9 +245,6 @@ export async function monitorPositions({ symbol, strategy }) {
             size: liveQty,
             meta: { startAfterRoiPct, gapRoiPct, lev },
           });
-          logger.info(
-            `▶️ TRAIL_ON ${symbol}: activated at ROI=${pnlRoiPct.toFixed(2)}% (start=${startAfterRoiPct}%)`,
-          );
         }
         // Persist trailing state to history even якщо ще не рухали SL
         if (trailingState?.active) {
@@ -309,9 +288,6 @@ export async function monitorPositions({ symbol, strategy }) {
             (side === 'SHORT' && (!currentSL || newStop < currentSL));
 
           if (needUpdate) {
-            logger.info(
-              `🪢 TRAIL move ${symbol}: SL ${currentSL ?? '—'} → ${newStop.toFixed(6)} (anchorROI=${(trailingState.anchorRoiPct ?? 0).toFixed(2)}%, stepROI=${trailingState.trailStepPct ?? 0}%, lev=${trailingState.lev ?? lev})`,
-            );
             if (TRADE_MODE === 'live') {
               await cancelStopOrders(symbol, { onlySL: true }); // TP не чіпаємо
               await placeStopLoss(symbol, side, newStop, roundQty(liveQty));
