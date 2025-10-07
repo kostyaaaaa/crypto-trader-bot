@@ -407,8 +407,42 @@ async function handleEvent(msg) {
             );
           }
 
-          // Якщо ВСІ тейки виконані → закриваємо позицію і передаємо фінальний PnL (сума по всіх філах TP)
-          const allFilled = updatedTps.every((tp) => tp.filled);
+          // Додаткова перевірка: якщо отримали FILLED event, але не всі TP позначені як filled,
+          // можливо це означає що всі TP ордери виконані, але через дублікати/out-of-order events
+          // не всі були оброблені. Перевіряємо live позицію.
+          let allFilled = updatedTps.every((tp) => tp.filled);
+
+          if (!allFilled && type === 'TAKE_PROFIT_MARKET') {
+            try {
+              const live = await getPositionFresh(symbol);
+              const liveAmt = live
+                ? Math.abs(Number(live.positionAmt) || 0)
+                : 0;
+
+              if (liveAmt === 0) {
+                logger.info(
+                  `🔍 ${symbol}: Live position is 0, marking all TPs as filled`,
+                );
+                // Якщо позиція на біржі закрита, але не всі TP позначені як filled,
+                // позначаємо всі як filled щоб закрити позицію в БД
+                updatedTps.forEach((tp) => {
+                  if (!tp.filled) {
+                    tp.filled = true;
+                    logger.info(
+                      `🔧 ${symbol}: Marked TP as filled (live position closed)`,
+                    );
+                  }
+                });
+                allFilled = true;
+              }
+            } catch (err) {
+              logger.warn(
+                `⚠️ ${symbol}: Failed to check live position:`,
+                err?.message || err,
+              );
+            }
+          }
+
           logger.info(
             `🔍 ${symbol}: TP status check - allFilled=${allFilled}, filled TPs: ${updatedTps.filter((tp) => tp.filled).length}/${updatedTps.length}`,
           );
