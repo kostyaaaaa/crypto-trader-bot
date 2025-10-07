@@ -93,11 +93,11 @@ export async function monitorPositions({ symbol, strategy }) {
   } catch {}
 
   for (let pos of positions) {
-    const { side, entryPrice, qty, orders } = pos;
-    const liveQty = Math.abs(Number(qty));
+    let { side, entryPrice, size: liveQty, orders } = pos;
+    liveQty = Math.abs(Number(liveQty));
     if (!Number.isFinite(liveQty) || liveQty <= 0) {
       logger.warn(
-        `⚠️ ${symbol}: missing qty in position doc — skip trailing/SL updates`,
+        `⚠️ ${symbol}: missing size in position doc — skip trailing/SL updates`,
       );
       continue;
     }
@@ -120,7 +120,7 @@ export async function monitorPositions({ symbol, strategy }) {
     }
 
     logger.info(
-      `ℹ️ POS ${symbol}: side=${side} entry=${entryPrice} qty=${liveQty} SL=${currentSL ?? '—'}`,
+      `ℹ️ POS ${symbol}: side=${side} entry=${entryPrice} size=${liveQty} SL=${currentSL ?? '—'}`,
     );
 
     if (oppExitN > 0) {
@@ -168,9 +168,6 @@ export async function monitorPositions({ symbol, strategy }) {
     /* ===== 1) TRAILING (PnL-anchored) ===== */
     const trailingCfg = strategy?.exits?.trailing;
 
-    // Єдиний режим:
-    // - startAfterPct: PnL% від entry, з якого активуємо трейл
-    // - trailStepPct: PnL% від entry, на якій відстані від max PnL тримаємо SL
     if (trailingCfg?.use && entryPrice) {
       try {
         let trailingState = openDoc?.trailing || null;
@@ -197,8 +194,8 @@ export async function monitorPositions({ symbol, strategy }) {
           pos?.isolatedMargin ?? pos?.initialMargin ?? NaN,
         );
 
-        // 2) Якщо біржові поля відсутні/некоректні — рахуємо через qty + margin
-        const qtyFromPos = Number(pos?.qty);
+        // 2) Якщо біржові поля відсутні/некоректні — рахуємо через size + margin
+        const qtyFromPos = Number(pos?.size);
         const qtyFromInitialNotional =
           Number.isFinite(Number(openDoc?.initialSizeUsd)) && entryPrice
             ? Number(openDoc.initialSizeUsd) / entryPrice
