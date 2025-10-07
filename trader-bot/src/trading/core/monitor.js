@@ -10,23 +10,11 @@ import { getActivePositions } from './binance-positions-manager.js';
 import {
   addToPosition,
   adjustPosition,
-  getHistory,
+  getOpenPosition,
   updateStopPrice,
 } from './historyStore.js';
 
 import markPriceHub from './mark-price-hub.js';
-
-// Витягуємо OPEN-док з історії (БД)
-async function getOpenHistoryDoc(symbol) {
-  try {
-    const hist = await getHistory(symbol, 10);
-    if (!Array.isArray(hist)) return null;
-    const open = hist.find((h) => h.status === 'OPEN');
-    return open || null;
-  } catch {
-    return null;
-  }
-}
 
 // === Mark price from WS hub (no REST) ===
 async function getMarkFromHub(symbol) {
@@ -49,7 +37,7 @@ function roundQty(q) {
 }
 
 export async function monitorPositions({ symbol, strategy }) {
-  const openDoc = await getOpenHistoryDoc(symbol);
+  const openDoc = await getOpenPosition(symbol);
   logger.info(`${symbol}:${!!openDoc} - openDoc`);
   if (!openDoc) return;
 

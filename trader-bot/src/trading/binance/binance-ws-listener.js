@@ -14,7 +14,6 @@ import {
 import {
   cancelAllOrders,
   cancelStopOrders,
-  getPosition,
   getPositionFresh,
   openMarketOrder,
   placeStopLoss,
@@ -230,8 +229,8 @@ async function handleEvent(msg) {
           const realizedFromTP = sumTpRealizedPnl(pos);
           // 2) дельта від поточного SL-філа (за lastQty/lastPx)
           //    Примітка: side з позиції, qty = o.l
-          // Use cumulative filled qty if available (`o.z`), fallback to last fill `o.l`
-          const slFillQty = Number(o.z) || Number(o.l) || 0;
+          // Use cumulative filled qty if available (`o.z`), fallback to order qty `o.q` or last fill `o.l`
+          const slFillQty = Number(o.z) || Number(o.q) || Number(o.l) || 0;
           const slDelta = calcFillPnl(
             Number(pos.entryPrice) || 0,
             lastPx,
@@ -242,7 +241,28 @@ async function handleEvent(msg) {
             (Number.isFinite(realizedFromTP) ? realizedFromTP : 0) +
             (Number.isFinite(slDelta) ? slDelta : 0);
 
+          logger.info(
+            `🧮 ${symbol}: SL close PnL parts — realizedFromTP=${realizedFromTP}, slDelta=${slDelta}, slQty=${slFillQty}, entry=${Number(pos.entryPrice) || 0}, lastPx=${lastPx}`,
+          );
+
           try {
+            // Перед закриттям — збережемо поточний стан TPs (щоб другі/треті не зникали)
+            try {
+              await updateTakeProfits(
+                symbol,
+                Array.isArray(pos.takeProfits)
+                  ? pos.takeProfits.map((t) => ({ ...t }))
+                  : [],
+                Number(pos.entryPrice) || 0,
+                'SL_FILLED',
+              );
+            } catch (e) {
+              logger.warn(
+                `⚠️ ${symbol}: failed to persist TPs before SL close:`,
+                e?.message || e,
+              );
+            }
+
             // Закриваємо позицію в історії з фінальним PnL
             const closed = await closePositionHistory(symbol, {
               closedBy: 'SL',
@@ -412,29 +432,18 @@ async function handleEvent(msg) {
           // можливо це означає що всі TP ордери виконані, але через дублікати/out-of-order events
           // не всі були оброблені. Перевіряємо live позицію.
           let allFilled = updatedTps.every((tp) => tp.filled);
-
+          let liveAmtIsZero = false;
           if (!allFilled && type === 'TAKE_PROFIT_MARKET') {
             try {
               const live = await getPositionFresh(symbol);
               const liveAmt = live
                 ? Math.abs(Number(live.positionAmt) || 0)
                 : 0;
-
               if (liveAmt === 0) {
+                liveAmtIsZero = true;
                 logger.info(
-                  `🔍 ${symbol}: Live position is 0, marking all TPs as filled`,
+                  `🔍 ${symbol}: Live position is 0 after TP fill — will close without forcing other TPs to 'filled'`,
                 );
-                // Якщо позиція на біржі закрита, але не всі TP позначені як filled,
-                // позначаємо всі як filled щоб закрити позицію в БД
-                updatedTps.forEach((tp) => {
-                  if (!tp.filled) {
-                    tp.filled = true;
-                    logger.info(
-                      `🔧 ${symbol}: Marked TP as filled (live position closed)`,
-                    );
-                  }
-                });
-                allFilled = true;
               }
             } catch (err) {
               logger.warn(
@@ -448,7 +457,7 @@ async function handleEvent(msg) {
             `🔍 ${symbol}: TP status check - allFilled=${allFilled}, filled TPs: ${updatedTps.filter((tp) => tp.filled).length}/${updatedTps.length}`,
           );
 
-          if (allFilled) {
+          if (allFilled || liveAmtIsZero) {
             // Calculate PnL from actual TP fills in the arrays
             const realizedFromTP = sumTpRealizedPnl({
               ...pos,
@@ -481,6 +490,21 @@ async function handleEvent(msg) {
             );
 
             try {
+              // Спочатку — оновимо TPs у БД остаточним станом
+              try {
+                await updateTakeProfits(
+                  symbol,
+                  updatedTps.map((t) => ({ ...t })),
+                  Number(pos.entryPrice) || 0,
+                  'TP_FILLED_FINAL',
+                );
+              } catch (e) {
+                logger.warn(
+                  `⚠️ ${symbol}: failed to persist final TPs before TP close:`,
+                  e?.message || e,
+                );
+              }
+
               const closed = await closePositionHistory(symbol, {
                 closedBy: 'TP',
               });
@@ -531,10 +555,14 @@ async function handleEvent(msg) {
 
             if (!trailingOn && tpsTotal >= 2 && filledCount === 1) {
               // перевіряємо поточну live-кількість на біржі
-              const live = await getPosition(symbol);
+              const live = await getPositionFresh(symbol);
               const liveAmt = live
                 ? Math.abs(Number(live.positionAmt) || 0)
                 : 0;
+
+              logger.info(
+                `🔎 ${symbol}: BE check — liveAmt=${liveAmt}, filledCount=${filledCount}/${tpsTotal}, trailingOn=${trailingOn}`,
+              );
 
               if (liveAmt > 0) {
                 // скасовуємо лише SL (TP не чіпаємо)
