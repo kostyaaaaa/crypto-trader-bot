@@ -105,34 +105,43 @@ export async function addToPosition(symbol, { qty, price, fee = 0 }) {
   const pos = await getOpenPosition(symbol);
   if (!pos) return null;
 
-  const effectivePrice = price || pos.entryPrice || 0;
-  const addNotional = (Number(qty) || 0) * effectivePrice;
-
+  const effectivePrice = Number.isFinite(+price)
+    ? Number(price)
+    : Number(pos.entryPrice) || 0;
+  const q = Number(qty) || 0;
+  const addNotional = round(q * effectivePrice, 8);
   const ts = nowTs();
+
+  const feeNum = Number(fee) || 0;
+
+  // Build $inc without conflicting paths
+  const incOps = { size: addNotional };
+  if (feeNum) incOps.fees = feeNum;
+
   const exec = {
     kind: 'ADD',
     ts,
     price: effectivePrice,
-    qty: Number(qty) || 0,
-    fee: Number(fee) || 0,
+    qty: q,
+    fee: feeNum,
     pnl: 0,
   };
 
-  return await updateDoc(
+  await updateDoc(
     COLLECTION,
     { _id: pos._id },
     {
-      $inc: {
-        size: addNotional,
-        fees: exec.fee,
-      },
+      $inc: incOps,
       $push: {
-        adds: { qty: exec.qty, price: exec.price, ts },
+        adds: { qty: q, price: effectivePrice, ts },
         executions: exec,
       },
-      $setOnInsert: { realizedPnl: 0, fees: 0 },
+      // never mix $setOnInsert for the same path we $inc; also keep an updatedAt stamp
+      $set: { updatedAt: new Date() },
     },
   );
+
+  return true;
 }
 
 // Оновлення стопів/тейків (історія)
