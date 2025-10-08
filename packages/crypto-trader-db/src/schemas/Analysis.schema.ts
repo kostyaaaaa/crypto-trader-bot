@@ -101,6 +101,15 @@ export interface IRsiVolTrendMeta {
   maLong: number;
 }
 
+export interface IChoppinessMeta {
+  LONG: number;
+  SHORT: number;
+  chop: number;
+  candlesUsed: number;
+  period: number;
+  interpretation: string;
+}
+
 // Module interfaces
 export interface IModuleBase {
   module: string;
@@ -158,6 +167,10 @@ export interface IRsiVolTrendModule extends IModuleBase {
   meta: IRsiVolTrendMeta;
 }
 
+export interface IChoppinessModule extends IModuleBase {
+  meta: IChoppinessMeta;
+}
+
 // Analysis modules container
 export interface IAnalysisModules {
   trend: ITrendModule;
@@ -170,6 +183,7 @@ export interface IAnalysisModules {
   longShort: ILongShortModule;
   higherMA: IHigherMAModule;
   rsiVolTrend: IRsiVolTrendModule;
+  choppiness: IChoppinessModule;
 }
 
 // Scores interface
@@ -325,6 +339,18 @@ const rsiVolTrendMetaSchema = new Schema(
   { _id: false },
 );
 
+const choppinessMetaSchema = new Schema(
+  {
+    LONG: { type: Number, required: true },
+    SHORT: { type: Number, required: true },
+    chop: { type: Number, required: true },
+    candlesUsed: { type: Number, required: true },
+    period: { type: Number, required: true },
+    interpretation: { type: String, required: true },
+  },
+  { _id: false },
+);
+
 // Module schemas
 const trendModuleSchema = new Schema(
   {
@@ -441,6 +467,17 @@ const rsiVolTrendModuleSchema = new Schema(
   { _id: false },
 );
 
+const choppinessModuleSchema = new Schema(
+  {
+    module: { type: String, required: true },
+    symbol: { type: String, required: true },
+    signal: { type: String, required: true },
+    strength: { type: Number, required: true },
+    meta: { type: choppinessMetaSchema, required: true },
+  },
+  { _id: false },
+);
+
 const analysisModulesSchema = new Schema(
   {
     trend: { type: trendModuleSchema, required: true },
@@ -453,6 +490,7 @@ const analysisModulesSchema = new Schema(
     longShort: { type: longShortModuleSchema, required: true },
     higherMA: { type: higherMAModuleSchema, required: true },
     rsiVolTrend: { type: rsiVolTrendModuleSchema, required: true },
+    choppiness: { type: choppinessModuleSchema, required: true },
   },
   { _id: false },
 );

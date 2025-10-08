@@ -155,6 +155,19 @@ export interface IRsiVolTrendModule extends IModuleBase {
   meta: IRsiVolTrendMeta;
 }
 
+export interface IChoppinessMeta {
+  LONG: number;
+  SHORT: number;
+  chop: number;
+  candlesUsed: number;
+  period: number;
+  interpretation: string;
+}
+
+export interface IChoppinessModule extends IModuleBase {
+  meta: IChoppinessMeta;
+}
+
 // Analysis modules container
 export interface IAnalysisModules {
   trend: ITrendModule;
@@ -167,6 +180,7 @@ export interface IAnalysisModules {
   longShort: ILongShortModule;
   higherMA: IHigherMAModule;
   rsiVolTrend: IRsiVolTrendModule;
+  choppiness: IChoppinessModule;
 }
 
 // Scores interface
