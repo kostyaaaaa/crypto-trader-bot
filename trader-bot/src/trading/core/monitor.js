@@ -108,11 +108,6 @@ export async function monitorPositions({ symbol, strategy }) {
       );
       if (slOrder) currentSL = Number(slOrder.price) || null;
     }
-
-    logger.info(
-      `ℹ️ POS ${symbol}: side=${side} entry=${entryPrice} size=${liveQty} SL=${currentSL ?? '—'}`,
-    );
-
     if (oppExitN > 0) {
       const anaSideFn = getAnaSide;
       const isOppositeToPos = (s) =>
@@ -341,46 +336,55 @@ export async function monitorPositions({ symbol, strategy }) {
           ? (unreal2 / initMargin2) * 100
           : priceMovePct2 * lev2;
 
-      // Skip add if latest analysis flips against our side
-      const ana = getAnaSide(lastAnalysis);
-      if (
-        ana &&
-        ((side === 'LONG' && ana === 'SHORT') ||
-          (side === 'SHORT' && ana === 'LONG'))
-      ) {
-        // Opposite bias — no averaging down
-        // continue to next position iteration
-      } else {
-        const shouldAdd = pnlRoiPct2 <= -roiTrigger;
+      // Decision purely by ROI trigger and maxAdds (no analysis gating)
+      const shouldAdd = pnlRoiPct2 <= -roiTrigger;
+      const canAdd = addsCount < sizing.maxAdds;
 
-        if (shouldAdd && addsCount < sizing.maxAdds) {
-          // Fixed-size add based on the FIRST margin (notional = baseMargin * lev)
-          const levForNotional = lev2;
-          const baseMarginUsd =
-            Number(openDoc?.marginUsd) ||
-            (Number(openDoc?.initialSizeUsd) && levForNotional > 0
-              ? Number(openDoc.initialSizeUsd) / levForNotional
-              : 0);
+      logger.info(
+        `📉 ADD check ${symbol}: ROI=${pnlRoiPct2.toFixed(2)}% <= -${roiTrigger}%? ${shouldAdd} | adds=${addsCount}/${sizing.maxAdds}`,
+      );
 
-          const mult = Number(sizing.addMultiplier) || 1; // e.g., 0.5 => add 50% of first margin
-          const addMarginUsd = baseMarginUsd * mult;
-          const addNotionalUsd = addMarginUsd * levForNotional;
-          const addQty = addNotionalUsd / price;
+      if (shouldAdd && canAdd) {
+        // Fixed-size add based on the FIRST margin (notional = baseMargin * lev)
+        const levForNotional = lev2;
+        const baseMarginUsd =
+          Number(openDoc?.marginUsd) ||
+          (Number(openDoc?.initialSizeUsd) && levForNotional > 0
+            ? Number(openDoc.initialSizeUsd) / levForNotional
+            : 0);
 
-          if (Number.isFinite(addQty) && addQty > 0) {
-            logger.info(
-              `➕ ADD ${symbol}: ROI=${pnlRoiPct2.toFixed(2)}% ≤ -${roiTrigger}% | baseMargin=${baseMarginUsd.toFixed(2)}$ mult=${mult} lev=${levForNotional} -> notional=${addNotionalUsd.toFixed(2)}$ qty=${addQty.toFixed(6)}`,
-            );
+        const mult = Number(sizing.addMultiplier) || 1; // e.g., 0.5 => add 50% of first margin
+        const addMarginUsd = baseMarginUsd * mult;
+        const addNotionalUsd = addMarginUsd * levForNotional;
+        const addQty = addNotionalUsd / price;
 
-            if (TRADE_MODE === 'live') {
-              try {
-                await openMarketOrder(symbol, binanceSide, roundQty(addQty));
-                await addToPosition(symbol, { qty: Number(addQty), price });
-              } catch {}
-            } else {
+        if (Number.isFinite(addQty) && addQty > 0) {
+          logger.info(
+            `🛒 ADD place ${symbol}: notional=${addNotionalUsd.toFixed(2)}$ qty=${addQty.toFixed(6)} (baseMargin=${baseMarginUsd.toFixed(2)}$ mult=${mult} lev=${levForNotional})`,
+          );
+
+          if (TRADE_MODE === 'live') {
+            try {
+              await openMarketOrder(symbol, binanceSide, roundQty(addQty));
               await addToPosition(symbol, { qty: Number(addQty), price });
-            }
+            } catch {}
+          } else {
+            await addToPosition(symbol, { qty: Number(addQty), price });
           }
+        } else {
+          logger.info(
+            `⛔ ADD qty too small/invalid for ${symbol}: calc=${addQty}`,
+          );
+        }
+      } else {
+        if (!shouldAdd) {
+          logger.info(
+            `⏳ ADD wait ${symbol}: ROI ${pnlRoiPct2.toFixed(2)}% > -${roiTrigger}%`,
+          );
+        } else {
+          logger.info(
+            `⛔ ADD limit ${symbol}: adds ${addsCount} >= maxAdds ${sizing.maxAdds}`,
+          );
         }
       }
     }
