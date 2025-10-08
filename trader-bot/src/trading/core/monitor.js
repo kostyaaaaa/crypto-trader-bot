@@ -345,18 +345,32 @@ export async function monitorPositions({ symbol, strategy }) {
       );
 
       if (shouldAdd && canAdd) {
-        // Fixed-size add based on the FIRST margin (notional = baseMargin * lev)
-        const levForNotional = lev2;
+        // Use leverage from live position, doc meta, or strategy as fallback
+        const levForNotional = Math.max(
+          1,
+          Number(pos?.leverage) ||
+            Number(openDoc?.meta?.leverage) ||
+            Number(strategy?.capital?.leverage) ||
+            1,
+        );
+
+        // Our DB may not store marginUsd; derive base margin from the first notional
+        // Prefer initialSizeUsd (first notional in $), otherwise fall back to current doc size (in $)
+        const baseNotionalUsd =
+          Number(openDoc?.initialSizeUsd) || Number(openDoc?.size) || 0;
+
+        // First margin ≈ first notional / leverage
         const baseMarginUsd =
-          Number(openDoc?.marginUsd) ||
-          (Number(openDoc?.initialSizeUsd) && levForNotional > 0
-            ? Number(openDoc.initialSizeUsd) / levForNotional
-            : 0);
+          levForNotional > 0 ? baseNotionalUsd / levForNotional : 0;
 
         const mult = Number(sizing.addMultiplier) || 1; // e.g., 0.5 => add 50% of first margin
         const addMarginUsd = baseMarginUsd * mult;
         const addNotionalUsd = addMarginUsd * levForNotional;
         const addQty = addNotionalUsd / price;
+
+        logger.info(
+          `🧮 ADD calc ${symbol}: baseNotional=${baseNotionalUsd.toFixed(2)}$ baseMargin=${baseMarginUsd.toFixed(2)}$ mult=${mult} lev=${levForNotional} -> notional=${addNotionalUsd.toFixed(2)}$ qtyRaw=${addQty}`,
+        );
 
         if (Number.isFinite(addQty) && addQty > 0) {
           logger.info(
