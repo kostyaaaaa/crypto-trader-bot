@@ -1,5 +1,5 @@
 import { analyzeCandles } from './candles/analyze-candles.js';
-
+import { analyzeChoppiness } from './choppiness/analyze-choppiness.js';
 import { analyzeFunding } from './funding/analyze-funding.js';
 import { analyzeHigherMA } from './higherMA/analyze-higher-ma.js';
 import { analyzeLiquidations } from './liquidations/analyze-liquidations.js';
@@ -12,6 +12,7 @@ import { analyzeVolatility } from './volatility/analyze-volatility.js';
 
 export {
   analyzeCandles,
+  analyzeChoppiness,
   analyzeFunding,
   analyzeHigherMA,
   analyzeLiquidations,
