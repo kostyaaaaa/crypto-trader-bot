@@ -37,7 +37,7 @@ function roundQty(q) {
 }
 
 export async function monitorPositions({ symbol, strategy }) {
-  const openDoc = await getOpenPosition(symbol);
+  let openDoc = await getOpenPosition(symbol);
 
   if (!openDoc) return;
 
@@ -91,6 +91,9 @@ export async function monitorPositions({ symbol, strategy }) {
       );
       continue;
     }
+    logger.info(
+      `🔎 ${symbol} MON: liveQty=${liveQty}, adds=${openDoc?.adds?.length || 0}`,
+    );
     const dir = side === 'LONG' ? 1 : -1;
     const binanceSide = side === 'LONG' ? 'BUY' : 'SELL';
 
@@ -148,7 +151,139 @@ export async function monitorPositions({ symbol, strategy }) {
       }
     }
 
-    const addsCount = openDoc?.adds?.length || 0;
+    /* ===== 2) DCA / Adds ===== */
+    let addsCount = openDoc?.adds?.length || 0;
+    if (!addsCount && Array.isArray(openDoc?.adjustments)) {
+      addsCount = openDoc.adjustments.filter((a) => a?.type === 'ADD').length;
+    }
+
+    const { sizing } = strategy || {};
+    if (sizing && sizing.maxAdds > 0 && entryPrice) {
+      // === ROI-based adds (aligned with trailing/TP/SL semantics) ===
+      // Trigger when ROI% falls to -addOnAdverseMovePct (negative ROI)
+      const roiTrigger = Math.max(0, Number(sizing.addOnAdverseMovePct) || 0);
+
+      // Compute ROI% similar to trailing block (prefer Binance fields)
+      const levCfg2 = Math.max(1, Number(strategy?.capital?.leverage) || 1);
+      const levLive2 = Math.max(
+        1,
+        Number(pos?.leverage) || Number(openDoc?.meta?.leverage) || levCfg2,
+      );
+      const lev2 = levLive2;
+
+      const priceMovePct2 = ((price - entryPrice) / entryPrice) * 100 * dir;
+      const unreal2 = Number(pos?.unRealizedProfit);
+      const initMargin2 = Number(
+        pos?.isolatedMargin ?? pos?.initialMargin ?? NaN,
+      );
+      const pnlRoiPct2 =
+        Number.isFinite(unreal2) &&
+        Number.isFinite(initMargin2) &&
+        initMargin2 > 0
+          ? (unreal2 / initMargin2) * 100
+          : priceMovePct2 * lev2;
+
+      // Decision purely by ROI trigger and maxAdds (no analysis gating)
+      const shouldAdd = pnlRoiPct2 <= -roiTrigger;
+      const canAdd = addsCount < sizing.maxAdds;
+
+      logger.info(
+        `📉 ADD check ${symbol}: ROI=${pnlRoiPct2.toFixed(2)}% <= -${roiTrigger}%? ${shouldAdd} | adds=${addsCount}/${sizing.maxAdds}`,
+      );
+
+      if (shouldAdd && canAdd) {
+        // Use leverage from live position, doc meta, or strategy as fallback
+        const levForNotional = Math.max(
+          1,
+          Number(pos?.leverage) ||
+            Number(openDoc?.meta?.leverage) ||
+            Number(strategy?.capital?.leverage) ||
+            1,
+        );
+
+        // Our DB may not store marginUsd; derive base margin from the first notional
+        // Prefer initialSizeUsd (first notional in $), otherwise fall back to current doc size (in $)
+        const baseNotionalUsd =
+          Number(openDoc?.initialSizeUsd) || Number(openDoc?.size) || 0;
+
+        // First margin ≈ first notional / leverage
+        const baseMarginUsd =
+          levForNotional > 0 ? baseNotionalUsd / levForNotional : 0;
+
+        const mult = Number(sizing.addMultiplier) || 1; // e.g., 0.5 => add 50% of first margin
+        const addMarginUsd = baseMarginUsd * mult;
+        const addNotionalUsd = addMarginUsd * levForNotional;
+        const addQty = addNotionalUsd / price;
+
+        logger.info(
+          `🧮 ADD calc ${symbol}: baseNotional=${baseNotionalUsd.toFixed(2)}$ baseMargin=${baseMarginUsd.toFixed(2)}$ mult=${mult} lev=${levForNotional} -> notional=${addNotionalUsd.toFixed(2)}$ qtyRaw=${addQty}`,
+        );
+
+        if (Number.isFinite(addQty) && addQty > 0) {
+          logger.info(
+            `🛒 ADD place ${symbol}: notional=${addNotionalUsd.toFixed(2)}$ qty=${addQty.toFixed(6)} (baseMargin=${baseMarginUsd.toFixed(2)}$ mult=${mult} lev=${levForNotional})`,
+          );
+
+          if (TRADE_MODE === 'live') {
+            try {
+              await openMarketOrder(symbol, binanceSide, roundQty(addQty));
+            } catch {}
+          }
+
+          // Persist ADD into history (DB) with timestamp for traceability
+          const addPayload = {
+            qty: Number(addQty),
+            price,
+            time: new Date().toISOString(),
+          };
+          try {
+            await addToPosition(symbol, addPayload);
+            await adjustPosition(symbol, {
+              type: 'ADD',
+              price,
+              size: Number(addQty),
+            });
+            logger.info(
+              `✅ ADD persisted ${symbol}: qty=${Number(addQty)} @ ${price}`,
+            );
+          } catch (e) {
+            logger.error(`❌ ADD persist failed ${symbol}: ${e?.message || e}`);
+          }
+
+          // Refresh openDoc from DB to get updated adds[] and prevent duplicate adds
+          try {
+            const refreshed = await getOpenPosition(symbol);
+            if (refreshed) openDoc = refreshed;
+          } catch {}
+
+          // Update local addsCount from DB (fallback to increment if still missing)
+          let addsLen = Number(openDoc?.adds?.length || 0);
+          if (!addsLen && Array.isArray(openDoc?.adjustments)) {
+            addsLen = openDoc.adjustments.filter(
+              (a) => a?.type === 'ADD',
+            ).length;
+          }
+          if (addsLen) {
+            logger.info(`ℹ️ ${symbol}: adds recorded in DB = ${addsLen}`);
+          }
+          addsCount = Number(openDoc?.adds?.length || addsCount + 1);
+        } else {
+          logger.info(
+            `⛔ ADD qty too small/invalid for ${symbol}: calc=${addQty}`,
+          );
+        }
+      } else {
+        if (!shouldAdd) {
+          logger.info(
+            `⏳ ADD wait ${symbol}: ROI ${pnlRoiPct2.toFixed(2)}% > -${roiTrigger}%`,
+          );
+        } else {
+          logger.info(
+            `⛔ ADD limit ${symbol}: adds ${addsCount} >= maxAdds ${sizing.maxAdds}`,
+          );
+        }
+      }
+    }
 
     /* ===== 1) TRAILING (PnL-anchored) ===== */
     const trailingCfg = strategy?.exits?.trailing;
@@ -308,99 +443,6 @@ export async function monitorPositions({ symbol, strategy }) {
         logger.info(`🚫 TRAIL disabled in config for ${symbol}`);
       if (!entryPrice)
         logger.warn(`🚫 TRAIL skip: missing entryPrice for ${symbol}`);
-    }
-    /* ===== 2) DCA / Adds ===== */
-    const { sizing } = strategy || {};
-    if (sizing && sizing.maxAdds > 0 && entryPrice) {
-      // === ROI-based adds (aligned with trailing/TP/SL semantics) ===
-      // Trigger when ROI% falls to -addOnAdverseMovePct (negative ROI)
-      const roiTrigger = Math.max(0, Number(sizing.addOnAdverseMovePct) || 0);
-
-      // Compute ROI% similar to trailing block (prefer Binance fields)
-      const levCfg2 = Math.max(1, Number(strategy?.capital?.leverage) || 1);
-      const levLive2 = Math.max(
-        1,
-        Number(pos?.leverage) || Number(openDoc?.meta?.leverage) || levCfg2,
-      );
-      const lev2 = levLive2;
-
-      const priceMovePct2 = ((price - entryPrice) / entryPrice) * 100 * dir;
-      const unreal2 = Number(pos?.unRealizedProfit);
-      const initMargin2 = Number(
-        pos?.isolatedMargin ?? pos?.initialMargin ?? NaN,
-      );
-      const pnlRoiPct2 =
-        Number.isFinite(unreal2) &&
-        Number.isFinite(initMargin2) &&
-        initMargin2 > 0
-          ? (unreal2 / initMargin2) * 100
-          : priceMovePct2 * lev2;
-
-      // Decision purely by ROI trigger and maxAdds (no analysis gating)
-      const shouldAdd = pnlRoiPct2 <= -roiTrigger;
-      const canAdd = addsCount < sizing.maxAdds;
-
-      logger.info(
-        `📉 ADD check ${symbol}: ROI=${pnlRoiPct2.toFixed(2)}% <= -${roiTrigger}%? ${shouldAdd} | adds=${addsCount}/${sizing.maxAdds}`,
-      );
-
-      if (shouldAdd && canAdd) {
-        // Use leverage from live position, doc meta, or strategy as fallback
-        const levForNotional = Math.max(
-          1,
-          Number(pos?.leverage) ||
-            Number(openDoc?.meta?.leverage) ||
-            Number(strategy?.capital?.leverage) ||
-            1,
-        );
-
-        // Our DB may not store marginUsd; derive base margin from the first notional
-        // Prefer initialSizeUsd (first notional in $), otherwise fall back to current doc size (in $)
-        const baseNotionalUsd =
-          Number(openDoc?.initialSizeUsd) || Number(openDoc?.size) || 0;
-
-        // First margin ≈ first notional / leverage
-        const baseMarginUsd =
-          levForNotional > 0 ? baseNotionalUsd / levForNotional : 0;
-
-        const mult = Number(sizing.addMultiplier) || 1; // e.g., 0.5 => add 50% of first margin
-        const addMarginUsd = baseMarginUsd * mult;
-        const addNotionalUsd = addMarginUsd * levForNotional;
-        const addQty = addNotionalUsd / price;
-
-        logger.info(
-          `🧮 ADD calc ${symbol}: baseNotional=${baseNotionalUsd.toFixed(2)}$ baseMargin=${baseMarginUsd.toFixed(2)}$ mult=${mult} lev=${levForNotional} -> notional=${addNotionalUsd.toFixed(2)}$ qtyRaw=${addQty}`,
-        );
-
-        if (Number.isFinite(addQty) && addQty > 0) {
-          logger.info(
-            `🛒 ADD place ${symbol}: notional=${addNotionalUsd.toFixed(2)}$ qty=${addQty.toFixed(6)} (baseMargin=${baseMarginUsd.toFixed(2)}$ mult=${mult} lev=${levForNotional})`,
-          );
-
-          if (TRADE_MODE === 'live') {
-            try {
-              await openMarketOrder(symbol, binanceSide, roundQty(addQty));
-              await addToPosition(symbol, { qty: Number(addQty), price });
-            } catch {}
-          } else {
-            await addToPosition(symbol, { qty: Number(addQty), price });
-          }
-        } else {
-          logger.info(
-            `⛔ ADD qty too small/invalid for ${symbol}: calc=${addQty}`,
-          );
-        }
-      } else {
-        if (!shouldAdd) {
-          logger.info(
-            `⏳ ADD wait ${symbol}: ROI ${pnlRoiPct2.toFixed(2)}% > -${roiTrigger}%`,
-          );
-        } else {
-          logger.info(
-            `⛔ ADD limit ${symbol}: adds ${addsCount} >= maxAdds ${sizing.maxAdds}`,
-          );
-        }
-      }
     }
   }
 }
