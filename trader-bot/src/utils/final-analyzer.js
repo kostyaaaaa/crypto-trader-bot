@@ -89,7 +89,7 @@ export async function finalAnalyzer({
   // RSI + Volume + Trend module (uses provided candles, no REST, hardcoded params)
   modules.rsiVolTrend = await analyzeRsiVolumeTrend(symbol, candles);
   // Choppiness Index module (fetches its own 1m candles, analyzes market choppiness)
-  modules.choppiness = await analyzeChoppiness(symbol, 10);
+  modules.choppiness = await analyzeChoppiness(symbol, 21);
   modules.liquidity = await analyzeLiquidity(symbol, liqWindow, lastPrice);
   modules.funding = await analyzeFunding(symbol, fundingWindow);
   modules.liquidations = await analyzeLiquidations(symbol);
