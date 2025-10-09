@@ -1,39 +1,26 @@
 import { Schema } from 'mongoose';
 
-// Analysis configuration interface
+export interface IModules {
+  trend: number;
+  trendRegime: number;
+  liquidity: number;
+  funding: number;
+  liquidations: number;
+  openInterest: number;
+  longShort: number;
+  higherMA: number;
+  rsiVolTrend: number;
+}
 export interface IAnalysisConfig {
   candleTimeframe: string;
   oiWindow: number;
   liqWindow: number;
-  liqSentWindow: number;
   fundingWindow: number;
   volWindow: number;
   corrWindow: number;
   longShortWindow: number;
-  weights: {
-    trend: number;
-    trendRegime: number;
-    liquidity: number;
-    funding: number;
-    liquidations: number;
-    openInterest: number;
-
-    longShort: number;
-    higherMA: number;
-    rsiVolTrend: number;
-  };
-  moduleThresholds: {
-    trend: number;
-    trendRegime: number;
-    liquidity: number;
-    funding: number;
-    liquidations: number;
-    openInterest: number;
-
-    longShort: number;
-    higherMA: number;
-    rsiVolTrend: number;
-  };
+  weights: IModules;
+  moduleThresholds: IModules;
   higherMA: IHigherMAConfig;
 }
 
@@ -199,7 +186,6 @@ const analysisConfigSchema = new Schema(
     candleTimeframe: { type: String, required: true },
     oiWindow: { type: Number, required: true },
     liqWindow: { type: Number, required: true },
-    liqSentWindow: { type: Number, required: true },
     fundingWindow: { type: Number, required: true },
     volWindow: { type: Number, required: true },
     corrWindow: { type: Number, required: true },

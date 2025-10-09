@@ -24,15 +24,17 @@ export interface ITrailing {
 // Position adjustment interface
 export interface IAdjustment {
   type: string;
-  price: number;
-  reason: string;
   ts: number;
+  price?: number;
+  size?: number;
+  tps?: Array<{ price: number; sizePct: number }>;
+  reason?: string;
 }
 
 // Position meta interface
 export interface IMeta {
-  leverage: number;
-  riskPct: number;
+  leverage: number | null;
+  riskPct: number | null;
   strategyName: string | null;
   openedBy: string;
 }
@@ -45,11 +47,14 @@ export interface IPosition {
   size: number;
   openedAt: Date;
   status: string;
-  stopPrice: number;
+  stopPrice: number | null;
   initialStopPrice: number | null;
+  realizedPnl: number;
+  fees: number;
+  executions: any[];
   takeProfits: ITakeProfit[];
   initialTPs: IInitialTP[];
-  trailing: ITrailing;
+  trailing: ITrailing | null;
   adds: any[];
   adjustments: IAdjustment[];
   analysis: Schema.Types.ObjectId;
@@ -92,17 +97,20 @@ const trailingSchema = new Schema(
 const adjustmentSchema = new Schema(
   {
     type: { type: String, required: true },
-    price: { type: Number, required: true },
-    reason: { type: String, required: true },
     ts: { type: Number, required: true },
+    price: { type: Number, required: false },
+    size: { type: Number, required: false },
+    // optional array of { price, sizePct }, matches IAdjustment['tps']
+    tps: { type: [initialTPSchema], required: false, default: undefined },
+    reason: { type: String, required: false },
   },
   { _id: false },
 );
 
 const metaSchema = new Schema(
   {
-    leverage: { type: Number, required: true },
-    riskPct: { type: Number, required: true },
+    leverage: { type: Number, required: true, default: null },
+    riskPct: { type: Number, required: true, default: null },
     strategyName: { type: String, default: null },
     openedBy: { type: String, required: true },
   },
@@ -142,11 +150,23 @@ export const PositionSchema = new Schema<IPosition>(
     },
     stopPrice: {
       type: Number,
-      required: true,
+      default: null,
     },
     initialStopPrice: {
       type: Number,
       default: null,
+    },
+    realizedPnl: {
+      type: Number,
+      default: 0,
+    },
+    fees: {
+      type: Number,
+      default: 0,
+    },
+    executions: {
+      type: [],
+      default: [],
     },
     takeProfits: {
       type: [takeProfitSchema],
@@ -158,7 +178,8 @@ export const PositionSchema = new Schema<IPosition>(
     },
     trailing: {
       type: trailingSchema,
-      required: true,
+      required: false,
+      default: null,
     },
     adds: {
       type: [],
