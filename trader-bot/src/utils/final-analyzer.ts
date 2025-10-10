@@ -1,6 +1,7 @@
 import axios from 'axios';
 import {
   analyzeCandles,
+  analyzeChoppiness,
   analyzeFunding,
   analyzeHigherMA,
   analyzeLiquidations,
@@ -20,6 +21,7 @@ import type {
   IAnalysis,
   IAnalysisConfig,
   IAnalysisModules,
+  IChoppinessModule,
   IFundingModule,
   IHigherMAModule,
   ILiquidationsModule,
@@ -112,6 +114,10 @@ export async function finalAnalyzer({
     candles,
   )) as ITrendModule | null;
 
+  modules.choppiness = (await analyzeChoppiness(
+    symbol,
+    21,
+  )) as IChoppinessModule | null;
   modules.volatility = (await analyzeVolatility(
     symbol,
     candles,

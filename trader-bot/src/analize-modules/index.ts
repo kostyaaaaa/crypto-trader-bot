@@ -1,5 +1,5 @@
 import { analyzeCandles } from './candles/analyze-candles.ts';
-
+import { analyzeChoppiness } from './choppiness/analyze-choppiness.ts';
 import { analyzeFunding } from './funding/analyze-funding.ts';
 import { analyzeHigherMA } from './higherMA/analyze-higher-ma.ts';
 import { analyzeLiquidations } from './liquidations/analyze-liquidations.ts';
@@ -12,6 +12,7 @@ import { analyzeVolatility } from './volatility/analyze-volatility.ts';
 
 export {
   analyzeCandles,
+  analyzeChoppiness,
   analyzeFunding,
   analyzeHigherMA,
   analyzeLiquidations,

@@ -135,6 +135,15 @@ export interface IRsiVolTrendMeta {
   candleDurationMs?: number;
 }
 
+export interface IChoppinessMeta {
+  LONG: number;
+  SHORT: number;
+  chop: number | null;
+  candlesUsed: number;
+  period: number;
+  interpretation: string;
+}
+
 // Module interfaces
 export interface IModuleBase {
   module: string;
@@ -202,6 +211,10 @@ export interface IAnalysisModules {
   longShort: ILongShortModule | null;
   higherMA: IHigherMAModule | null;
   rsiVolTrend: IRsiVolTrendModule | null;
+  choppiness: IChoppinessModule | null;
+}
+export interface IChoppinessModule extends IModuleBase {
+  meta: IChoppinessMeta;
 }
 
 // Scores interface
@@ -405,6 +418,18 @@ const rsiVolTrendMetaSchema = new Schema(
   { _id: false },
 );
 
+const choppinessMetaSchema = new Schema(
+  {
+    LONG: { type: Number, required: true },
+    SHORT: { type: Number, required: true },
+    chop: { type: Number, required: true },
+    candlesUsed: { type: Number, required: true },
+    period: { type: Number, required: true },
+    interpretation: { type: String, required: true },
+  },
+  { _id: false },
+);
+
 const trendModuleSchema = new Schema(
   {
     module: { type: String, required: true },
@@ -517,6 +542,17 @@ const rsiVolTrendModuleSchema = new Schema(
   { _id: false },
 );
 
+const choppinessModuleSchema = new Schema(
+  {
+    module: { type: String, required: true },
+    symbol: { type: String, required: true },
+    signal: { type: String, required: true },
+    strength: { type: Number, required: true },
+    meta: { type: choppinessMetaSchema, required: true },
+  },
+  { _id: false },
+);
+
 const analysisModulesSchema = new Schema(
   {
     trend: { type: trendModuleSchema, required: false, default: null },
@@ -544,6 +580,7 @@ const analysisModulesSchema = new Schema(
     },
     longShort: { type: longShortModuleSchema, required: false, default: null },
     higherMA: { type: higherMAModuleSchema, required: false, default: null },
+    choppiness: { type: choppinessModuleSchema, required: true, default: null },
     rsiVolTrend: {
       type: rsiVolTrendModuleSchema,
       required: false,
