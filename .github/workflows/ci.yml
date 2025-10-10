@@ -155,16 +155,21 @@ jobs:
       - name: Install dependencies (if cache miss)
         run: npm ci --if-present
 
-      - name: Check JavaScript syntax for trader-bot
-        run: |
-          echo "Checking syntax for all JavaScript files in trader-bot..."
-          find trader-bot/src -name "*.js" -exec node --check {} \;
+      - name: Verify TypeScript types for trader-bot
+        run: npx tsc --noEmit --project ./trader-bot/tsconfig.json
 
-      - name: Verify trader bot can start (dry run)
+      - name: Verify trader bot entry file exists
         run: |
           echo "Verifying trader bot entry point..."
-          node --check trader-bot/src/index.js
-          echo "✅ Trader bot syntax check passed"
+          test -f trader-bot/src/index.ts
+          echo "✅ trader-bot/src/index.ts present"
+
+      - name: (Optional) Dry import with tsx to ensure module resolution
+        if: ${{ false }}
+        run: |
+          # Enable this if you want to do a real dry import instead of a pure type check
+          npx -y tsx --version
+          npx -y tsx --eval "await import('./trader-bot/src/index.ts');"
 
   # Summary job that depends on all others
   ci-complete:
