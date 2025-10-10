@@ -107,6 +107,7 @@ export async function finalAnalyzer({
     longShort: null,
     higherMA: null,
     rsiVolTrend: null,
+    choppiness: null,
   };
 
   modules.trend = (await analyzeCandles(
