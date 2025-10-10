@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { IPosition } from 'crypto-trader-db';
 import logger from '../utils/Logger.js';
 
 /**
@@ -43,15 +44,20 @@ function formatPrice(value: unknown): string {
 /**
  * Builds a link to the console Positions page with opened row (?pos=<id>)
  */
+
+type IdLike = string | { toString(): string }; // | Types.ObjectId
+
 function buildPositionLink(
-  position: { _id?: string | { toString(): string } } | null,
+  position: (Partial<IPosition> & { _id?: IdLike }) | null,
 ): string | null {
   try {
     const base = process.env.FRONTEND_URL || '';
     if (!base || !position || !position._id) return null;
+
     const clean = base.replace(/\/+$/, '');
     const id =
       typeof position._id === 'string' ? position._id : position._id.toString();
+
     return `${clean}/positions?pos=${id}`;
   } catch {
     return null;
@@ -61,26 +67,7 @@ function buildPositionLink(
 /**
  * Sends trade notification for position closure
  */
-export async function notifyPositionClosed(position: {
-  symbol?: string;
-  side?: string;
-  entryPrice?: number;
-  size?: number;
-  meta?: { leverage?: number };
-  stopPrice?: number;
-  takeProfits?: Array<{
-    price?: number;
-    sizePct?: number;
-    size?: number;
-    qty?: number;
-    pct?: number;
-  }>;
-  closedBy?: string;
-  openedAt?: Date | string;
-  finalPnl?: number;
-  closedAt?: Date | string;
-  _id?: string | { toString(): string };
-}): Promise<void> {
+export async function notifyPositionClosed(position: IPosition): Promise<void> {
   try {
     const symbol = position.symbol ?? 'UNKNOWN';
     const side = position.side ?? 'UNKNOWN';
@@ -102,12 +89,28 @@ export async function notifyPositionClosed(position: {
     let tpText = '—';
     if (Array.isArray(tps) && tps.length) {
       tpText = tps
-        .map((tp, i: number) => {
-          const p = tp.price ?? '—';
-          const sz = tp.sizePct ?? tp.size ?? tp.qty ?? '—';
-          const pct =
-            tp.pct !== undefined ? `, ${tp.pct > 0 ? '+' : ''}${tp.pct}%` : '';
-          return `TP${i + 1}: ${formatPrice(p)} (${sz}%${pct})`;
+        .map((tp: unknown, i: number) => {
+          // Allow for legacy shapes where TP may contain size/qty and optional pct (ROI distance)
+          const t = tp as {
+            price?: number;
+            sizePct?: number;
+            size?: number;
+            qty?: number;
+            pct?: number;
+          };
+          const p = t.price ?? undefined;
+          const rawSize = t.sizePct ?? t.size ?? t.qty;
+          const sz =
+            typeof rawSize === 'number' && Number.isFinite(rawSize)
+              ? rawSize
+              : undefined;
+
+          const pctText =
+            typeof t.pct === 'number' && Number.isFinite(t.pct)
+              ? `, ${t.pct > 0 ? '+' : ''}${t.pct}%`
+              : '';
+
+          return `TP${i + 1}: ${formatPrice(p)} (${sz ?? '—'}%${pctText})`;
         })
         .join('\n');
     }
