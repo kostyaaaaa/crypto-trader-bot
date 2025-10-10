@@ -1,6 +1,6 @@
 import type { ILiquidityModule } from 'crypto-trader-db';
-import { loadDocs } from '../../storage/storage.ts';
-import logger from '../../utils/db-logger.ts';
+import { loadDocs } from '../../storage/storage';
+import logger from '../../utils/db-logger';
 export async function analyzeLiquidity(
   symbol: string = 'ETHUSDT',
   window: number = 20,

@@ -1,10 +1,10 @@
 import WebSocket from 'ws';
-import { saveDoc } from '../../storage/storage.ts';
+import { saveDoc } from '../../storage/storage';
 import type {
   BinanceDepthPartialUpdate,
   LiquidityCandle,
-} from '../../types/index.ts';
-import logger from '../../utils/db-logger.ts';
+} from '../../types/index';
+import logger from '../../utils/db-logger';
 
 function avg(arr: number[]): number {
   return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;

@@ -11,11 +11,11 @@ import {
   analyzeRsiVolumeTrend,
   analyzeTrendRegime,
   analyzeVolatility,
-} from '../analize-modules/index.ts';
-import { saveDoc } from '../storage/storage.ts';
-import type { BinanceKline, Candle } from '../types/index.ts';
+} from '../analize-modules/index';
+import { saveDoc } from '../storage/storage';
+import type { BinanceKline, Candle } from '../types/index';
 
-import logger from './db-logger.ts';
+import logger from './db-logger';
 
 import type {
   IAnalysis,

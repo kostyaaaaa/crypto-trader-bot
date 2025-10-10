@@ -2,12 +2,12 @@
   "name": "crypto-trader-db",
   "version": "1.0.0",
   "description": "MongoDB database utilities for crypto trader bot",
-  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.js",
+      "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
   },

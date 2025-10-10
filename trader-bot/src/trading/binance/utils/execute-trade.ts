@@ -1,6 +1,6 @@
-import logger from '../../../utils/db-logger.ts';
-import { updateStopPrice, updateTakeProfits } from '../../core/history-store.ts';
-import { preparePosition } from '../../core/prepare.ts';
+import logger from '../../../utils/db-logger';
+import { updateStopPrice, updateTakeProfits } from '../../core/history-store';
+import { preparePosition } from '../../core/prepare';
 import {
   adjustPrice,
   adjustQuantity,
@@ -11,8 +11,8 @@ import {
   placeStopLoss,
   placeTakeProfit,
   setLeverage,
-} from '../binance-functions/index.ts';
-import { normalizeTpPlan } from './normalize-tp-plan.ts';
+} from '../binance-functions/index';
+import { normalizeTpPlan } from './normalize-tp-plan';
 import type {
   ExchangeFilters,
   LivePosition,
@@ -20,8 +20,8 @@ import type {
   PreparedPosition,
   Side,
   TakeProfitPlanEntry,
-} from './types.ts';
-import { validateStop } from './validate-stop.ts';
+} from './types';
+import { validateStop } from './validate-stop';
 
 export async function executeTrade(
   symbol: string,

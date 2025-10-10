@@ -1,6 +1,6 @@
 import type { ITrendModule } from 'crypto-trader-db';
-import type { Candle } from '../../types/types.ts';
-import { EMA, RSI } from '../../utils/getEMAAndRSI.ts';
+import type { Candle } from '../../types/types';
+import { EMA, RSI } from '../../utils/getEMAAndRSI';
 
 const toFixedOrNull = (v: number | null | undefined, d = 2): number | null =>
   typeof v === 'number' && Number.isFinite(v) ? Number(v.toFixed(d)) : null;

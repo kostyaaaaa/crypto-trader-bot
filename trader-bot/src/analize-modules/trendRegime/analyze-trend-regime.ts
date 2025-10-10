@@ -1,5 +1,5 @@
 import type { ITrendRegimeMix, ITrendRegimeModule } from 'crypto-trader-db';
-import type { Candle } from '../../types/index.ts';
+import type { Candle } from '../../types/index';
 
 export interface TrendRegimeOptionsObj {
   period?: number;

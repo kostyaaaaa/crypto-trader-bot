@@ -5,8 +5,8 @@ import type {
   IHigherMAModule,
   IMAType,
 } from 'crypto-trader-db';
-import type { BinanceKline } from '../../types/index.ts';
-import { EMA as calcEMA, SMA } from '../../utils/getEMAAndRSI.ts';
+import type { BinanceKline } from '../../types/index';
+import { EMA as calcEMA, SMA } from '../../utils/getEMAAndRSI';
 const DEFAULT_CFG: IHigherMAConfig = {
   timeframe: '1d',
   maShort: 7,

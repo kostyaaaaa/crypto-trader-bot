@@ -1,8 +1,8 @@
-import js from '@eslint/js';
-import globals from 'globals';
-import tseslint from 'typescript-eslint';
+const js = require('@eslint/js');
+const globals = require('globals');
+const tseslint = require('typescript-eslint');
 
-export default tseslint.config([
+module.exports = tseslint.config([
   {
     ignores: ['dist/**/*'],
   },
@@ -14,7 +14,7 @@ export default tseslint.config([
       globals: globals.node,
       parserOptions: {
         project: './tsconfig.json',
-        tsconfigRootDir: import.meta.dirname,
+        tsconfigRootDir: __dirname,
       },
     },
     rules: {

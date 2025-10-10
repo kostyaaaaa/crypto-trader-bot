@@ -1,9 +1,9 @@
-import logger from '../../../utils/db-logger.ts';
-import { adjustQuantity } from './adjust-quantity.ts';
-import { client } from './client.ts';
-import { getSymbolFilters } from './get-symbol-filters.ts';
-import { normalizeOrderSide } from './normalize-order-side.ts';
-import type { OrderSide, Side } from './types.ts';
+import logger from '../../../utils/db-logger';
+import { adjustQuantity } from './adjust-quantity';
+import { client } from './client';
+import { getSymbolFilters } from './get-symbol-filters';
+import { normalizeOrderSide } from './normalize-order-side';
+import type { OrderSide, Side } from './types';
 
 export async function openMarketOrder(
   symbol: string,

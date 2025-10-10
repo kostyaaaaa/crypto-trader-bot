@@ -1,7 +1,7 @@
 // ============ Exchange info / filters ============
-import logger from '../../../utils/db-logger.ts';
-import { getExchangeInfoCached } from './state.ts';
-import type { SymbolFilter, SymbolInfo } from './types.ts';
+import logger from '../../../utils/db-logger';
+import { getExchangeInfoCached } from './state';
+import type { SymbolFilter, SymbolInfo } from './types';
 
 export async function getSymbolFilters(
   symbol: string,

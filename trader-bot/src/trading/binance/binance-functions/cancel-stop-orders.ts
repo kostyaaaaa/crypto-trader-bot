@@ -1,6 +1,6 @@
-import type { OpenOrder } from '../../../types/index.ts';
-import logger from '../../../utils/db-logger.ts';
-import { client } from './client.ts';
+import type { OpenOrder } from '../../../types/index';
+import logger from '../../../utils/db-logger';
+import { client } from './client';
 
 export async function cancelStopOrders(
   symbol: string,

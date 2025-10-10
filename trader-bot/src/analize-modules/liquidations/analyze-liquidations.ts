@@ -1,5 +1,8 @@
-import { type ILiquidationsModule, type ILiquidations as LiquidationCandle } from 'crypto-trader-db';
-import { loadDocs } from '../../storage/storage.ts';
+import {
+  type ILiquidationsModule,
+  type ILiquidations as LiquidationCandle,
+} from 'crypto-trader-db';
+import { loadDocs } from '../../storage/storage';
 
 const MAX_COUNT = 10 as const;
 const MAX_AGE_MIN = 30 as const;

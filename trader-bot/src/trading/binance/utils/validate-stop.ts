@@ -1,4 +1,4 @@
-import type { Side } from './types.ts';
+import type { Side } from './types';
 
 export function validateStop(
   side: Side,

@@ -1,6 +1,6 @@
-import logger from '../../../utils/db-logger.ts';
-import { client } from './client.ts';
-import type { FuturesPositionRisk } from './types.ts';
+import logger from '../../../utils/db-logger';
+import { client } from './client';
+import type { FuturesPositionRisk } from './types';
 
 export async function getPositionFresh(
   symbol: string,

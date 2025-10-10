@@ -1,2 +1,2 @@
-export * from './binance-res.ts';
-export * from './types.ts';
+export * from './binance-res';
+export * from './types';

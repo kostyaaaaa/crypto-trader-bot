@@ -191,9 +191,9 @@ export const PositionSchema = new Schema<IPosition>(
       default: [],
     },
     analysis: {
-      type: AnalysisSchema, 
+      type: AnalysisSchema,
       required: true,
-      default: null
+      default: null,
     },
     meta: {
       type: metaSchema,

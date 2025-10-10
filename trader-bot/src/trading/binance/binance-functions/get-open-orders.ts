@@ -1,6 +1,6 @@
-import logger from '../../../utils/db-logger.ts';
-import { getOpenOrdersCached } from './state.ts';
-import type { OpenOrder } from './types.ts';
+import logger from '../../../utils/db-logger';
+import { getOpenOrdersCached } from './state';
+import type { OpenOrder } from './types';
 
 export async function getOpenOrders(symbol: string): Promise<OpenOrder[]> {
   try {

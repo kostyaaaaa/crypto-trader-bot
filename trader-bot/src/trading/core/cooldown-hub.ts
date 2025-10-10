@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { createHmac } from 'node:crypto';
-import logger from '../../utils/db-logger.ts';
+import logger from '../../utils/db-logger';
 
 type IncomeType = 'REALIZED_PNL' | string;
 

@@ -7,14 +7,14 @@ import type {
   IStrategyConfig,
   ITakeProfit,
 } from 'crypto-trader-db';
-import { loadDocs } from '../../storage/storage.ts';
-import logger from '../../utils/db-logger.ts';
-import { notifyTrade } from '../../utils/notify.ts';
-import { executeTrade } from '../binance/utils/index.ts';
-import { getActivePositions } from './binance-positions-manager.ts';
-import cooldownHub from './cooldown-hub.ts';
-import { openPosition } from './history-store.ts';
-import markPriceHub from './mark-price-hub.ts';
+import { loadDocs } from '../../storage/storage';
+import logger from '../../utils/db-logger';
+import { notifyTrade } from '../../utils/notify';
+import { executeTrade } from '../binance/utils/index';
+import { getActivePositions } from './binance-positions-manager';
+import cooldownHub from './cooldown-hub';
+import { openPosition } from './history-store';
+import markPriceHub from './mark-price-hub';
 type Side = 'LONG' | 'SHORT';
 type Bias = Side | 'NEUTRAL';
 type ModuleKey = keyof IAnalysisModules;

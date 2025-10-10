@@ -3,7 +3,7 @@ import type {
   IVolatilityRegime,
   IVolatilityThresholds,
 } from 'crypto-trader-db';
-import type { Candle } from '../../types/index.ts';
+import type { Candle } from '../../types/index';
 export async function analyzeVolatility(
   symbol: string = 'ETHUSDT',
   candles: Candle[] = [],

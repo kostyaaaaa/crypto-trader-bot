@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { ILongShortModule } from 'crypto-trader-db';
-import logger from '../../utils/db-logger.ts';
+import logger from '../../utils/db-logger';
 
 type GLSRow = {
   symbol: string;

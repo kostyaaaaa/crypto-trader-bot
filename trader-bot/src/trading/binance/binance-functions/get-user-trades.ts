@@ -1,6 +1,6 @@
-import type { UserTrade } from '../../../types/index.ts';
-import logger from '../../../utils/db-logger.ts';
-import { client } from './client.ts';
+import type { UserTrade } from '../../../types/index';
+import logger from '../../../utils/db-logger';
+import { client } from './client';
 
 export async function getUserTrades(
   symbol: string,

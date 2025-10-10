@@ -1,10 +1,10 @@
-import logger from '../../../utils/db-logger.ts';
-import { adjustPrice } from './adjust-price.ts';
-import { adjustQuantity } from './adjust-quantity.ts';
-import { client } from './client.ts';
-import { getSymbolFilters } from './get-symbol-filters.ts';
-import { oppositeOrderSide } from './opposite-order-side.ts';
-import type { OrderSide, Side } from './types.ts';
+import logger from '../../../utils/db-logger';
+import { adjustPrice } from './adjust-price';
+import { adjustQuantity } from './adjust-quantity';
+import { client } from './client';
+import { getSymbolFilters } from './get-symbol-filters';
+import { oppositeOrderSide } from './opposite-order-side';
+import type { OrderSide, Side } from './types';
 
 export async function placeStopLoss(
   symbol: string,

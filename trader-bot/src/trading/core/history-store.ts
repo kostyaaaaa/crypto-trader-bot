@@ -6,13 +6,10 @@ import type {
   ITakeProfit,
 } from 'crypto-trader-db';
 import { Types } from 'mongoose';
-import { loadDocs, saveDoc, updateDoc } from '../../storage/storage.ts';
-import logger from '../../utils/db-logger.ts';
-import { notifyTrade } from '../../utils/notify.ts';
-import {
-  getPosition,
-  getUserTrades,
-} from '../binance/binance-functions/index.ts';
+import { loadDocs, saveDoc, updateDoc } from '../../storage/storage';
+import logger from '../../utils/db-logger';
+import { notifyTrade } from '../../utils/notify';
+import { getPosition, getUserTrades } from '../binance/binance-functions/index';
 
 export type Side = 'LONG' | 'SHORT';
 

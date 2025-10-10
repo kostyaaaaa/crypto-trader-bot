@@ -1,4 +1,3 @@
-
 export type Side = 'LONG' | 'SHORT';
 export type VolRegime = 'DEAD' | 'EXTREME' | 'NORMAL' | string;
 
@@ -14,7 +13,6 @@ export interface TakeProfitItem {
   price: number;
   sizePct: number; // 0..100
 }
-
 
 export function autoTakeProfits({
   entryPrice,
