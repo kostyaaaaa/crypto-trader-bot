@@ -1,4 +1,4 @@
-import { Candle } from '../types/types';
+import { Candle } from '../types/index.ts';
 
 export type Timeframe = '1m' | `${number}m` | `${number}h`;
 
