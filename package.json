@@ -2,8 +2,7 @@
   "name": "crypto-trader-bot",
   "version": "1.0.0",
   "description": "## Project Structure",
-  "main": "index.js",
-  
+  "main": "index.ts",
   "scripts": {
     "prettier": "prettier --write .",
     "lint": "npm run lint --workspace=crypto-trader-console && npm run lint --workspace=server && npm run lint --workspace=crypto-trader-db && npm run lint --workspace=trader-bot",
