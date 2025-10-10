@@ -198,23 +198,3 @@ export interface FuturesOrderResponse {
   /** true if order is in the order book (for REST this is often implied by status) */
   isWorking?: boolean;
 }
-
-export interface LiveOrder {
-  type: 'SL' | 'TP';
-  price: number | null; // stopPrice або price
-  qty: number; // у коінах
-  side: BinanceSide; // BUY | SELL
-  reduceOnly?: boolean;
-}
-
-export interface LiveStateFlat {
-  side: Side; // LONG | SHORT | null
-  size: number; // у коінах (abs(positionAmt))
-  entryPrice: number | null; // entryPrice або null
-  leverage: number | null; // pos.leverage або null
-  unRealizedProfit: number | null;
-  isolatedMargin: number | null;
-  initialMargin: number | null;
-  markPrice: number | null; // pos.markPrice або null
-  orders: LiveOrder[]; // лише SL/TP (без OTHER)
-}

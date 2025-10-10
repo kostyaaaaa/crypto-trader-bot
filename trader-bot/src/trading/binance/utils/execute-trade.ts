@@ -1,5 +1,5 @@
 import logger from '../../../utils/db-logger.ts';
-import { updateStopPrice, updateTakeProfits } from '../../core/historyStore.ts';
+import { updateStopPrice, updateTakeProfits } from '../../core/history-store.ts';
 import { preparePosition } from '../../core/prepare.ts';
 import {
   adjustPrice,

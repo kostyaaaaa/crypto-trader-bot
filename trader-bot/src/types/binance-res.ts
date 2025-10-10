@@ -1,8 +1,6 @@
-import type { ISide } from 'crypto-trader-db';
-
 export interface ForceOrderOrder {
   s: string; // symbol
-  S: ISide; // BUY / SELL (кого ліквідували)
+  S: BinanceSide; // BUY / SELL (кого ліквідували)
   q: string; // qty
   p?: string; // price
   ap?: string; // average price
@@ -14,6 +12,7 @@ export interface ForceOrderEvent {
   E?: number;
   o: ForceOrderOrder;
 }
+export type OrderSide = 'BUY' | 'SELL';
 
 export type DepthLevel = [string, string];
 
@@ -63,6 +62,24 @@ export interface LiveOrder {
   reduceOnly?: boolean;
 }
 
+// Raw live position from exchange/state (before normalization)
+export interface LivePosition {
+  side: Side; // LONG | SHORT | null
+  size: number | string | null; // exchange may return string; we normalize elsewhere
+  entryPrice: number | null;
+  leverage: number | null;
+  unRealizedProfit: number | null;
+  isolatedMargin: number | null;
+  initialMargin: number | null;
+  markPrice: number | null;
+}
+
+// Exit plan structure used by binance-positions-manager
+export type ExitPlan = {
+  sl?: { price: number | null };
+  tp?: Array<{ price: number | null; sizePct: number }>;
+};
+
 export interface LiveStateFlat {
   side: Side; // LONG | SHORT | null
   size: number; // у коінах (abs(positionAmt))
@@ -75,6 +92,12 @@ export interface LiveStateFlat {
   orders: LiveOrder[]; // лише SL/TP (без OTHER)
 }
 
+// Canonical live state used by get-live-state.ts
+export interface LiveState {
+  position: LivePosition | null;
+  orders: LiveOrder[];
+}
+
 export type BinanceFuturesOrderType =
   | 'LIMIT'
   | 'MARKET'
@@ -83,14 +106,13 @@ export type BinanceFuturesOrderType =
   | 'TAKE_PROFIT'
   | 'TAKE_PROFIT_MARKET'
   | 'TRAILING_STOP_MARKET'
-  | string; // Binance інколи додає варіації
+  | string;
 
 export interface OpenOrder {
   symbol: string;
   orderId: number;
   clientOrderId: string;
 
-  // ВАЖЛИВО: числові значення приходять як РЯДКИ
   price: string; // часто "0" для STOP_MARKET/TP_MARKET
   stopPrice: string; // ключове поле для SL/TP
   origQty: string;
@@ -119,3 +141,67 @@ export type UserTrade = {
   marginAsset?: string; // зазвичай "USDT"
   time: number; // timestamp у мілісекундах (epoch ms)
 };
+
+export type LiveStateOrder = LiveOrder;
+
+// 2) мінімальний тип позиційного ризику (його просить state.ts/get-live-state.ts)
+export interface FuturesPositionRisk {
+  symbol: string;
+  positionAmt: string;
+  entryPrice: string;
+  leverage: string;
+  unRealizedProfit?: string;
+  unrealizedProfit?: string;
+  isolatedMargin?: string;
+  initialMargin?: string;
+  markPrice?: string;
+}
+// ---- Binance user data stream event types (minimal) ----
+export type OrderStatus =
+  | 'NEW'
+  | 'PARTIALLY_FILLED'
+  | 'FILLED'
+  | 'CANCELED'
+  | 'REJECTED'
+  | 'EXPIRED'
+  | 'PENDING_CANCEL'
+  | 'EXPIRED_IN_MATCH'
+  | string; // Binance sometimes adds variants
+
+export type OrderType =
+  | 'MARKET'
+  | 'STOP_MARKET'
+  | 'TAKE_PROFIT_MARKET'
+  | 'LIMIT'
+  | 'STOP'
+  | 'TAKE_PROFIT'
+  | string;
+
+export interface OrderTradeUpdateEvent {
+  e: 'ORDER_TRADE_UPDATE';
+  E?: number; // event time
+  T?: number; // transaction time
+  o: {
+    s: string; // symbol
+    X: OrderStatus; // order status
+    S: 'BUY' | 'SELL'; // side
+    ot: OrderType; // order type
+    L?: string | number; // last filled price
+    l?: string | number; // last filled qty
+    z?: string | number; // cumulative filled qty
+    q?: string | number; // order qty
+    i: number; // orderId
+    n?: string | number; // commission amount
+    N?: string; // commission asset
+  };
+}
+
+export interface AccountUpdateEvent {
+  e: 'ACCOUNT_UPDATE';
+  [k: string]: unknown;
+}
+
+export type UserDataEvent =
+  | OrderTradeUpdateEvent
+  | AccountUpdateEvent
+  | { e: string; [k: string]: unknown };

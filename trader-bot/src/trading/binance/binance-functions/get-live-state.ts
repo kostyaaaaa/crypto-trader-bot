@@ -1,13 +1,20 @@
+import type {
+  FuturesPositionRisk,
+  LiveOrder,
+  LivePosition,
+  LiveState,
+  OpenOrder,
+} from '../../../types/binance-res.ts';
 import logger from '../../../utils/db-logger.ts';
 import { getOpenOrdersCached, getPositionRiskCached } from './state.ts';
-import type { LiveOrder, LiveStateFlat, Side } from './types.ts';
 
-export async function getLiveState(symbol: string): Promise<LiveStateFlat> {
+export async function getLiveState(symbol: string): Promise<LiveState> {
   try {
-    const positions = (await getPositionRiskCached()) || [];
-    const pos: any = positions.find((p: any) => p.symbol === symbol);
+    const positions = ((await getPositionRiskCached()) ||
+      []) as FuturesPositionRisk[];
+    const pos = positions.find((p) => p.symbol === symbol);
 
-    let side: Side = null;
+    let side: LivePosition['side'] = null;
     let size = 0;
     let entryPrice: number | null = null;
     let leverage: number | null = null;
@@ -38,67 +45,60 @@ export async function getLiveState(symbol: string): Promise<LiveStateFlat> {
       markPrice = Number.isFinite(mp) ? mp : null;
     }
 
-    const openOrders = (await getOpenOrdersCached(symbol)) || [];
+    const openOrders = ((await getOpenOrdersCached(symbol)) ||
+      []) as OpenOrder[];
     const orders: LiveOrder[] = openOrders
-      .map((o: any) => {
-        const rawQty = parseFloat(o.origQty);
-        const qty = Number.isFinite(rawQty) ? rawQty : 0;
+      .map((o) => {
+        const qtyNum = parseFloat(o.origQty);
+        const qty = Number.isFinite(qtyNum) ? qtyNum : 0;
 
-        const sp = parseFloat(o.stopPrice);
-        const pxFromStop = Number.isFinite(sp) && sp > 0 ? sp : NaN;
-        const px = Number.isFinite(pxFromStop)
-          ? pxFromStop
-          : Number.isFinite(parseFloat(o.price))
-            ? parseFloat(o.price)
+        const stopPx = parseFloat(o.stopPrice);
+        const priceFromStop =
+          Number.isFinite(stopPx) && stopPx > 0 ? stopPx : NaN;
+        const limitPx = parseFloat(o.price);
+        const px = Number.isFinite(priceFromStop)
+          ? priceFromStop
+          : Number.isFinite(limitPx)
+            ? limitPx
             : NaN;
 
-        const isStop =
-          typeof o.type === 'string' &&
-          (o.type.includes('STOP') || o.origType?.includes?.('STOP'));
-        const isTp =
-          typeof o.type === 'string' &&
-          (o.type.includes('TAKE_PROFIT') ||
-            o.origType?.includes?.('TAKE_PROFIT'));
-
+        const t = String(o.type || '').toUpperCase();
+        const ot = String(o.origType || '').toUpperCase();
+        const isStop = t.includes('STOP') || ot.includes('STOP');
+        const isTp = t.includes('TAKE_PROFIT') || ot.includes('TAKE_PROFIT');
         if (!isStop && !isTp) return null;
 
         const sideStr = String(o.side || '').toUpperCase();
-        const side: string = sideStr === 'SELL' ? 'SELL' : 'BUY';
+        const side = sideStr === 'SELL' ? 'SELL' : 'BUY';
 
-        return {
+        const ord: LiveOrder = {
           type: isStop ? 'SL' : 'TP',
           price: Number.isFinite(px) ? px : null,
-          qty: Number.isFinite(qty) ? qty : 0,
+          qty,
           side,
-          reduceOnly: !!o.reduceOnly,
-        } as LiveOrder;
+          reduceOnly: Boolean(o.reduceOnly),
+        };
+        return ord;
       })
-      .filter(Boolean) as LiveOrder[];
+      .filter((x): x is LiveOrder => x !== null);
 
-    return {
-      side,
-      size,
-      entryPrice,
-      leverage,
-      unRealizedProfit,
-      isolatedMargin,
-      initialMargin,
-      markPrice,
-      orders,
-    };
-  } catch (err: any) {
-    logger.error(`❌ getLiveState failed for ${symbol}:`, err?.message || err);
+    const position: LivePosition | null = side
+      ? {
+          side,
+          size,
+          entryPrice,
+          leverage,
+          unRealizedProfit,
+          isolatedMargin,
+          initialMargin,
+          markPrice,
+        }
+      : null;
 
-    return {
-      side: null,
-      size: 0,
-      entryPrice: null,
-      leverage: null,
-      unRealizedProfit: null,
-      isolatedMargin: null,
-      initialMargin: null,
-      markPrice: null,
-      orders: [],
-    };
+    return { position, orders };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error(`❌ getLiveState failed for ${symbol}: ${msg}`);
+    return { position: null, orders: [] };
   }
 }

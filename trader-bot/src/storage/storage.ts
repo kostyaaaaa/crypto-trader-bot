@@ -1,93 +1,126 @@
-// src/storage/storage.js
-import { LiquidationsModel, LiquidityModel } from 'crypto-trader-db';
+// src/storage/storage.ts
 import dotenv from 'dotenv';
-import mongoose from 'mongoose';
+import type { Model } from 'mongoose';
+
+import type {
+  IAnalysis,
+  ILiquidations,
+  ILiquidity,
+  IPosition,
+} from 'crypto-trader-db';
+import {
+  AnalysisModel,
+  LiquidationsModel,
+  LiquidityModel,
+  PositionModel,
+} from 'crypto-trader-db';
 
 dotenv.config();
 
-const DB_MAX = 1000000;
+const DB_MAX = 1_000_000 as const;
 
-function getModel(collection) {
-  switch (collection) {
-    case 'liquidations':
-      return LiquidationsModel;
-    case 'liquidity':
-      return LiquidityModel;
-    default:
-      return mongoose.connection.collection(collection); // native
+/* ===================== Types ===================== */
+
+type DocByCollection = {
+  liquidations: ILiquidations;
+  liquidity: ILiquidity;
+  analysis: IAnalysis;
+  positions: IPosition;
+};
+
+export type KnownCollection = keyof DocByCollection;
+type DocOf<C extends KnownCollection> = DocByCollection[C];
+
+/** дозволяємо Date або ISO-рядок у часових полях */
+type MaybeDate = Date | string;
+type AllowDateStrings<T> = {
+  [K in keyof T]: K extends 'time' | 'createdAt' | 'updatedAt'
+    ? T[K] | MaybeDate
+    : T[K];
+};
+type DocInput<C extends KnownCollection> = AllowDateStrings<DocOf<C>>;
+
+/* ===================== Model map ===================== */
+
+const MODELS = {
+  liquidations: LiquidationsModel, // Model<ILiquidations>
+  liquidity: LiquidityModel,       // Model<ILiquidity>
+  analysis: AnalysisModel,         // Model<IAnalysis>
+  positions: PositionModel,        // Model<IPosition>
+} as const;
+
+export function getModel(c: KnownCollection) {
+  return MODELS[c];
+}
+
+/* ===================== SAVE ===================== */
+
+export async function saveDoc<C extends KnownCollection>(
+  collection: C,
+  doc: DocInput<C>,
+): Promise<void> {
+  // спрощуємо внутрішні типи: працюємо як з Model<any>
+  const model = getModel(collection) as unknown as Model<any>;
+
+  await model.create(doc as any);
+
+  const count = await model.countDocuments();
+  if (count > DB_MAX) {
+    const oldest = await model.find().sort({ _id: 1 }).limit(count - DB_MAX);
+    const ids = oldest.map((d: any) => d._id);
+    await model.deleteMany({ _id: { $in: ids } });
   }
 }
 
-/* ========= SAVE ========= */
-export async function saveDoc(collection, doc) {
-  const Model = getModel(collection);
-  const maxDocs = DB_MAX;
+/* ===================== LOAD ===================== */
 
-  if (Model.create) {
-    // mongoose
-    await Model.create(doc);
-    const count = await Model.countDocuments();
-    if (count > maxDocs) {
-      const oldest = await Model.find()
-        .sort({ _id: 1 })
-        .limit(count - maxDocs);
-      const ids = oldest.map((d) => d._id);
-      await Model.deleteMany({ _id: { $in: ids } });
-    }
-  } else {
-    // native
-    await Model.insertOne(doc);
-    const count = await Model.countDocuments();
-    if (count > maxDocs) {
-      const toDelete = count - maxDocs;
-      const oldest = await Model.find()
-        .sort({ _id: 1 })
-        .limit(toDelete)
-        .toArray();
-      const ids = oldest.map((d) => d._id);
-      await Model.deleteMany({ _id: { $in: ids } });
-    }
-  }
-}
-
-/* ========= LOAD ========= */
-export async function loadDocs(collection, symbol, limit = 100) {
-  const Model = getModel(collection);
+export async function loadDocs<C extends KnownCollection>(
+  collection: C,
+  symbol?: string,
+  limit = 100,
+): Promise<DocOf<C>[]> {
+  const model = getModel(collection) as unknown as Model<any>;
   const query = symbol ? { symbol } : {};
 
-  if (Model.find && Model.create) {
-    return await Model.find(query).sort({ time: -1 }).limit(limit).lean();
-  } else {
-    return await Model.find(query).sort({ time: -1 }).limit(limit).toArray();
-  }
+  const docs = await model
+    .find(query)
+    .sort({ time: -1 })
+    .limit(limit)
+    .lean<DocOf<C>>()           
+    .exec();
+
+  return docs as unknown as DocOf<C>[]; // або просто `return docs as DocOf<C>[]`
 }
 
-/* ========= RAW ========= */
-export async function loadDocsRaw(collection) {
-  const Model = getModel(collection);
+export async function loadDocsRaw<C extends KnownCollection>(
+  collection: C,
+): Promise<DocOf<C>[]> {
+  const model = getModel(collection) as unknown as Model<any>;
 
-  if (Model.find && Model.create) {
-    return await Model.find({}).lean();
-  } else {
-    return await Model.find({}).toArray();
-  }
+  const docs = await model
+    .find({})
+    .lean<DocOf<C>>()              // <— те саме
+    .exec();
+
+  return docs as unknown as DocOf<C>[];
 }
+/* ===================== UPDATE ===================== */
 
-/* ========= UPDATE ========= */
-export async function updateDoc(collection, query, update, opts = {}) {
-  const Model = getModel(collection);
+type UpdateOpts = { upsert?: boolean };
 
-  if (Model.findOneAndUpdate) {
-    // mongoose
-    return await Model.findOneAndUpdate(query, update, {
+export async function updateDoc<C extends KnownCollection>(
+  collection: C,
+  query: Partial<DocOf<C>>,
+  update: Partial<DocOf<C>> | Record<string, unknown>,
+  opts: UpdateOpts = {},
+): Promise<DocOf<C> | null> {
+  const model = getModel(collection) as unknown as Model<any>;
+  const res = await model
+    .findOneAndUpdate(query, update, {
       new: true,
       upsert: opts.upsert === true,
-    });
-  } else {
-    // native
-    return await Model.findOneAndUpdate(query, update, {
-      returnDocument: 'after',
-      upsert: opts.upsert === true,
-    });
-  }
+    })
+    .lean();
+
+  return (res ?? null) as DocOf<C> | null;
 }

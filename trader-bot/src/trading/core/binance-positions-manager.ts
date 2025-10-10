@@ -1,4 +1,11 @@
 // src/trading/core/binance-positions-manager.ts
+import type {
+  BinanceSide,
+  ExitPlan,
+  LiveState,
+  LiveStateFlat,
+  Side,
+} from '../../types/binance-res.ts';
 import logger from '../../utils/db-logger.ts';
 import {
   adjustPrice,
@@ -11,11 +18,7 @@ import {
   placeStopLoss,
   placeTakeProfit,
 } from '../binance/binance-functions/index.ts';
-import { getOpenPosition } from './historyStore.ts';
-
-/* ===== Types ===== */
-export type Side = 'LONG' | 'SHORT';
-export type BinanceSide = 'BUY' | 'SELL';
+import { getOpenPosition } from './history-store.ts';
 
 /* ===== Helpers ===== */
 function oppositeSide(side: Side): Side {
@@ -26,7 +29,7 @@ function oppositeSide(side: Side): Side {
 
 export async function getActivePositions(
   symbol: string,
-): Promise<LivePosition[]> {
+): Promise<LiveStateFlat[]> {
   if (!symbol) throw new Error('getActivePositions requires a symbol');
 
   const openDoc = await getOpenPosition(symbol);
@@ -39,10 +42,15 @@ export async function getActivePositions(
           side: position.side as Side,
           entryPrice: position.entryPrice ?? null,
           size: Number(position.size) || 0,
+          leverage: position.leverage ?? null,
+          unRealizedProfit: position.unRealizedProfit ?? null,
+          isolatedMargin: position.isolatedMargin ?? null,
+          initialMargin: position.initialMargin ?? null,
+          markPrice: position.markPrice ?? null,
           orders: (orders || []).map((o) => ({
-            type: (o.type as 'SL' | 'TP') ?? 'SL',
-            price: Number.isFinite(Number(o.price)) ? Number(o.price) : null,
-            qty: Number(o.qty) || 0,
+            type: o.type,
+            price: o.price,
+            qty: o.qty,
             side: o.side as BinanceSide,
             reduceOnly: !!o.reduceOnly,
           })),
@@ -86,7 +94,7 @@ export async function applyAddToPosition(
   addUsd: number,
   price: number,
   exits?: ExitPlan,
-): Promise<{ position: LivePosition | null; orders: LiveOrder[] }> {
+): Promise<LiveState> {
   const filters = await getSymbolFilters(symbol);
 
   // Розрахунок коін-кількості з $-нотіоналу

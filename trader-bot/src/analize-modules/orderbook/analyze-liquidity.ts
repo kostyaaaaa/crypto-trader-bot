@@ -1,17 +1,17 @@
 import type { ILiquidityModule } from 'crypto-trader-db';
 import { loadDocs } from '../../storage/storage.ts';
-import type { LiquidityCandle } from '../../types/index.ts';
 import logger from '../../utils/db-logger.ts';
 export async function analyzeLiquidity(
   symbol: string = 'ETHUSDT',
   window: number = 20,
   lastPrice: number | null = null,
 ): Promise<ILiquidityModule | null> {
-  const liq = (await loadDocs('liquidity', symbol, window)) as
-    | LiquidityCandle[]
-    | null;
+  const liq = (await loadDocs('liquidity', symbol, window)) as Array<{
+    avgImbalance: number | string;
+    avgSpread: number | string;
+  }>;
 
-  if (!liq || liq.length === 0) {
+  if (liq.length === 0) {
     logger.warn(`⚠️ No liquidity aggregates for ${symbol}`);
     return null;
   }

@@ -1,7 +1,11 @@
 // src/trading/core/monitor.ts
 import type { IPosition } from 'crypto-trader-db';
 import { loadDocs } from '../../storage/storage.ts';
-import type { LiveStateFlat as LiveState } from '../../types/index.ts';
+import type {
+  BinanceSide,
+  LiveStateFlat,
+  Side,
+} from '../../types/binance-res.ts'; // use canonical Binance types
 import logger from '../../utils/db-logger.ts';
 import {
   cancelStopOrders,
@@ -14,19 +18,20 @@ import {
   adjustPosition,
   getOpenPosition,
   updateStopPrice,
-} from './historyStore.ts';
+} from './history-store.ts';
 import markPriceHub from './mark-price-hub.ts';
 
 /* ========= local types (мінімально потрібні) ========= */
-
-type Side = 'LONG' | 'SHORT';
-type BinanceSide = 'BUY' | 'SELL';
 
 interface AnalysisRecord {
   bias?: Side | 'NEUTRAL';
   signal?: Side | 'NEUTRAL';
   time?: string | Date;
   createdAt?: string | Date;
+}
+
+function errMsg(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
 }
 
 /* ========= helpers ========= */
@@ -42,7 +47,7 @@ async function getMarkFromHub(symbol: string): Promise<number | null> {
 function getAnaSide(
   a: AnalysisRecord | null | undefined,
 ): Side | 'NEUTRAL' | null {
-  return (a && ((a.bias as any) ?? a.signal)) || null;
+  return (a?.bias ?? a?.signal) || null;
 }
 
 function roundQty(q: number): number {
@@ -56,16 +61,32 @@ const TRADE_MODE = process.env.TRADE_MODE || 'paper';
 
 export async function monitorPositions(params: {
   symbol: string;
-  strategy: any;
+  strategy: {
+    exits?: {
+      oppositeCountExit?: number;
+      trailing?: {
+        use?: boolean;
+        startAfterPct?: number;
+        trailStepPct?: number;
+      };
+    };
+    sizing?: {
+      maxAdds?: number;
+      addOnAdverseMovePct?: number;
+      addMultiplier?: number;
+    };
+    capital?: { leverage?: number };
+  };
 }): Promise<void> {
   const { symbol, strategy } = params;
 
   let openDoc = (await getOpenPosition(symbol)) as IPosition | null;
   if (!openDoc) return;
 
-  let positions: LiveState[] = [];
+  let positions: LiveStateFlat[] = [];
+
   try {
-    positions = (await getActivePositions(symbol)) as LiveState[];
+    positions = await getActivePositions(symbol);
   } catch {
     return;
   }
@@ -80,8 +101,9 @@ export async function monitorPositions(params: {
   }
 
   // Скільки останніх аналізів дивимося на протилежність (0 → вимкнено)
-  const oppExitN = Number.isFinite(+strategy?.exits?.oppositeCountExit)
-    ? Math.max(0, Math.floor(+strategy.exits.oppositeCountExit))
+  const rawOpp = strategy?.exits?.oppositeCountExit;
+  const oppExitN = Number.isFinite(Number(rawOpp))
+    ? Math.max(0, Math.floor(Number(rawOpp)))
     : 0;
 
   // Останні аналізи для швидких перевірок
@@ -126,12 +148,7 @@ export async function monitorPositions(params: {
       : null;
 
     if (currentSL == null && Array.isArray(orders)) {
-      const slOrder = orders.find(
-        (o) =>
-          o?.type === 'SL' ||
-          o?.type === 'STOP' ||
-          /STOP/i.test(String(o?.type ?? '')),
-      );
+      const slOrder = orders.find((o) => o.type === 'SL');
       if (slOrder) currentSL = Number(slOrder.price) || null;
     }
 
@@ -219,8 +236,7 @@ export async function monitorPositions(params: {
             1,
         );
 
-        const baseNotionalUsd =
-          Number(openDoc?.initialSizeUsd) || Number(openDoc?.size) || 0;
+        const baseNotionalUsd = Number(openDoc?.size) || 0;
         const baseMarginUsd =
           levForNotional > 0 ? baseNotionalUsd / levForNotional : 0;
 
@@ -250,15 +266,15 @@ export async function monitorPositions(params: {
             logger.info(
               `✅ ADD persisted ${symbol}: qty=${Number(addQty)} @ ${price}`,
             );
-          } catch (e: any) {
-            logger.error(`❌ ADD persist failed ${symbol}: ${e?.message || e}`);
+          } catch (e: unknown) {
+            logger.error(`❌ ADD persist failed ${symbol}: ${errMsg(e)}`);
           }
 
           // оновимо openDoc, щоб не подвоїти ADD за ту ж ітерацію
           try {
             const refreshed = (await getOpenPosition(
               symbol,
-            )) as PositionDoc | null;
+            )) as IPosition | null;
             if (refreshed) openDoc = refreshed;
           } catch {}
         } else {
@@ -298,18 +314,16 @@ export async function monitorPositions(params: {
         // оцінка кількості (якщо треба для маржі)
         const qtyFromPos = Number(pos?.size);
         const qtyFromInitialNotional =
-          Number.isFinite(Number(openDoc?.initialSizeUsd)) && entryPrice
-            ? Number(openDoc!.initialSizeUsd) / entryPrice
-            : Number.isFinite(Number(openDoc?.size)) && entryPrice
-              ? Number(openDoc!.size) / entryPrice
-              : NaN;
+          Number.isFinite(Number(openDoc?.size)) && entryPrice
+            ? Number(openDoc!.size) / entryPrice
+            : NaN;
 
         const estQty =
           [qtyFromPos, qtyFromInitialNotional, Number(liveQty)].find(
             (v) => Number.isFinite(v) && v! > 0,
           ) || 0;
 
-        let marginUsd = Number(openDoc?.marginUsd);
+        let marginUsd = Number(pos?.isolatedMargin ?? pos?.initialMargin);
         if (!Number.isFinite(marginUsd) || marginUsd <= 0) {
           const levForMargin = lev;
           if (Number.isFinite(estQty) && estQty > 0 && levForMargin > 0) {
@@ -342,8 +356,7 @@ export async function monitorPositions(params: {
             active: true,
             startAfterPct: startAfterRoiPct,
             trailStepPct: gapRoiPct,
-            anchorRoiPct: pnlRoiPct,
-            lev,
+            anchor: pnlRoiPct,
           };
 
           // просто зафіксуємо в історії; фактичну стоп-ціну ще не рухаємо
@@ -357,17 +370,16 @@ export async function monitorPositions(params: {
 
         // Якщо трейл активний — тягнемо SL
         if (trailingState?.active) {
-          if (pnlRoiPct > (trailingState.anchorRoiPct ?? -Infinity)) {
-            trailingState.anchorRoiPct = pnlRoiPct;
+          if (pnlRoiPct > (trailingState.anchor ?? -Infinity)) {
+            trailingState.anchor = pnlRoiPct;
           }
 
           const targetStopRoiPct = Math.max(
             0,
-            (trailingState.anchorRoiPct ?? 0) -
-              (trailingState.trailStepPct ?? 0),
+            (trailingState.anchor ?? 0) - (trailingState.trailStepPct ?? 0),
           );
 
-          const useLev = Math.max(1, Number(trailingState.lev || lev) || 1);
+          const useLev = Math.max(1, Number(lev) || 1);
           const targetStopPriceMovePct = targetStopRoiPct / useLev;
 
           const newStop =
@@ -381,7 +393,7 @@ export async function monitorPositions(params: {
 
           if (needUpdate) {
             if (TRADE_MODE === 'live') {
-              await cancelStopOrders(symbol, { onlySL: true } as any); // TP не чіпаємо
+              await cancelStopOrders(symbol, { onlySL: true });
               await placeStopLoss(symbol, side, newStop, roundQty(liveQty));
             }
 
@@ -399,8 +411,8 @@ export async function monitorPositions(params: {
             );
           }
         }
-      } catch (e: any) {
-        logger.error(`❌ TRAIL error ${symbol}: ${e?.message || e}`);
+      } catch (e: unknown) {
+        logger.error(`❌ TRAIL error ${symbol}: ${errMsg(e)}`);
       }
     } else {
       if (!trailingCfg?.use)

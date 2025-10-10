@@ -13,7 +13,7 @@ import { notifyTrade } from '../../utils/notify.ts';
 import { executeTrade } from '../binance/utils/index.ts';
 import { getActivePositions } from './binance-positions-manager.ts';
 import cooldownHub from './cooldown-hub.ts';
-import { openPosition } from './historyStore.ts';
+import { openPosition } from './history-store.ts';
 import markPriceHub from './mark-price-hub.ts';
 type Side = 'LONG' | 'SHORT';
 type Bias = Side | 'NEUTRAL';
@@ -180,7 +180,6 @@ export async function tradingEngine({
     }
   }
 
-  // спред
   const spreadPct = Number(modules?.liquidity?.meta?.spreadPct ?? 0);
   if (Number.isFinite(spreadPct) && spreadPct > entry.maxSpreadPct) {
     logger.info(
@@ -189,7 +188,6 @@ export async function tradingEngine({
     return;
   }
 
-  // funding extreme
   const fr = Number(modules?.funding?.meta?.avgFunding ?? 0);
   const absOver = entry.avoidWhen?.fundingExtreme?.absOver;
   if (absOver && Math.abs(fr) > absOver) {
@@ -207,7 +205,7 @@ export async function tradingEngine({
   }
 
   const runConfig: ICoinConfig = JSON.parse(
-    JSON.stringify({ ...strategy, ...analysisConfig }),
+    JSON.stringify({ strategy, analysisConfig }),
   );
   runConfig.strategy.capital.riskPerTradePct = baseRiskPct * riskFactor;
   logger.info(
@@ -224,13 +222,12 @@ export async function tradingEngine({
     entryPrice,
   );
   if (position) {
-    notifyTrade(position, 'OPENED');
+    notifyTrade(position, 'OPEN');
     await openPosition(symbol, {
       side: position.side, // 'LONG' | 'SHORT'
       entryPrice: position.entryPrice,
       size: position.size,
-      stopPrice: position.stopPrice ?? null, // ✅ правильний ключ + властивість
-      // знімемо можливі зайві поля (pct тощо)
+      stopPrice: position.stopPrice ?? null,
       takeProfits: (position.takeProfits || []).map((tp: ITakeProfit) => ({
         price: Number(tp.price),
         sizePct: Number(tp.sizePct),

@@ -1,5 +1,11 @@
 // src/trading/core/historyStore.ts
-import type { IAdjustment, IPosition, ITakeProfit } from 'crypto-trader-db';
+import type {
+  IAdjustment,
+  IAnalysis,
+  IPosition,
+  ITakeProfit,
+} from 'crypto-trader-db';
+import { Types } from 'mongoose';
 import { loadDocs, saveDoc, updateDoc } from '../../storage/storage.ts';
 import logger from '../../utils/db-logger.ts';
 import { notifyTrade } from '../../utils/notify.ts';
@@ -35,6 +41,9 @@ function round(n: number, p = 6): number {
 function nowTs(): number {
   return Date.now();
 }
+function errMsg(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
 
 const COLLECTION = 'positions' as const;
 
@@ -49,6 +58,11 @@ const KEY_ADJUSTMENT_TYPES = new Set<IAdjustment['type']>([
   'SL_HIT',
   'CLOSE',
 ]);
+
+// Helper for accessing Mongo _id field
+type WithMongoId<T> = T & { _id: Types.ObjectId | string };
+const asWithId = <T extends object>(x: T): WithMongoId<T> =>
+  x as WithMongoId<T>;
 
 // ===== API =====
 
@@ -72,7 +86,7 @@ interface OpenPositionArgs {
     pct?: number;
   }>;
   trailingCfg?: { startAfterPct: number; trailStepPct: number } | null;
-  analysis: any; // ObjectId | string
+  analysis?: IAnalysis | null; // ObjectId | string | null
   strategyMeta?: {
     leverage?: number | null;
     riskPct?: number | null;
@@ -103,20 +117,21 @@ export async function openPosition(
     size,
     openedAt: new Date(),
     status: 'OPEN',
-
     stopPrice,
     initialStopPrice: stopPrice,
-
     takeProfits: (takeProfits || []).map((tp) => ({
       price: Number(tp.price),
-      sizePct: Number(tp.sizePct ?? (tp as any).size ?? 100),
+      sizePct: Number(
+        tp.sizePct ?? (tp as unknown as { size?: number }).size ?? 100,
+      ),
       filled: Boolean(tp.filled ?? false),
     })),
     initialTPs: (takeProfits || []).map((tp) => ({
       price: Number(tp.price),
-      sizePct: Number(tp.sizePct ?? (tp as any).size ?? 100),
+      sizePct: Number(
+        tp.sizePct ?? (tp as unknown as { size?: number }).size ?? 100,
+      ),
     })),
-
     trailing: trailingCfg
       ? {
           active: false,
@@ -125,16 +140,12 @@ export async function openPosition(
           anchor: null,
         }
       : null,
-
     realizedPnl: 0,
     fees: 0,
     executions: [] as IExecution[],
-
     adds: [] as IAdd[],
     adjustments: [] as IAdjustment[],
-
-    analysis: (analysis as any) ?? null,
-
+    analysis: analysis ?? null,
     meta: {
       leverage: (strategyMeta?.leverage as number | null) ?? null,
       riskPct: (strategyMeta?.riskPct as number | null) ?? null,
@@ -144,12 +155,9 @@ export async function openPosition(
   };
 
   try {
-    const saved: any = await saveDoc(COLLECTION, newPos);
-    if (saved && (saved as any)._id) {
-      (newPos as any)._id = (saved as any)._id;
-    }
-  } catch (e: any) {
-    logger.error(`❌ openPosition save failed for ${symbol}: ${e?.message}`);
+    await saveDoc(COLLECTION, newPos);
+  } catch (e: unknown) {
+    logger.error(`❌ openPosition save failed for ${symbol}: ${errMsg(e)}`);
   }
 
   return newPos;
@@ -190,18 +198,16 @@ export async function addToPosition(
   const incOps: Record<string, number> = { size: addNotional };
   if (feeNum) incOps.fees = feeNum;
 
-  await updateDoc(
-    COLLECTION,
-    { _id: (pos as any)._id },
-    {
-      $inc: incOps,
-      $push: {
-        adds: { qty: q, price: effectivePrice, ts },
-        executions: exec,
-      },
-      $set: { updatedAt: new Date() },
+  const posId = asWithId(pos)._id;
+
+  await updateDoc(COLLECTION, { _id: posId } as unknown as Partial<IPosition>, {
+    $inc: incOps,
+    $push: {
+      adds: { qty: q, price: effectivePrice, ts },
+      executions: exec,
     },
-  );
+    $set: { updatedAt: new Date() },
+  });
 
   return true;
 }
@@ -240,14 +246,18 @@ export async function adjustPosition(
     newAdjustments.splice(0, newAdjustments.length - 20);
   }
 
-  const FILL_TYPES = new Set(['TP_HIT', 'SL_HIT', 'CLOSE']);
+  const FILL_TYPES = new Set(['TP_HIT', 'SL_HIT', 'CLOSE'] as const);
   const hasExecInputs =
-    FILL_TYPES.has(type) &&
+    FILL_TYPES.has(
+      type as typeof FILL_TYPES extends Set<infer U> ? U : never,
+    ) &&
     Number.isFinite(Number(price)) &&
     Number.isFinite(Number(size)) &&
     Number(size) > 0;
 
-  let update: any = { $set: { adjustments: newAdjustments } };
+  let update: Record<string, unknown> = {
+    $set: { adjustments: newAdjustments },
+  };
 
   if (hasExecInputs) {
     const dir = pos.side === 'LONG' ? 1 : -1;
@@ -283,7 +293,7 @@ export async function adjustPosition(
       $push: {
         executions: exec,
       },
-    };
+    } as Record<string, unknown>;
 
     // Якщо закрили повністю — додамо технічний CLOSE
     if (newSize === 0 && type !== 'CLOSE') {
@@ -296,14 +306,24 @@ export async function adjustPosition(
         pnl: 0,
         cumPnl: round((pos.realizedPnl || 0) + pnl, 8),
       };
-      update.$push.executions = { $each: [exec, finalClose] };
-      update.$set.finalPnl = round((pos.realizedPnl || 0) + pnl, 8);
-      update.$set.closedAt = new Date();
-      update.$set.closedBy = exec.kind; // TP або SL
+      (update.$push as { executions: unknown }) = {
+        executions: { $each: [exec, finalClose] },
+      };
+      (update.$set as Record<string, unknown>) = {
+        ...(update.$set as Record<string, unknown>),
+        finalPnl: round((pos.realizedPnl || 0) + pnl, 8),
+        closedAt: new Date(),
+        closedBy: exec.kind, // TP або SL
+      };
     }
   }
 
-  await updateDoc(COLLECTION, { _id: (pos as any)._id }, update);
+  const posId = asWithId(pos)._id;
+  await updateDoc(
+    COLLECTION,
+    { _id: posId } as unknown as Partial<IPosition>,
+    update,
+  );
   return { ...pos, adjustments: newAdjustments };
 }
 
@@ -320,26 +340,32 @@ export async function closePositionHistory(
   // Legacy-фолбек — якщо PnL не накопичився
   if (!Number.isFinite(finalPnl) || Math.abs(finalPnl) < 1e-9) {
     try {
-      const trades = await getUserTrades(symbol, { limit: 1000 });
+      type UserTrade = {
+        time?: number;
+        T?: number;
+        realizedPnl?: number | string;
+      };
+      const trades = (await getUserTrades(symbol, {
+        limit: 1000,
+      })) as UserTrade[];
       const since = pos.openedAt ? new Date(pos.openedAt).getTime() : 0;
       finalPnl = trades
-        .filter((t: any) => (t.time || t.T) >= since)
-        .reduce((sum: number, t: any) => sum + (Number(t.realizedPnl) || 0), 0);
-    } catch {}
+        .filter((t) => (t.time ?? t.T ?? 0) >= since)
+        .reduce((sum: number, t) => sum + (Number(t.realizedPnl) || 0), 0);
+    } catch (e: unknown) {
+      // ignore — залишаємо finalPnl як є
+    }
   }
 
-  await updateDoc(
-    COLLECTION,
-    { _id: (pos as any)._id },
-    {
-      $set: {
-        status: 'CLOSED',
-        closedAt: new Date(),
-        finalPnl: round(finalPnl, 8),
-        closedBy,
-      },
+  const posId = asWithId(pos)._id;
+  await updateDoc(COLLECTION, { _id: posId } as unknown as Partial<IPosition>, {
+    $set: {
+      status: 'CLOSED',
+      closedAt: new Date(),
+      finalPnl: round(finalPnl, 8),
+      closedBy,
     },
-  );
+  });
 
   return {
     ...pos,
@@ -373,13 +399,12 @@ export async function reconcilePositions(): Promise<IPosition[]> {
         });
         if (c) {
           closed.push(c);
-          await notifyTrade(c as any, 'CLOSED');
+          await notifyTrade(c, 'CLOSED');
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error(
-        `⚠️ reconcilePositions failed for ${pos.symbol}:`,
-        err?.message,
+        `⚠️ reconcilePositions failed for ${pos.symbol}: ${errMsg(err)}`,
       );
     }
   }
@@ -405,11 +430,10 @@ export async function updateStopPrice(
   if (newAdjustments.length > 20)
     newAdjustments.splice(0, newAdjustments.length - 20);
 
-  await updateDoc(
-    COLLECTION,
-    { _id: (pos as any)._id },
-    { $set: { stopPrice: price, adjustments: newAdjustments } },
-  );
+  const posId = asWithId(pos)._id;
+  await updateDoc(COLLECTION, { _id: posId } as unknown as Partial<IPosition>, {
+    $set: { stopPrice: price, adjustments: newAdjustments },
+  });
 
   return { ...pos, stopPrice: price, adjustments: newAdjustments };
 }
@@ -417,7 +441,7 @@ export async function updateStopPrice(
 export async function updateTakeProfits(
   symbol: string,
   tps: Array<{ price: number; sizePct: number }>,
-  baseEntry?: number,
+  _baseEntry?: number,
   reason?: string,
 ): Promise<IPosition | null> {
   const pos = await getOpenPosition(symbol);
@@ -437,11 +461,10 @@ export async function updateTakeProfits(
     filled: false,
   }));
 
-  await updateDoc(
-    COLLECTION,
-    { _id: (pos as any)._id },
-    { $set: { takeProfits: mapped, adjustments: newAdjustments } },
-  );
+  const posId = asWithId(pos)._id;
+  await updateDoc(COLLECTION, { _id: posId } as unknown as Partial<IPosition>, {
+    $set: { takeProfits: mapped, adjustments: newAdjustments },
+  });
 
   return { ...pos, takeProfits: mapped, adjustments: newAdjustments };
 }

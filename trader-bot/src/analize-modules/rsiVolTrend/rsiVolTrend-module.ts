@@ -1,5 +1,5 @@
 import { type IRsiVolTrendModule } from 'crypto-trader-db';
-import type { Candle } from '../../types/types';
+import type { Candle } from '../../types/index.ts';
 
 const RSI_PERIOD = 25;
 const RSI_WARMUP = 60;

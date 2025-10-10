@@ -1,16 +1,27 @@
-// trading/binance/ws-listener.js
+import type {
+  OrderTradeUpdateEvent,
+  UserDataEvent,
+} from '../../types/index.ts';
+
+// Helper: safe number parser
+const n = (v: unknown): number => {
+  const x = Number(v);
+  return Number.isFinite(x) ? x : 0;
+};
+// trading/binance/binance-ws-listener.ts
 import axios from 'axios';
 import WebSocket from 'ws';
 import logger from '../../utils/db-logger.ts';
 import { notifyTrade } from '../../utils/notify.ts';
 
+import type { IPosition } from 'crypto-trader-db';
 import { PositionModel } from 'crypto-trader-db';
 import {
   closePositionHistory,
   getOpenPosition,
   updateStopPrice,
   updateTakeProfits,
-} from '../core/historyStore.ts';
+} from '../core/history-store.ts';
 import {
   cancelAllOrders,
   cancelStopOrders,
@@ -19,10 +30,16 @@ import {
   placeStopLoss,
 } from './binance-functions/index.ts';
 
+import type { OrderSide, Side } from '../../types/index.ts';
+
+function errMsg(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
 // --- Dedup storage for ORDER_TRADE_UPDATE events to avoid double-processing
-const _processedOrderEvents = new Map(); // key -> ts
+const _processedOrderEvents: Map<string, number> = new Map(); // key -> ts
 const DEDUP_TTL_MS = 5 * 60 * 1000; // 5 minutes
-function isDuplicateOrderEvent(key) {
+function isDuplicateOrderEvent(key: string): boolean {
   const now = Date.now();
   const ts = _processedOrderEvents.get(key);
   if (ts && now - ts < DEDUP_TTL_MS) return true;
@@ -33,16 +50,16 @@ function isDuplicateOrderEvent(key) {
 // -------------------------
 // 1. Отримання listenKey
 // -------------------------
-async function getListenKey() {
+async function getListenKey(): Promise<string | null> {
   try {
     const res = await axios.post(
       'https://fapi.binance.com/fapi/v1/listenKey',
       {},
       { headers: { 'X-MBX-APIKEY': process.env.BINANCE_API_KEY } },
     );
-    return res.data.listenKey;
+    return (res.data && (res.data as { listenKey?: string }).listenKey) || null;
   } catch (err) {
-    logger.error('❌ Failed to get listenKey:', err.message);
+    logger.error('❌ Failed to get listenKey:', errMsg(err));
     return null;
   }
 }
@@ -50,7 +67,7 @@ async function getListenKey() {
 // -------------------------
 // 2. Запуск WS стріму
 // -------------------------
-export async function startUserStream() {
+export async function startUserStream(): Promise<void> {
   const listenKey = await getListenKey();
   if (!listenKey) return;
 
@@ -61,22 +78,22 @@ export async function startUserStream() {
     logger.info('🔌 Binance user stream connected');
   });
 
-  ws.on('message', async (raw) => {
+  ws.on('message', async (raw: WebSocket.RawData) => {
     try {
-      const msg = JSON.parse(raw.toString());
+      const msg = JSON.parse(raw.toString()) as UserDataEvent;
       await handleEvent(msg);
     } catch (err) {
-      logger.error('❌ WS message handling error:', err?.message || err);
+      logger.error('❌ WS message handling error:', errMsg(err));
     }
   });
 
   ws.on('close', () => {
     logger.info('⚠️ Binance user stream closed. Reconnecting...');
-    setTimeout(() => startUserStream(), 5000);
+    setTimeout(() => void startUserStream(), 5000);
   });
 
   ws.on('error', (err) => {
-    logger.error('❌ WS error:', err.message);
+    logger.error('❌ WS error:', errMsg(err));
     ws.close();
   });
 
@@ -91,7 +108,7 @@ export async function startUserStream() {
         );
         logger.info('♻️ listenKey refreshed');
       } catch (err) {
-        logger.error('❌ Failed to refresh listenKey:', err.message);
+        logger.error('❌ Failed to refresh listenKey:', errMsg(err));
       }
     },
     25 * 60 * 1000,
@@ -101,10 +118,12 @@ export async function startUserStream() {
 // -------------------------
 // 3. Автозакриття хвостів
 // -------------------------
-async function forceCloseIfLeftover(symbol) {
+async function forceCloseIfLeftover(symbol: string): Promise<void> {
   try {
     // ⚠️ IMPORTANT: use fresh read to avoid cache staleness right after FILLED
-    const live = await getPositionFresh(symbol);
+    const live = (await getPositionFresh(symbol)) as {
+      positionAmt?: string;
+    } | null;
     if (!live) return;
 
     const amt = Number(live.positionAmt);
@@ -114,68 +133,84 @@ async function forceCloseIfLeftover(symbol) {
     await openMarketOrder(symbol, side, Math.abs(amt));
     logger.info(`🔧 Forced close leftover ${amt} on ${symbol}`);
   } catch (err) {
-    logger.error(`❌ Failed to force close leftover ${symbol}:`, err.message);
+    logger.error(`❌ Failed to force close leftover ${symbol}:`, errMsg(err));
   }
 }
 
 // ---- PnL helpers (gross, excl. fees) ----
-function calcFillPnl(entryPrice, fillPrice, qty, posSide) {
+function calcFillPnl(
+  entryPrice: number | string | null | undefined,
+  fillPrice: number | string | null | undefined,
+  qty: number | string | null | undefined,
+  posSide: 'LONG' | 'SHORT' | null | undefined,
+): number {
+  const entry = n(entryPrice);
+  const fill = n(fillPrice);
+  const q = n(qty);
+  if (!(entry > 0 && fill > 0 && q > 0)) return 0;
   const dir = posSide === 'LONG' ? 1 : -1;
-  return (fillPrice - entryPrice) * qty * dir;
+  return (fill - entry) * q * dir;
 }
-function sumTpRealizedPnl(pos) {
+function sumTpRealizedPnl(
+  pos:
+    | Pick<IPosition, 'takeProfits' | 'entryPrice' | 'side'>
+    | null
+    | undefined,
+): number {
   if (!pos || !Array.isArray(pos.takeProfits)) return 0;
-  const entry = Number(pos.entryPrice) || 0;
-  const side = pos.side || 'LONG';
   let sum = 0;
   for (const tp of pos.takeProfits) {
-    if (!tp || !Array.isArray(tp.fills)) continue;
-    for (const f of tp.fills) {
-      const qty = Number(f.qty) || 0;
-      const price = Number(f.price) || 0;
-      if (qty > 0 && Number.isFinite(price)) {
-        sum += calcFillPnl(entry, price, qty, side);
-      }
+    if (!tp || !Array.isArray((tp as any).fills)) continue;
+    for (const f of (tp as any).fills as Array<{
+      qty?: number | string;
+      price?: number | string;
+    }>) {
+      sum += calcFillPnl(
+        pos.entryPrice as number,
+        f.price,
+        f.qty,
+        pos.side as any,
+      );
     }
   }
   return sum;
 }
 
 // ---- TP cum helpers ----
-function sumFillsQty(fills) {
+function sumFillsQty(
+  fills: Array<{ qty?: number | string }> | undefined,
+): number {
   if (!Array.isArray(fills)) return 0;
   let s = 0;
   for (const f of fills) s += Number(f?.qty) || 0;
   return s;
 }
-function nextMonotonicCum(prevCum, evCum, deltaQty, fills) {
+function nextMonotonicCum(
+  prevCum: number | string | undefined,
+  evCum: number | string | undefined,
+  deltaQty: number | string | undefined,
+  fills: Array<{ qty?: number | string }> | undefined,
+): number {
   const prev = Number(prevCum) || 0;
   const ev = Number(evCum);
   const hasEv = Number.isFinite(ev) && ev > 0;
   const sumF = sumFillsQty(fills);
   const candidate = hasEv ? ev : prev + (Number(deltaQty) || 0);
-  // never allow cum to shrink; also never below sum of recorded fills
   return Math.max(prev, candidate, sumF);
 }
 
 // -------------------------
 // 4. Обробка івентів
 // -------------------------
-async function handleEvent(msg) {
+async function handleEvent(msg: UserDataEvent): Promise<void> {
   switch (msg.e) {
     case 'ACCOUNT_UPDATE':
-      // 🔹 Тут обробляються події акаунта (баланс, маржа, зміни у wallet).
-      // Зараз нічого не робимо, але можна додати логіку оновлення балансу.
       break;
 
     case 'ORDER_TRADE_UPDATE': {
-      // 🔹 Це основний івент про статус ордерів (Binance Futures).
-      // Викликається коли:
-      //   - ордер частково або повністю виконаний,
-      //   - спрацював SL / TP,
-      //   - ордер відмінено тощо.
+      const m = msg as OrderTradeUpdateEvent;
 
-      const o = msg.o;
+      const o = m.o;
       const symbol = o.s; // символ (наприклад "BTCUSDT")
       const status = o.X; // статус ордера (NEW, PARTIALLY_FILLED, FILLED, CANCELED...)
       const side = o.S; // BUY / SELL
@@ -187,7 +222,7 @@ async function handleEvent(msg) {
       );
 
       // Deduplicate identical updates (e.g., WS reconnects / repeats)
-      const dedupKey = `${o.i}:${status}:${o.z || o.l || 0}:${msg.T || msg.E || ''}`;
+      const dedupKey = `${o.i}:${status}:${o.z || o.l || 0}:${m.T || m.E || ''}`;
       if (isDuplicateOrderEvent(dedupKey)) {
         logger.info(`↩️ Skipping duplicate order update ${dedupKey}`);
         break;
@@ -197,7 +232,7 @@ async function handleEvent(msg) {
       if (status !== 'FILLED') break;
 
       // Fetch current DB position once (before using `pos`)
-      const pos = await getOpenPosition(symbol);
+      const pos = (await getOpenPosition(symbol)) as IPosition | null;
 
       if (!pos && (type === 'STOP_MARKET' || type === 'TAKE_PROFIT_MARKET')) {
         logger.warn(
@@ -220,29 +255,24 @@ async function handleEvent(msg) {
           } catch (err) {
             logger.error(
               `❌ ${symbol}: failed to update stop price:`,
-              err?.message || err,
+              errMsg(err),
             );
           }
 
-          // Рахуємо фінальний PnL:
-          // 1) що вже реалізовано на попередніх TP філах
-          const realizedFromTP = sumTpRealizedPnl(pos);
-          // 2) дельта від поточного SL-філа (за lastQty/lastPx)
-          //    Примітка: side з позиції, qty = o.l
-          // Use cumulative filled qty if available (`o.z`), fallback to order qty `o.q` or last fill `o.l`
-          const slFillQty = Number(o.z) || Number(o.q) || Number(o.l) || 0;
+          // qty to close = cumulative filled for this SL order (o.z) or its quantity (o.q) or last fill (o.l)
+          const slFillQty = n(o.z) || n(o.q) || n(o.l);
+          // SL delta on remaining qty
           const slDelta = calcFillPnl(
-            Number(pos.entryPrice) || 0,
+            pos.entryPrice as number,
             lastPx,
             slFillQty,
-            pos.side || 'LONG',
+            pos.side as any,
           );
-          const finalGrossPnl =
-            (Number.isFinite(realizedFromTP) ? realizedFromTP : 0) +
-            (Number.isFinite(slDelta) ? slDelta : 0);
+          // total gross PnL = realized on prior TPs + SL delta
+          const finalGrossPnl = n(sumTpRealizedPnl(pos)) + n(slDelta);
 
           logger.info(
-            `🧮 ${symbol}: SL close PnL parts — realizedFromTP=${realizedFromTP}, slDelta=${slDelta}, slQty=${slFillQty}, entry=${Number(pos.entryPrice) || 0}, lastPx=${lastPx}`,
+            `🧮 ${symbol}: SL close PnL parts — realizedFromTP=${finalGrossPnl}, slDelta=${slDelta}, slQty=${slFillQty}, entry=${Number(pos.entryPrice) || 0}, lastPx=${lastPx}`,
           );
 
           try {
@@ -251,7 +281,7 @@ async function handleEvent(msg) {
               await updateTakeProfits(
                 symbol,
                 Array.isArray(pos.takeProfits)
-                  ? pos.takeProfits.map((t) => ({ ...t }))
+                  ? pos.takeProfits.map((t) => ({ ...(t as any) }))
                   : [],
                 Number(pos.entryPrice) || 0,
                 'SL_FILLED',
@@ -259,20 +289,26 @@ async function handleEvent(msg) {
             } catch (e) {
               logger.warn(
                 `⚠️ ${symbol}: failed to persist TPs before SL close:`,
-                e?.message || e,
+                errMsg(e),
               );
             }
 
-            // Закриваємо позицію в історії з фінальним PnL
             const closed = await closePositionHistory(symbol, {
               closedBy: 'SL',
-              finalPnl: Number.isFinite(finalGrossPnl)
-                ? Number(finalGrossPnl.toFixed(4))
-                : undefined,
             });
-            // Чистимо залишки
             await cancelAllOrders(symbol);
             await forceCloseIfLeftover(symbol);
+
+            // Оновимо finalPnl після закриття, щоб зберегти точне значення
+            if (closed && Number.isFinite(finalGrossPnl)) {
+              const pnlToSet = Math.round(n(finalGrossPnl) * 1e8) / 1e8;
+              await PositionModel.findByIdAndUpdate(
+                (closed as any)._id,
+                { $set: { finalPnl: pnlToSet } },
+                { new: true },
+              );
+              (closed as any).finalPnl = pnlToSet;
+            }
 
             // Відправляємо нотифікацію
             if (closed) {
@@ -281,7 +317,7 @@ async function handleEvent(msg) {
           } catch (err) {
             logger.error(
               `❌ ${symbol}: failed to close position:`,
-              err?.message || err,
+              errMsg(err),
             );
           }
         }
@@ -294,45 +330,53 @@ async function handleEvent(msg) {
         logger.info(`🎯 ${symbol}: Take-profit triggered`);
         if (pos && Array.isArray(pos.takeProfits)) {
           // Беремо копію поточних тейків
-          const updatedTps = pos.takeProfits.map((tp) => ({ ...tp }));
+          const updatedTps = pos.takeProfits.map((tp) => ({ ...(tp as any) }));
 
           // Зчитуємо дані про останній трейд (qty/price/fee)
           const fillQty = Number(o.l) || 0; // last filled quantity
           const fillPx = Number(o.L) || 0; // last fill price
           const feeAmt = Number(o.n) || 0; // commission amount
           const feeAsset = o.N || null;
-          const fillAt = new Date(msg.E || Date.now()).toISOString();
+          const fillAt = new Date(m.E || Date.now()).toISOString();
 
           // Шукаємо тейк, який відповідає ціні (з невеликою похибкою)
-          const tolerance = Math.max(0.01, Math.abs(pos.entryPrice * 0.001)); // 0.1% або мін. 0.01
-          let matched = null;
+          const tolerance = Math.max(
+            0.01,
+            Math.abs(Number(pos.entryPrice) * 0.001),
+          ); // 0.1% або мін. 0.01
+          let matched: any = null;
           for (const tp of updatedTps) {
-            const tpPrice = Number(tp.price);
+            const tpPrice = Number((tp as any).price);
             // Дозволяємо дописувати часткові філи (кілька подій на один TP)
             const priceMatch =
               Number.isFinite(tpPrice) &&
               Math.abs(tpPrice - fillPx) <= tolerance;
             if (priceMatch) {
-              if (!Array.isArray(tp.fills)) tp.fills = [];
+              if (!Array.isArray((tp as any).fills)) (tp as any).fills = [];
               // Використовуємо кумулятивну кількість з івента, щоб уникати дублю філів
               const evCum = Number(o.z);
-              const prevCum = Number(tp.cum) || 0; // what we've already accounted for this TP
+              const prevCum = Number((tp as any).cum) || 0; // what we've already accounted for this TP
               const deltaQty =
                 Number.isFinite(evCum) && evCum > 0
                   ? Math.max(0, evCum - prevCum)
                   : fillQty;
               // Оновлюємо лічильники на TP (монотонно)
               const before = prevCum;
-              tp.cum = nextMonotonicCum(prevCum, evCum, deltaQty, tp.fills);
+              (tp as any).cum = nextMonotonicCum(
+                prevCum,
+                evCum,
+                deltaQty,
+                (tp as any).fills,
+              );
               if (Number.isFinite(evCum) && evCum > 0 && evCum < before) {
                 logger.warn(
-                  `↪️ ${symbol}: TP o.z(${evCum}) < prevCum(${before}) — keeping monotonic cum=${tp.cum}`,
+                  `↪️ ${symbol}: TP o.z(${evCum}) < prevCum(${before}) — keeping monotonic cum=${(tp as any).cum}`,
                 );
               }
-              tp.orderId = tp.orderId || o.i;
+              (tp as any).orderId = (tp as any).orderId || o.i;
               // Додаємо тільки дельту, якщо вона > 0
               if (deltaQty > 0) {
-                tp.fills.push({
+                (tp as any).fills.push({
                   qty: deltaQty,
                   price: fillPx,
                   time: fillAt,
@@ -349,7 +393,7 @@ async function handleEvent(msg) {
               }
               // Позначаємо TP як виконаний (біржа повертає FILLED коли ордер добрав свій обсяг)
               // Важливо: позначаємо як filled навіть якщо deltaQty <= 0 (дублікат/out-of-order event)
-              tp.filled = true;
+              (tp as any).filled = true;
               matched = tp;
               break;
             }
@@ -360,10 +404,10 @@ async function handleEvent(msg) {
               `⚠️ ${symbol}: TP fill received, but no matching TP by price (px=${fillPx}). Storing to the nearest TP.`,
             );
             // fallback: кидаємо у найближчий по ціні
-            let nearest = null;
+            let nearest: any = null;
             let best = Infinity;
             for (const tp of updatedTps || []) {
-              const tpPriceNum = Number(tp?.price);
+              const tpPriceNum = Number((tp as any)?.price);
               if (!Number.isFinite(tpPriceNum)) continue;
               const d = Math.abs(tpPriceNum - fillPx);
               if (d < best) {
@@ -372,28 +416,29 @@ async function handleEvent(msg) {
               }
             }
             if (nearest) {
-              if (!Array.isArray(nearest.fills)) nearest.fills = [];
+              if (!Array.isArray((nearest as any).fills))
+                (nearest as any).fills = [];
               const evCum = Number(o.z);
-              const prevCum = Number(nearest.cum) || 0;
+              const prevCum = Number((nearest as any).cum) || 0;
               const deltaQty =
                 Number.isFinite(evCum) && evCum > 0
                   ? Math.max(0, evCum - prevCum)
                   : fillQty;
               const before = prevCum;
-              nearest.cum = nextMonotonicCum(
+              (nearest as any).cum = nextMonotonicCum(
                 prevCum,
                 evCum,
                 deltaQty,
-                nearest.fills,
+                (nearest as any).fills,
               );
               if (Number.isFinite(evCum) && evCum > 0 && evCum < before) {
                 logger.warn(
-                  `↪️ ${symbol}: TP(nearest) o.z(${evCum}) < prevCum(${before}) — keeping monotonic cum=${nearest.cum}`,
+                  `↪️ ${symbol}: TP(nearest) o.z(${evCum}) < prevCum(${before}) — keeping monotonic cum=${(nearest as any).cum}`,
                 );
               }
-              nearest.orderId = nearest.orderId || o.i;
+              (nearest as any).orderId = (nearest as any).orderId || o.i;
               if (deltaQty > 0) {
-                nearest.fills.push({
+                (nearest as any).fills.push({
                   qty: deltaQty,
                   price: fillPx,
                   time: fillAt,
@@ -402,40 +447,41 @@ async function handleEvent(msg) {
                 });
               }
               // Позначаємо TP як виконаний навіть якщо deltaQty <= 0 (дублікат/out-of-order event)
-              nearest.filled = true;
+              (nearest as any).filled = true;
             }
           }
 
           // Ensure cum never below sum of recorded fills (final guard)
           for (const tp of updatedTps) {
-            const prev = Number(tp.cum) || 0;
-            const fixed = Math.max(prev, sumFillsQty(tp.fills));
-            if (fixed !== prev) tp.cum = fixed;
+            const prev = Number((tp as any).cum) || 0;
+            const fixed = Math.max(prev, sumFillsQty((tp as any).fills));
+            if (fixed !== prev) (tp as any).cum = fixed;
           }
 
           try {
             // Оновлюємо список тейків у БД (з новими полями fills[])
             await updateTakeProfits(
               symbol,
-              updatedTps,
-              pos.entryPrice,
+              updatedTps as any,
+              Number(pos.entryPrice),
               'TP_FILLED',
             );
           } catch (err) {
             logger.error(
               `❌ ${symbol}: failed to update take profits:`,
-              err?.message || err,
+              errMsg(err),
             );
           }
 
-          // Додаткова перевірка: якщо отримали FILLED event, але не всі TP позначені як filled,
-          // можливо це означає що всі TP ордери виконані, але через дублікати/out-of-order events
-          // не всі були оброблені. Перевіряємо live позицію.
-          let allFilled = updatedTps.every((tp) => tp.filled);
+          let allFilled = (updatedTps as any[]).every(
+            (tp) => (tp as any).filled,
+          );
           let liveAmtIsZero = false;
           if (!allFilled && type === 'TAKE_PROFIT_MARKET') {
             try {
-              const live = await getPositionFresh(symbol);
+              const live = (await getPositionFresh(symbol)) as {
+                positionAmt?: string;
+              } | null;
               const liveAmt = live
                 ? Math.abs(Number(live.positionAmt) || 0)
                 : 0;
@@ -448,13 +494,13 @@ async function handleEvent(msg) {
             } catch (err) {
               logger.warn(
                 `⚠️ ${symbol}: Failed to check live position:`,
-                err?.message || err,
+                errMsg(err),
               );
             }
           }
 
           logger.info(
-            `🔍 ${symbol}: TP status check - allFilled=${allFilled}, filled TPs: ${updatedTps.filter((tp) => tp.filled).length}/${updatedTps.length}`,
+            `🔍 ${symbol}: TP status check - allFilled=${allFilled}, filled TPs: ${updatedTps.filter((tp: any) => tp.filled).length}/${updatedTps.length}`,
           );
 
           if (allFilled || liveAmtIsZero) {
@@ -462,25 +508,30 @@ async function handleEvent(msg) {
             const realizedFromTP = sumTpRealizedPnl({
               ...pos,
               takeProfits: updatedTps,
-            });
+            } as IPosition);
 
             // If no fills were recorded (due to monotonic violations), calculate from current event
             let actualPnl = realizedFromTP;
             if (Math.abs(realizedFromTP) < 0.01) {
               // Calculate PnL from the current TP fill event
-              const fillQty = Number(o.l) || 0; // last filled quantity
-              const fillPx = Number(o.L) || 0; // last fill price
+              const fillQty2 = Number(o.l) || 0; // last filled quantity
+              const fillPx2 = Number(o.L) || 0; // last fill price
               const entry = Number(pos.entryPrice) || 0;
-              const side = pos.side || 'LONG';
+              const side2 = pos.side || 'LONG';
 
-              if (fillQty > 0 && fillPx > 0 && entry > 0) {
-                actualPnl = calcFillPnl(entry, fillPx, fillQty, side);
+              if (fillQty2 > 0 && fillPx2 > 0 && entry > 0) {
+                actualPnl = calcFillPnl(
+                  entry,
+                  fillPx2,
+                  fillQty2,
+                  side2 as Side,
+                );
                 logger.info(
-                  `💰 ${symbol}: Calculated PnL from current event - qty=${fillQty}, price=${fillPx}, entry=${entry}, side=${side}, pnl=${actualPnl}`,
+                  `💰 ${symbol}: Calculated PnL from current event - qty=${fillQty2}, price=${fillPx2}, entry=${entry}, side=${side2}, pnl=${actualPnl}`,
                 );
               } else {
                 logger.warn(
-                  `⚠️ ${symbol}: Cannot calculate PnL from event - qty=${fillQty}, price=${fillPx}, entry=${entry}`,
+                  `⚠️ ${symbol}: Cannot calculate PnL from event - qty=${fillQty2}, price=${fillPx2}, entry=${entry}`,
                 );
               }
             }
@@ -494,14 +545,14 @@ async function handleEvent(msg) {
               try {
                 await updateTakeProfits(
                   symbol,
-                  updatedTps.map((t) => ({ ...t })),
+                  updatedTps.map((t) => ({ ...(t as any) })),
                   Number(pos.entryPrice) || 0,
                   'TP_FILLED_FINAL',
                 );
               } catch (e) {
                 logger.warn(
                   `⚠️ ${symbol}: failed to persist final TPs before TP close:`,
-                  e?.message || e,
+                  errMsg(e),
                 );
               }
 
@@ -511,24 +562,21 @@ async function handleEvent(msg) {
               logger.info(`✅ ${symbol}: Position closed in DB: ${!!closed}`);
 
               // Update the finalPnl after closing to ensure correct PnL is stored
-              if (closed && Number.isFinite(actualPnl) && actualPnl !== 0) {
+              const rounded = Math.round(n(actualPnl) * 1e8) / 1e8;
+              if (closed && Number.isFinite(rounded) && rounded !== 0) {
                 await PositionModel.findByIdAndUpdate(
-                  closed._id,
-                  { $set: { finalPnl: Number(actualPnl.toFixed(8)) } },
+                  (closed as any)._id,
+                  { $set: { finalPnl: rounded } },
                   { new: true },
                 );
-                logger.info(
-                  `💾 ${symbol}: Updated finalPnl to ${actualPnl.toFixed(8)}`,
-                );
-
-                // Update the closed object for notification
-                closed.finalPnl = Number(actualPnl.toFixed(8));
+                logger.info(`💾 ${symbol}: Updated finalPnl to ${rounded}`);
+                (closed as any).finalPnl = rounded;
               }
 
               await cancelAllOrders(symbol);
               await forceCloseIfLeftover(symbol);
               if (closed) {
-                await notifyTrade(closed, 'CLOSED');
+                await notifyTrade(closed as any, 'CLOSED');
                 logger.info(`📱 ${symbol}: Telegram notification sent`);
               } else {
                 logger.warn(
@@ -538,7 +586,7 @@ async function handleEvent(msg) {
             } catch (err) {
               logger.error(
                 `❌ ${symbol}: failed to close position:`,
-                err?.message || err,
+                errMsg(err),
               );
             }
           } else {
@@ -550,12 +598,18 @@ async function handleEvent(msg) {
           // ===== BREAK-EVEN після першого TP — ставимо тільки якщо трейлінг ВИМКНЕНО =====
           try {
             const tpsTotal = updatedTps.length;
-            const filledCount = updatedTps.filter((tp) => tp.filled).length;
-            const trailingOn = !!(pos?.trailing || pos?.trailingCfg?.use);
+            const filledCount = updatedTps.filter(
+              (tp: any) => tp.filled,
+            ).length;
+            const trailingOn = !!(
+              (pos as any)?.trailing || (pos as any)?.trailingCfg?.use
+            );
 
             if (!trailingOn && tpsTotal >= 2 && filledCount === 1) {
               // перевіряємо поточну live-кількість на біржі
-              const live = await getPositionFresh(symbol);
+              const live = (await getPositionFresh(symbol)) as {
+                positionAmt?: string;
+              } | null;
               const liveAmt = live
                 ? Math.abs(Number(live.positionAmt) || 0)
                 : 0;
@@ -574,7 +628,12 @@ async function handleEvent(msg) {
                 const bePrice = Number(pos.entryPrice);
 
                 // ставимо новий SL на entry для залишкового обсягу
-                await placeStopLoss(symbol, pos.side, bePrice, liveAmt);
+                await placeStopLoss(
+                  symbol,
+                  pos.side as Side | OrderSide,
+                  bePrice,
+                  liveAmt,
+                );
 
                 // логімо в історію
                 await updateStopPrice(symbol, bePrice, 'BREAKEVEN');
@@ -587,7 +646,7 @@ async function handleEvent(msg) {
           } catch (e) {
             logger.warn(
               `⚠️ ${symbol}: failed to set BE after 1st TP:`,
-              e?.message || e,
+              errMsg(e),
             );
           }
           // Інакше — позиція залишається відкритою (частковий TP)
@@ -601,6 +660,7 @@ async function handleEvent(msg) {
         logger.info(`✅ Market order filled for ${symbol} (${side})`);
         // Тут можна обробити логіку відкриття нової позиції або закриття вручну
       }
+      break;
     }
 
     default:

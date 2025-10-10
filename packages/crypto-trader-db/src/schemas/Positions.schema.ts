@@ -1,4 +1,5 @@
 import { Schema } from 'mongoose';
+import { AnalysisSchema, IAnalysis } from './Analysis.schema.js';
 
 // Take profit interface
 export interface ITakeProfit {
@@ -57,7 +58,7 @@ export interface IPosition {
   trailing: ITrailing | null;
   adds: any[];
   adjustments: IAdjustment[];
-  analysis: Schema.Types.ObjectId;
+  analysis: IAnalysis | null;
   meta: IMeta;
   closedAt?: Date;
   closedBy?: string;
@@ -190,9 +191,9 @@ export const PositionSchema = new Schema<IPosition>(
       default: [],
     },
     analysis: {
-      type: Schema.Types.ObjectId,
+      type: AnalysisSchema, 
       required: true,
-      ref: 'Analysis',
+      default: null
     },
     meta: {
       type: metaSchema,
