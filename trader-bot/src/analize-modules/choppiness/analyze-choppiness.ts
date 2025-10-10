@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { IChoppinessModule } from 'crypto-trader-db';
-import type { BinanceKline } from '../../types/index.ts';
-import logger from '../../utils/db-logger.ts';
+import type { BinanceKline } from '../../types/index';
+import logger from '../../utils/db-logger';
 // ─── Допоміжні типи ───────────────────────────────────────────────────────────
 export type AnalysisSignal = 'ACTIVE' | 'NEUTRAL' | 'NONE';
 

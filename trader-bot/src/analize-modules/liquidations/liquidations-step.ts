@@ -1,8 +1,8 @@
 import { type ILiquidations, type ISide } from 'crypto-trader-db';
 import WebSocket from 'ws';
-import { saveDoc } from '../../storage/storage.ts';
-import type { ForceOrderEvent } from '../../types/index.ts';
-import logger from '../../utils/db-logger.ts';
+import { saveDoc } from '../../storage/storage';
+import type { ForceOrderEvent } from '../../types/index';
+import logger from '../../utils/db-logger';
 
 export interface LiquidationItem {
   symbol: string;

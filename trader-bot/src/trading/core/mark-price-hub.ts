@@ -1,7 +1,7 @@
 import axios from 'axios';
 import EventEmitter from 'events';
 import WebSocket, { type RawData } from 'ws';
-import logger from '../../utils/db-logger.ts';
+import logger from '../../utils/db-logger';
 
 const WS_BASE =
   process.env.BINANCE_WS_PUBLIC_BASE || 'wss://fstream.binance.com';

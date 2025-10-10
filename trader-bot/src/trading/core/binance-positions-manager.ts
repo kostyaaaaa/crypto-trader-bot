@@ -5,8 +5,8 @@ import type {
   LiveState,
   LiveStateFlat,
   Side,
-} from '../../types/binance-res.ts';
-import logger from '../../utils/db-logger.ts';
+} from '../../types/binance-res';
+import logger from '../../utils/db-logger';
 import {
   adjustPrice,
   adjustQuantity,
@@ -17,8 +17,8 @@ import {
   openMarketOrder,
   placeStopLoss,
   placeTakeProfit,
-} from '../binance/binance-functions/index.ts';
-import { getOpenPosition } from './history-store.ts';
+} from '../binance/binance-functions/index';
+import { getOpenPosition } from './history-store';
 
 /* ===== Helpers ===== */
 function oppositeSide(side: Side): Side {

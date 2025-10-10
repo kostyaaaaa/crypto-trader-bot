@@ -1,8 +1,8 @@
 import axios, { type AxiosResponse } from 'axios';
 
 import type { IOpenInterestModule } from 'crypto-trader-db';
-import type { BinanceKline, OIHistItem } from '../../types/index.ts';
-import logger from '../../utils/db-logger.ts';
+import type { BinanceKline, OIHistItem } from '../../types/index';
+import logger from '../../utils/db-logger';
 
 export async function analyzeOpenInterest(
   symbol: string = 'ETHUSDT',

@@ -1,16 +1,16 @@
 import { CoinConfigModel, type ICoinConfig } from 'crypto-trader-db';
 import { Types } from 'mongoose';
-import { LiquidationsStepWS } from './analize-modules/liquidations/liquidations-step.ts';
-import { OrderBookStepWS } from './analize-modules/orderbook/order-book-step.ts';
-import connectDB from './config/database.ts';
-import { startUserStream } from './trading/binance/binance-ws-listener.ts';
-import cooldownHub from './trading/core/cooldown-hub.ts';
-import { tradingEngine } from './trading/core/engine.ts';
-import markPriceHub from './trading/core/mark-price-hub.ts';
-import { monitorPositions } from './trading/core/monitor.ts';
-import logger from './utils/db-logger.ts';
+import { LiquidationsStepWS } from './analize-modules/liquidations/liquidations-step';
+import { OrderBookStepWS } from './analize-modules/orderbook/order-book-step';
+import connectDB from './config/database';
+import { startUserStream } from './trading/binance/binance-ws-listener';
+import cooldownHub from './trading/core/cooldown-hub';
+import { tradingEngine } from './trading/core/engine';
+import markPriceHub from './trading/core/mark-price-hub';
+import { monitorPositions } from './trading/core/monitor';
+import logger from './utils/db-logger';
 
-import { finalAnalyzer } from './utils/final-analyzer.ts';
+import { finalAnalyzer } from './utils/final-analyzer';
 type CoinConfigWithId = ICoinConfig & { _id: Types.ObjectId };
 interface ActiveService {
   analysisInterval: NodeJS.Timeout;

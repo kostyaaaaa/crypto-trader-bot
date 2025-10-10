@@ -1,6 +1,6 @@
 // src/trading/core/prepare.ts
 import type { ICapitalConfig, IExitsConfig } from 'crypto-trader-db';
-import { autoTakeProfits } from './calculate-auto-take-profits.ts';
+import { autoTakeProfits } from './calculate-auto-take-profits';
 // ---- Local types (мінімально необхідні для цього модуля) ----
 export type RawSide = 'LONG' | 'SHORT' | 'BUY' | 'SELL' | null;
 export type Side = 'LONG' | 'SHORT';

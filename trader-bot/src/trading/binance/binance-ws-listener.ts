@@ -1,7 +1,4 @@
-import type {
-  OrderTradeUpdateEvent,
-  UserDataEvent,
-} from '../../types/index.ts';
+import type { OrderTradeUpdateEvent, UserDataEvent } from '../../types/index';
 
 // Helper: safe number parser
 const n = (v: unknown): number => {
@@ -11,8 +8,8 @@ const n = (v: unknown): number => {
 // trading/binance/binance-ws-listener.ts
 import axios from 'axios';
 import WebSocket from 'ws';
-import logger from '../../utils/db-logger.ts';
-import { notifyTrade } from '../../utils/notify.ts';
+import logger from '../../utils/db-logger';
+import { notifyTrade } from '../../utils/notify';
 
 import type { IPosition } from 'crypto-trader-db';
 import { PositionModel } from 'crypto-trader-db';
@@ -21,16 +18,16 @@ import {
   getOpenPosition,
   updateStopPrice,
   updateTakeProfits,
-} from '../core/history-store.ts';
+} from '../core/history-store';
 import {
   cancelAllOrders,
   cancelStopOrders,
   getPositionFresh,
   openMarketOrder,
   placeStopLoss,
-} from './binance-functions/index.ts';
+} from './binance-functions/index';
 
-import type { OrderSide, Side } from '../../types/index.ts';
+import type { OrderSide, Side } from '../../types/index';
 
 function errMsg(e: unknown): string {
   return e instanceof Error ? e.message : String(e);

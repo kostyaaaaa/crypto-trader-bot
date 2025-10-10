@@ -44,9 +44,9 @@ type DocInput<C extends KnownCollection> = AllowDateStrings<DocOf<C>>;
 
 const MODELS = {
   liquidations: LiquidationsModel, // Model<ILiquidations>
-  liquidity: LiquidityModel,       // Model<ILiquidity>
-  analysis: AnalysisModel,         // Model<IAnalysis>
-  positions: PositionModel,        // Model<IPosition>
+  liquidity: LiquidityModel, // Model<ILiquidity>
+  analysis: AnalysisModel, // Model<IAnalysis>
+  positions: PositionModel, // Model<IPosition>
 } as const;
 
 export function getModel(c: KnownCollection) {
@@ -66,7 +66,10 @@ export async function saveDoc<C extends KnownCollection>(
 
   const count = await model.countDocuments();
   if (count > DB_MAX) {
-    const oldest = await model.find().sort({ _id: 1 }).limit(count - DB_MAX);
+    const oldest = await model
+      .find()
+      .sort({ _id: 1 })
+      .limit(count - DB_MAX);
     const ids = oldest.map((d: any) => d._id);
     await model.deleteMany({ _id: { $in: ids } });
   }
@@ -86,7 +89,7 @@ export async function loadDocs<C extends KnownCollection>(
     .find(query)
     .sort({ time: -1 })
     .limit(limit)
-    .lean<DocOf<C>>()           
+    .lean<DocOf<C>>()
     .exec();
 
   return docs as unknown as DocOf<C>[]; // або просто `return docs as DocOf<C>[]`
@@ -99,7 +102,7 @@ export async function loadDocsRaw<C extends KnownCollection>(
 
   const docs = await model
     .find({})
-    .lean<DocOf<C>>()              // <— те саме
+    .lean<DocOf<C>>() // <— те саме
     .exec();
 
   return docs as unknown as DocOf<C>[];

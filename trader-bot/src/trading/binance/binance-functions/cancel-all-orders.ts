@@ -1,5 +1,5 @@
-import logger from '../../../utils/db-logger.ts';
-import { client } from './client.ts';
+import logger from '../../../utils/db-logger';
+import { client } from './client';
 
 export async function cancelAllOrders(symbol: string): Promise<any | null> {
   try {

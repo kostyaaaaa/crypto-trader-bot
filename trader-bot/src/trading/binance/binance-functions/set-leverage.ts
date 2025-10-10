@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import logger from '../../../utils/db-logger.ts';
+import logger from '../../../utils/db-logger';
 const BASE_URL = 'https://fapi.binance.com';
 
 function signParams(params: Record<string, string | number>): string {

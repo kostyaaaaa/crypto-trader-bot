@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { IFundingModule } from 'crypto-trader-db';
-import logger from '../../utils/db-logger.ts';
+import logger from '../../utils/db-logger';
 
 interface BinanceFundingRate {
   symbol: string;

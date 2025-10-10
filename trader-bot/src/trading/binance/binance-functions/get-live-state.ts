@@ -4,9 +4,9 @@ import type {
   LivePosition,
   LiveState,
   OpenOrder,
-} from '../../../types/binance-res.ts';
-import logger from '../../../utils/db-logger.ts';
-import { getOpenOrdersCached, getPositionRiskCached } from './state.ts';
+} from '../../../types/binance-res';
+import logger from '../../../utils/db-logger';
+import { getOpenOrdersCached, getPositionRiskCached } from './state';
 
 export async function getLiveState(symbol: string): Promise<LiveState> {
   try {

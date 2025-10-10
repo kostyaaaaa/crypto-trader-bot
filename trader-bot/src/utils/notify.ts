@@ -1,7 +1,7 @@
 // utils/notify.ts
 import axios from 'axios';
 import type { IAdjustment, IPosition, ITakeProfit } from 'crypto-trader-db';
-import logger from './db-logger.ts';
+import logger from './db-logger';
 
 /* ===================== helpers & types ===================== */
 

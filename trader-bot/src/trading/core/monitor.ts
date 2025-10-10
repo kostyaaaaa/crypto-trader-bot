@@ -1,25 +1,21 @@
 // src/trading/core/monitor.ts
 import type { IPosition } from 'crypto-trader-db';
-import { loadDocs } from '../../storage/storage.ts';
-import type {
-  BinanceSide,
-  LiveStateFlat,
-  Side,
-} from '../../types/binance-res.ts'; // use canonical Binance types
-import logger from '../../utils/db-logger.ts';
+import { loadDocs } from '../../storage/storage';
+import type { BinanceSide, LiveStateFlat, Side } from '../../types/binance-res'; // use canonical Binance types
+import logger from '../../utils/db-logger';
 import {
   cancelStopOrders,
   openMarketOrder,
   placeStopLoss,
-} from '../binance/binance-functions/index.ts';
-import { getActivePositions } from './binance-positions-manager.ts';
+} from '../binance/binance-functions/index';
+import { getActivePositions } from './binance-positions-manager';
 import {
   addToPosition,
   adjustPosition,
   getOpenPosition,
   updateStopPrice,
-} from './history-store.ts';
-import markPriceHub from './mark-price-hub.ts';
+} from './history-store';
+import markPriceHub from './mark-price-hub';
 
 /* ========= local types (мінімально потрібні) ========= */
 
