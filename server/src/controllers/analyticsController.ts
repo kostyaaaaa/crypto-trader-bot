@@ -4,74 +4,7 @@ import { DB_MAX_DOCUMENTS } from '../constants/database.js';
 import { ApiErrorResponse, ApiResponse, ListResponse } from '../types/index.js';
 import logger from '../utils/Logger.js';
 
-// Get analysis data by date range and symbol
-const getAnalysisByDateRangeAndSymbol = async (
-  req: Request,
-  res: Response<ListResponse<IAnalysis> | ApiErrorResponse>,
-): Promise<void> => {
-  try {
-    const { symbol, dateFrom, dateTo } = req.query;
-
-    if (!symbol || !dateFrom || !dateTo) {
-      res.status(400).json({
-        error: 'Missing parameters',
-        message: 'symbol, dateFrom, and dateTo query parameters are required',
-      });
-      return;
-    }
-
-    const startDate = new Date(dateFrom as string);
-    const endDate = new Date(dateTo as string);
-
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      res.status(400).json({
-        error: 'Invalid date format',
-        message:
-          'Please provide valid ISO timestamp strings for dateFrom and dateTo parameters',
-      });
-      return;
-    }
-
-    if (startDate >= endDate) {
-      res.status(400).json({
-        error: 'Invalid date range',
-        message: 'dateFrom must be earlier than dateTo',
-      });
-      return;
-    }
-
-    // Find analysis data for the symbol within the date range
-    const analysisData = await AnalysisModel.find({
-      symbol,
-      time: { $gte: startDate, $lte: endDate },
-    }).sort({ time: 1 });
-
-    logger.success(
-      `Successfully fetched ${analysisData.length} analysis records for symbol: ${symbol} between ${dateFrom} and ${dateTo}`,
-    );
-
-    res.json({
-      success: true,
-      message: `Analysis data for ${symbol} between ${dateFrom} and ${dateTo} retrieved successfully`,
-      data: analysisData,
-      count: analysisData.length,
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error: any) {
-    logger.error(
-      `Error fetching analysis data by date range and symbol for: ${req.query.symbol}`,
-      {
-        message: error.message,
-        stack: error.stack,
-      },
-    );
-
-    res.status(500).json({
-      error: 'Failed to fetch analysis data by date range and symbol',
-      message: error.message,
-    });
-  }
-};
+// Removed - functionality merged into getAnalysis
 
 // POST /analysis - Save an analysis document
 const saveAnalysis = async (
@@ -117,25 +50,65 @@ const saveAnalysis = async (
   }
 };
 
-// GET /analytics - Get analysis documents
+// GET /analytics - Get analysis documents (with optional date range filtering)
 const getAnalysis = async (
   req: Request,
   res: Response<ListResponse<IAnalysis> | ApiErrorResponse>,
 ): Promise<void> => {
   try {
-    const { symbol, limit } = req.query;
+    const { symbol, limit, dateFrom, dateTo } = req.query;
 
-    const query = symbol ? { symbol } : {};
+    // Build query object
+    const query: any = symbol ? { symbol } : {};
+
+    // If date range is provided, validate and add to query
+    if (dateFrom || dateTo) {
+      if (!dateFrom || !dateTo) {
+        res.status(400).json({
+          error: 'Missing parameters',
+          message:
+            'Both dateFrom and dateTo are required when using date filtering',
+        });
+        return;
+      }
+
+      const startDate = new Date(dateFrom as string);
+      const endDate = new Date(dateTo as string);
+
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        res.status(400).json({
+          error: 'Invalid date format',
+          message:
+            'Please provide valid ISO timestamp strings for dateFrom and dateTo',
+        });
+        return;
+      }
+
+      if (startDate >= endDate) {
+        res.status(400).json({
+          error: 'Invalid date range',
+          message: 'dateFrom must be earlier than dateTo',
+        });
+        return;
+      }
+
+      query.time = { $gte: startDate, $lte: endDate };
+    }
+
     const limitNum = limit ? parseInt(limit as string, 10) : 100;
 
-    const docs = await AnalysisModel.find(query)
-      .sort({ time: -1 })
-      .limit(limitNum)
-      .lean()
-      .exec();
+    // Query with appropriate sorting and limit
+    let queryBuilder = AnalysisModel.find(query).sort({ time: 1 });
+
+    // Only apply limit if not using date range filtering
+    if (!dateFrom && !dateTo) {
+      queryBuilder = queryBuilder.limit(limitNum);
+    }
+
+    const docs = await queryBuilder.lean().exec();
 
     logger.success(
-      `Successfully loaded ${docs.length} analysis documents${symbol ? ` for symbol ${symbol}` : ''}`,
+      `Successfully loaded ${docs.length} analysis documents${symbol ? ` for symbol ${symbol}` : ''}${dateFrom ? ` from ${dateFrom} to ${dateTo}` : ''}`,
     );
 
     res.json({
@@ -159,4 +132,4 @@ const getAnalysis = async (
   }
 };
 
-export { getAnalysis, getAnalysisByDateRangeAndSymbol, saveAnalysis };
+export { getAnalysis, saveAnalysis };

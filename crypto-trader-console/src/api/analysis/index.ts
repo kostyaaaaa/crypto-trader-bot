@@ -1,1 +1,1 @@
-export * from './getAnalysisBySybbol';
+export * from './getAnalysisBySymbol';
