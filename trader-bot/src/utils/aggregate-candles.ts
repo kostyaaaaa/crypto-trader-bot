@@ -1,6 +1,4 @@
-import { Candle } from '../types/index';
-
-export type Timeframe = '1m' | `${number}m` | `${number}h`;
+import type { Candle, Timeframe } from '../types';
 
 export function aggregateCandles(
   candles: Candle[],

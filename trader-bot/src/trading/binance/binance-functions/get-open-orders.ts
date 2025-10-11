@@ -1,6 +1,6 @@
+import type { OpenOrder } from '../../../types';
 import logger from '../../../utils/db-logger';
 import { getOpenOrdersCached } from './state';
-import type { OpenOrder } from './types';
 
 export async function getOpenOrders(symbol: string): Promise<OpenOrder[]> {
   try {

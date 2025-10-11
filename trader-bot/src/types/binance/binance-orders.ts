@@ -1,5 +1,5 @@
 // Binance order-related types
-import type { BinanceSide } from './common';
+import type { BinanceSide, OrderSide } from '../common';
 
 export type BinanceFuturesOrderType =
   | 'LIMIT'
@@ -61,3 +61,29 @@ export interface LiveOrder {
 }
 
 export type LiveStateOrder = LiveOrder;
+
+export interface FuturesOrderResponse {
+  symbol: string;
+  orderId: number;
+  clientOrderId: string;
+  price: string; // requested limit/stop price (or "0" for market)
+  avgPrice: string; // average fill price (or "0" if not filled)
+  origQty: string; // original order quantity
+  executedQty: string; // executed quantity
+  cumQuote: string; // cumulative quote asset transacted
+  status: OrderStatus;
+  side: OrderSide;
+  type: BinanceFuturesOrderType;
+  origType: BinanceFuturesOrderType;
+  timeInForce?: 'GTC' | 'IOC' | 'FOK' | 'GTX';
+  stopPrice?: string;
+  activatePrice?: string;
+  priceRate?: string;
+  reduceOnly: boolean;
+  closePosition?: boolean;
+  workingType?: 'MARK_PRICE' | 'CONTRACT_PRICE';
+  priceProtect?: boolean;
+  positionSide?: 'BOTH' | 'LONG' | 'SHORT';
+  updateTime: number;
+  isWorking?: boolean;
+}

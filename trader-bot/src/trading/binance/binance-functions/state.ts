@@ -1,6 +1,10 @@
 // state.ts
+import type {
+  FuturesPositionRisk,
+  OpenOrder,
+  SymbolInfo,
+} from '../../../types';
 import { client } from './client';
-import type { FuturesPositionRisk, OpenOrder, SymbolInfo } from './types';
 
 interface Cache<T> {
   data: T | null;

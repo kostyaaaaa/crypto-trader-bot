@@ -1,14 +1,14 @@
-import logger from '../../../utils/db-logger';
-import { adjustQuantity } from './adjust-quantity';
-import { client } from './client';
-import { getSymbolFilters } from './get-symbol-filters';
-import { oppositeOrderSide } from './opposite-order-side';
 import type {
   FuturesOrderResponse,
   OrderSide,
   Side,
   SymbolFilter,
-} from './types';
+} from '../../../types';
+import logger from '../../../utils/db-logger';
+import { adjustQuantity } from './adjust-quantity';
+import { client } from './client';
+import { getSymbolFilters } from './get-symbol-filters';
+import { oppositeOrderSide } from './opposite-order-side';
 
 export async function closePosition(
   symbol: string,

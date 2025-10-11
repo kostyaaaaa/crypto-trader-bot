@@ -1,17 +1,18 @@
 // Binance position-related types
+import type { Side } from '../common';
 import type { LiveOrder } from './binance-orders';
-import type { Side } from './common';
 
 // Raw live position from exchange/state (before normalization)
 export interface LivePosition {
-  side: Side; // LONG | SHORT | null
-  size: number | string | null; // exchange may return string; we normalize elsewhere
-  entryPrice: number | null;
-  leverage: number | null;
-  unRealizedProfit: number | null;
-  isolatedMargin: number | null;
-  initialMargin: number | null;
-  markPrice: number | null;
+  side?: Side; // LONG | SHORT | null
+  size?: number | string | null; // exchange may return string; we normalize elsewhere
+  entryPrice?: number | string | null;
+  positionAmt?: number | string; // raw position amount from Binance
+  leverage?: number | string | null;
+  unRealizedProfit?: number | string | null;
+  isolatedMargin?: number | string | null;
+  initialMargin?: number | string | null;
+  markPrice?: number | string | null;
 }
 
 // Canonical live state used by get-live-state.ts

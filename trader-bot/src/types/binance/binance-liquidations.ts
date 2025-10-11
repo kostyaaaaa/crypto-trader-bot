@@ -1,5 +1,5 @@
 // Binance liquidation event types
-import type { BinanceSide } from './common';
+import type { BinanceSide } from '../common';
 
 export interface ForceOrderOrder {
   s: string; // symbol
