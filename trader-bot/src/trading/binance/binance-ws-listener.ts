@@ -44,6 +44,74 @@ function isDuplicateOrderEvent(key: string): boolean {
   return false;
 }
 
+// --- Aggregate per-order fills to compute VWAP (avg price)
+const _orderAgg: Map<number, { q: number; notional: number }> = new Map();
+
+// --- Close context per symbol to accumulate PnL parts until flat
+type CloseCtx = {
+  entry: number;
+  side: Side | null | undefined;
+  tp: number; // realized from TPs
+  sl: number; // realized from SL
+  leftover: number; // realized from forced market close of remainder
+  closed?: boolean;
+};
+const _closeCtx: Map<string, CloseCtx> = new Map();
+
+function getCtx(
+  symbol: string,
+  entry: number,
+  side: Side | null | undefined,
+): CloseCtx {
+  let c = _closeCtx.get(symbol);
+  if (!c) {
+    c = { entry, side, tp: 0, sl: 0, leftover: 0 };
+    _closeCtx.set(symbol, c);
+  }
+  return c;
+}
+
+async function maybeFinalizeClose(symbol: string): Promise<boolean> {
+  try {
+    const live = (await getPositionFresh(symbol)) as {
+      positionAmt?: string;
+    } | null;
+    const amt = live ? Math.abs(Number(live.positionAmt) || 0) : 0;
+    if (amt > 0) return false; // still not flat
+
+    const ctx = _closeCtx.get(symbol);
+    if (!ctx || ctx.closed) return false;
+
+    const finalGross = n(ctx.tp) + n(ctx.sl) + n(ctx.leftover);
+
+    const closed = await closePositionHistory(symbol, { closedBy: 'SL' });
+    await cancelAllOrders(symbol);
+    // extra safety: if exchange already flat, this is a no-op
+    await forceCloseIfLeftover(symbol);
+
+    if (closed && Number.isFinite(finalGross)) {
+      const pnlToSet = Math.round(n(finalGross) * 1e8) / 1e8;
+      await PositionModel.findByIdAndUpdate(
+        (closed as any)._id,
+        { $set: { finalPnl: pnlToSet } },
+        { new: true },
+      );
+      (closed as any).finalPnl = pnlToSet;
+    }
+
+    if (closed) {
+      await notifyTrade(closed as any, 'CLOSED');
+    }
+
+    ctx.closed = true;
+    _closeCtx.delete(symbol);
+    return true;
+  } catch (e) {
+    logger.error(`❌ ${symbol}: finalize close failed:`, errMsg(e));
+    return false;
+  }
+}
+
 // -------------------------
 // 1. Отримання listenKey
 // -------------------------
@@ -218,6 +286,14 @@ async function handleEvent(msg: UserDataEvent): Promise<void> {
         `📦 Order update: ${symbol} ${side} status=${status}, type=${type}, lastPx=${lastPx}, lastQty=${lastQty}, orderId=${o.i}`,
       );
 
+      // Aggregate fills for VWAP (avg execution price)
+      if (Number.isFinite(lastPx) && Number.isFinite(lastQty) && lastQty > 0) {
+        const agg = _orderAgg.get(o.i) || { q: 0, notional: 0 };
+        agg.q += lastQty;
+        agg.notional += lastPx * lastQty;
+        _orderAgg.set(o.i, agg);
+      }
+
       // Deduplicate identical updates (e.g., WS reconnects / repeats)
       const dedupKey = `${o.i}:${status}:${o.z || o.l || 0}:${m.T || m.E || ''}`;
       if (isDuplicateOrderEvent(dedupKey)) {
@@ -257,66 +333,64 @@ async function handleEvent(msg: UserDataEvent): Promise<void> {
           }
 
           // qty to close = cumulative filled for this SL order (o.z) or its quantity (o.q) or last fill (o.l)
-          const slFillQty = n(o.z) || n(o.q) || n(o.l);
-          // SL delta on remaining qty
+          const agg = _orderAgg.get(o.i);
+          const slFillQty = agg?.q || n(o.z) || n(o.q) || n(o.l);
+          const avgPxFromAgg = agg && agg.q > 0 ? agg.notional / agg.q : 0;
+          const avgPx =
+            n((o as any).ap) ||
+            (Number.isFinite(avgPxFromAgg) && avgPxFromAgg > 0
+              ? avgPxFromAgg
+              : lastPx);
+          _orderAgg.delete(o.i);
+
           const slDelta = calcFillPnl(
             pos.entryPrice as number,
-            lastPx,
+            avgPx,
             slFillQty,
             pos.side as any,
           );
-          // total gross PnL = realized on prior TPs + SL delta
-          const finalGrossPnl = n(sumTpRealizedPnl(pos)) + n(slDelta);
+
+          // total realized from TP so far
+          const realizedFromTP = n(sumTpRealizedPnl(pos));
 
           logger.info(
-            `🧮 ${symbol}: SL close PnL parts — realizedFromTP=${finalGrossPnl}, slDelta=${slDelta}, slQty=${slFillQty}, entry=${Number(pos.entryPrice) || 0}, lastPx=${lastPx}`,
+            `🧮 ${symbol}: SL PnL parts — realizedFromTP=${realizedFromTP}, slDelta=${slDelta}, slQty=${slFillQty}, entry=${Number(pos.entryPrice) || 0}, avgPx=${avgPx}`,
           );
 
+          // Зберігаємо контекст закриття, але НЕ закриваємо позицію поки не стане flat
+          const ctx = getCtx(
+            symbol,
+            Number(pos.entryPrice) || 0,
+            pos.side as any,
+          );
+          ctx.tp = realizedFromTP;
+          ctx.sl += n(slDelta);
+
+          // Спробуємо зберегти поточні TPs (щоб не втратити fills)
           try {
-            // Перед закриттям — збережемо поточний стан TPs (щоб другі/треті не зникали)
-            try {
-              await updateTakeProfits(
-                symbol,
-                Array.isArray(pos.takeProfits)
-                  ? pos.takeProfits.map((t) => ({ ...(t as any) }))
-                  : [],
-                Number(pos.entryPrice) || 0,
-                'SL_FILLED',
-              );
-            } catch (e) {
-              logger.warn(
-                `⚠️ ${symbol}: failed to persist TPs before SL close:`,
-                errMsg(e),
-              );
-            }
-
-            const closed = await closePositionHistory(symbol, {
-              closedBy: 'SL',
-            });
-            await cancelAllOrders(symbol);
-            await forceCloseIfLeftover(symbol);
-
-            // Оновимо finalPnl після закриття, щоб зберегти точне значення
-            if (closed && Number.isFinite(finalGrossPnl)) {
-              const pnlToSet = Math.round(n(finalGrossPnl) * 1e8) / 1e8;
-              await PositionModel.findByIdAndUpdate(
-                (closed as any)._id,
-                { $set: { finalPnl: pnlToSet } },
-                { new: true },
-              );
-              (closed as any).finalPnl = pnlToSet;
-            }
-
-            // Відправляємо нотифікацію
-            if (closed) {
-              await notifyTrade(closed, 'CLOSED');
-            }
-          } catch (err) {
-            logger.error(
-              `❌ ${symbol}: failed to close position:`,
-              errMsg(err),
+            await updateTakeProfits(
+              symbol,
+              Array.isArray(pos.takeProfits)
+                ? pos.takeProfits.map((t) => ({ ...(t as any) }))
+                : [],
+              Number(pos.entryPrice) || 0,
+              'SL_FILLED',
+            );
+          } catch (e) {
+            logger.warn(
+              `⚠️ ${symbol}: failed to persist TPs before SL close:`,
+              errMsg(e),
             );
           }
+
+          // Скасовуємо решту стопів/тейків і закриваємо хвіст, якщо залишився
+          try {
+            await cancelAllOrders(symbol);
+          } catch {}
+          await forceCloseIfLeftover(symbol);
+
+          // Якщо позиція вже плоска — фіналізуємо, інакше дочекаємось MARKET-події по хвосту
+          await maybeFinalizeClose(symbol);
         }
       }
 
@@ -655,7 +729,35 @@ async function handleEvent(msg: UserDataEvent): Promise<void> {
       // =======================
       else if (type === 'MARKET') {
         logger.info(`✅ Market order filled for ${symbol} (${side})`);
-        // Тут можна обробити логіку відкриття нової позиції або закриття вручну
+        // Якщо ми в процесі закриття після SL — дорахуємо PnL по "хвосту" (leftover)
+        const ctx = _closeCtx.get(symbol);
+        if (ctx && !ctx.closed) {
+          const agg = _orderAgg.get(o.i);
+          const execQty = agg?.q || n(o.z) || n(o.q) || n(o.l);
+          const avgPxFromAgg = agg && agg.q > 0 ? agg.notional / agg.q : 0;
+          const avgPx =
+            n((o as any).ap) ||
+            (Number.isFinite(avgPxFromAgg) && avgPxFromAgg > 0
+              ? avgPxFromAgg
+              : lastPx);
+          _orderAgg.delete(o.i);
+
+          if (execQty > 0 && avgPx > 0) {
+            const delta = calcFillPnl(
+              ctx.entry,
+              avgPx,
+              execQty,
+              ctx.side as any,
+            );
+            ctx.leftover += n(delta);
+            logger.info(
+              `➕ ${symbol}: leftover PnL += ${delta} (qty=${execQty}, avgPx=${avgPx})`,
+            );
+          }
+
+          await maybeFinalizeClose(symbol);
+        }
+        // Інакше: це не наш сценарій закриття — ігноруємо
       }
       break;
     }
