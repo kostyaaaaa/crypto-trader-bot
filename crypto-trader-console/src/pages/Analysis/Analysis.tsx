@@ -161,7 +161,7 @@ const Analysis: FC = () => {
 
   // take the last N items (most recent)
   const rows = useMemo(
-    () => (data?.data ?? []).slice(-historyN),
+    () => (data?.data ?? [])?.reverse().slice(-historyN),
     [data, historyN],
   );
 
