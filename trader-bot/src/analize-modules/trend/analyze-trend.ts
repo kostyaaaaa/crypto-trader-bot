@@ -1,5 +1,5 @@
 import type { ITrendModule } from 'crypto-trader-db';
-import type { Candle } from '../../types/types';
+import type { Candle } from '../../types/candles';
 import { computeRSISeries } from '../../utils/computeRSISeries';
 import { EMA, RSI } from '../../utils/getEMAAndRSI';
 

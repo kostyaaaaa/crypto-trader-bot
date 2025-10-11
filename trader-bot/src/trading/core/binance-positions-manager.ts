@@ -5,7 +5,7 @@ import type {
   LiveState,
   LiveStateFlat,
   Side,
-} from '../../types/binance-res';
+} from '../../types';
 import logger from '../../utils/db-logger';
 import {
   adjustPrice,

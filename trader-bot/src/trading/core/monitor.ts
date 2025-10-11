@@ -1,7 +1,7 @@
 // src/trading/core/monitor.ts
 import type { IPosition } from 'crypto-trader-db';
 import { getAnalysis } from '../../api';
-import type { BinanceSide, LiveStateFlat, Side } from '../../types/binance-res'; // use canonical Binance types
+import type { BinanceSide, LiveStateFlat, Side } from '../../types';
 import logger from '../../utils/db-logger';
 import {
   cancelStopOrders,
