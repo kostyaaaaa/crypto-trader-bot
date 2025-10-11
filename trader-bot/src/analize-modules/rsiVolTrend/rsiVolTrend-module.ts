@@ -1,7 +1,9 @@
 import { type IRsiVolTrendModule } from 'crypto-trader-db';
 import type { Candle } from '../../types/index';
+import { computeRSISeries } from '../../utils/computeRSISeries';
+import { RSI } from '../../utils/getEMAAndRSI';
 
-const RSI_PERIOD = 25;
+const RSI_PERIOD = 14;
 const RSI_WARMUP = 60;
 const VOL_LOOKBACK = 10;
 const MA_SHORT = 7;
@@ -16,38 +18,6 @@ function sma(values: number[], period: number): number | null {
     sum += Number(values[i]) || 0;
   }
   return sum / period;
-}
-
-function rsiWilder(
-  closes: number[],
-  period: number = 14,
-  warmup: number = 100,
-): number | null {
-  if (!Array.isArray(closes) || closes.length < period + 2) return null;
-  const n = closes.length;
-  const take = Math.min(n, period + warmup + 2);
-  const arr = closes.slice(n - take);
-
-  let gain = 0;
-  let loss = 0;
-  for (let i = 1; i <= period; i++) {
-    const diff = arr[i] - arr[i - 1];
-    if (diff >= 0) gain += diff;
-    else loss -= diff;
-  }
-  let avgGain = gain / period;
-  let avgLoss = loss / period;
-
-  for (let i = period + 1; i < arr.length; i++) {
-    const diff = arr[i] - arr[i - 1];
-    const g = diff > 0 ? diff : 0;
-    const l = diff < 0 ? -diff : 0;
-    avgGain = (avgGain * (period - 1) + g) / period;
-    avgLoss = (avgLoss * (period - 1) + l) / period;
-  }
-  if (avgLoss === 0) return 100;
-  const rs = avgGain / avgLoss;
-  return 100 - 100 / (1 + rs);
 }
 
 function avg(values: number[]): number | null {
@@ -72,6 +42,15 @@ function inferCandleDurationMs(
   return fallback;
 }
 
+// ---------- демпфер для силы при низком объёме ----------
+function applyVolumeDamping(score: number, volRatio: number): number {
+  if (!Number.isFinite(score) || !Number.isFinite(volRatio)) return 0;
+
+  if (volRatio <= 0.7) return score * (volRatio / 0.7); // линейно от 0 до 0.7
+  return score; // выше 0.7 — без изменений
+}
+
+// ---------- main module ----------
 export async function analyzeRsiVolumeTrend(
   symbol: string,
   candles: Candle[] | null = null,
@@ -87,15 +66,23 @@ export async function analyzeRsiVolumeTrend(
       symbol,
       signal: 'NEUTRAL',
       strength: 0,
-      meta: { LONG: 0, SHORT: 0, candlesUsed: candles?.length ?? 0, needBars },
+      meta: {
+        LONG: 0,
+        SHORT: 0,
+        candlesUsed: candles?.length ?? 0,
+        needBars,
+      },
     };
   }
 
   const closes = candles.map((c) => Number(c.close) || 0);
   const vols = candles.map((c) => Number(c.volume) || 0);
   const price = closes.at(-1) as number;
+
   const ma7 = sma(closes, MA_SHORT);
   const ma25 = sma(closes, MA_LONG);
+  const prevMa7 = sma(closes.slice(0, -1), MA_SHORT);
+  const maSlope = ma7 && prevMa7 ? ma7 - prevMa7 : 0;
 
   const lastCandle = candles.at(-1) as Candle;
   const openTimeMs = Date.parse(lastCandle.time) || 0;
@@ -104,18 +91,15 @@ export async function analyzeRsiVolumeTrend(
     CANDLE_DURATION_MS_FALLBACK,
   );
   const elapsedMs = Math.max(0, Date.now() - openTimeMs);
-
   let progress = durationMs > 0 ? elapsedMs / durationMs : 1;
   progress = Math.max(0.1, Math.min(1, progress));
 
+  // ---------- volume logic ----------
   const lastVol = (vols.at(-1) || 0) / progress;
   const avgVol = avg(vols.slice(-VOL_LOOKBACK - 1, -1));
   const volRatio = avgVol ? lastVol / avgVol : 0;
-  const maSlope = ma7 && ma25 ? ma7 - ma25 : 0;
 
-  const rsi = rsiWilder(closes, RSI_PERIOD, RSI_WARMUP);
-
-  if (!avgVol || !lastVol || volRatio < 0.7) {
+  if (!avgVol || !lastVol) {
     return {
       module: 'rsiVolTrend',
       symbol,
@@ -132,27 +116,19 @@ export async function analyzeRsiVolumeTrend(
     };
   }
 
-  if (rsi != null && (rsi > 72 || rsi < 28)) {
-    return {
-      module: 'rsiVolTrend',
-      symbol,
-      signal: 'NEUTRAL',
-      strength: 0,
-      meta: {
-        LONG: 0,
-        SHORT: 0,
-        candlesUsed: candles.length,
-        reason: 'RSI extreme',
-        rsi: Number(rsi.toFixed(2)),
-        progress: Number((progress * 100).toFixed(1)) + '%',
-      },
-    };
-  }
+  // ---------- RSI logic ----------
+  const rsiSeries = computeRSISeries(
+    closes.slice(-RSI_WARMUP - RSI_PERIOD),
+    RSI_PERIOD,
+  );
+  const rsiRaw = rsiSeries.at(-1) ?? RSI(closes, RSI_PERIOD);
+  const rsi =
+    typeof rsiRaw === 'number' && Number.isFinite(rsiRaw) ? rsiRaw : 50;
 
-  let volScore = 0;
-  if (Number.isFinite(volRatio)) {
-    volScore = Math.min(100, Math.max(0, ((volRatio - 0.7) / 1.3) * 100));
-  }
+  // ---------- scoring ----------
+  let volScore = Number.isFinite(volRatio)
+    ? Math.min(100, Math.max(0, ((volRatio - 0.7) / 1.3) * 100))
+    : 0;
 
   let trendLong = 0,
     trendShort = 0;
@@ -167,15 +143,26 @@ export async function analyzeRsiVolumeTrend(
         : 0;
   }
 
-  let rsiLong = 0,
-    rsiShort = 0;
-  if (rsi != null) {
-    rsiLong = rsi >= 50 ? Math.min(100, ((rsi - 50) / 22) * 100) : 0;
-    rsiShort = rsi <= 50 ? Math.min(100, ((50 - rsi) / 22) * 100) : 0;
-  }
+  // ---------- RSI усиление ----------
+  let rsiBoostLong = 0;
+  let rsiBoostShort = 0;
 
-  const LONG = volScore * 0.5 + trendLong * 0.3 + rsiLong * 0.2;
-  const SHORT = volScore * 0.5 + trendShort * 0.3 + rsiShort * 0.2;
+  if (rsi > 72)
+    rsiBoostShort = Math.min(20, (rsi - 72) * 1.2); // усиливает SHORT
+  else if (rsi < 28) rsiBoostLong = Math.min(20, (28 - rsi) * 1.2); // усиливает LONG
+
+  const rsiLongScore = rsi >= 50 ? ((rsi - 50) / 22) * 100 : 0;
+  const rsiShortScore = rsi <= 50 ? ((50 - rsi) / 22) * 100 : 0;
+
+  // ---------- итоговые веса ----------
+  let LONG =
+    volScore * 0.5 + trendLong * 0.3 + rsiLongScore * 0.15 + rsiBoostLong;
+  let SHORT =
+    volScore * 0.5 + trendShort * 0.3 + rsiShortScore * 0.15 + rsiBoostShort;
+
+  // ---------- демпфирование по объёму ----------
+  LONG = applyVolumeDamping(LONG, volRatio);
+  SHORT = applyVolumeDamping(SHORT, volRatio);
 
   const deadZone = volRatio > 1.5 ? 5 : 15;
   let signal: string = 'NEUTRAL';
@@ -185,6 +172,7 @@ export async function analyzeRsiVolumeTrend(
 
   const strength = Math.max(LONG, SHORT);
 
+  // ---------- output ----------
   return {
     module: 'rsiVolTrend',
     symbol,
@@ -195,9 +183,9 @@ export async function analyzeRsiVolumeTrend(
       SHORT: Number(SHORT.toFixed(2)),
       candlesUsed: candles.length,
       progress: Number((progress * 100).toFixed(1)) + '%',
-      rsi: rsi != null ? Number(rsi.toFixed(2)) : null,
-      rsiLongScore: Number(rsiLong.toFixed(2)),
-      rsiShortScore: Number(rsiShort.toFixed(2)),
+      rsi: Number(rsi.toFixed(2)),
+      rsiLongScore: Number(rsiLongScore.toFixed(2)),
+      rsiShortScore: Number(rsiShortScore.toFixed(2)),
       volRatio: Number(volRatio.toFixed(2)),
       trendLong: Number(trendLong.toFixed(2)),
       trendShort: Number(trendShort.toFixed(2)),
