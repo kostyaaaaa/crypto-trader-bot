@@ -1,7 +1,7 @@
 import { CoinConfigModel, type ICoinConfig } from 'crypto-trader-db';
 import { Types } from 'mongoose';
 import { LiquidationsStepWS } from './analize-modules/liquidations/liquidations-step';
-import { OrderBookStepWS } from './analize-modules/orderbook/order-book-step';
+import { LiquidityStepWS } from './analize-modules/liquidity/liquidity-step';
 import connectDB from './config/database';
 import { startUserStream } from './trading/binance/binance-ws-listener';
 import cooldownHub from './trading/core/cooldown-hub';
@@ -9,13 +9,13 @@ import { tradingEngine } from './trading/core/engine';
 import markPriceHub from './trading/core/mark-price-hub';
 import { monitorPositions } from './trading/core/monitor';
 import logger from './utils/db-logger';
-
 import { finalAnalyzer } from './utils/final-analyzer';
+
 type CoinConfigWithId = ICoinConfig & { _id: Types.ObjectId };
 interface ActiveService {
   analysisInterval: NodeJS.Timeout;
   monitorInterval: NodeJS.Timeout;
-  stopOB?: () => void;
+  stopLiquidityWS?: () => void;
   stopLiq?: () => void;
 }
 
@@ -27,7 +27,7 @@ async function startConfig(config: CoinConfigWithId): Promise<void> {
   const { symbol, isActive, analysisConfig, strategy } = config;
   if (!isActive) return;
 
-  const stopOB = OrderBookStepWS(symbol);
+  const stopLiquidityWS = LiquidityStepWS(symbol);
   const stopLiq = LiquidationsStepWS(symbol);
 
   // 🔹 Аналіз + запуск двигуна раз на хвилину
@@ -44,7 +44,7 @@ async function startConfig(config: CoinConfigWithId): Promise<void> {
   activeIntervals[symbol] = {
     analysisInterval,
     monitorInterval,
-    stopOB,
+    stopLiquidityWS,
     stopLiq,
   };
 
@@ -57,7 +57,7 @@ function stopConfig(symbol: string): void {
 
   clearInterval(svc.analysisInterval);
   clearInterval(svc.monitorInterval);
-  svc.stopOB?.();
+  svc.stopLiquidityWS?.();
   svc.stopLiq?.();
 
   delete activeIntervals[symbol];

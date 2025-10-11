@@ -1,12 +1,12 @@
 import type { ILiquidityModule } from 'crypto-trader-db';
-import { loadDocs } from '../../storage/storage';
+import { getLiquidity } from '../../api';
 import logger from '../../utils/db-logger';
 export async function analyzeLiquidity(
   symbol: string = 'ETHUSDT',
   window: number = 20,
   lastPrice: number | null = null,
 ): Promise<ILiquidityModule | null> {
-  const liq = (await loadDocs('liquidity', symbol, window)) as Array<{
+  const liq = (await getLiquidity(symbol, window)) as Array<{
     avgImbalance: number | string;
     avgSpread: number | string;
   }>;

@@ -1,34 +1,17 @@
 import { CoinConfigModel, ICoinConfig } from 'crypto-trader-db';
 import { Request, Response } from 'express';
+import {
+  ApiErrorResponse,
+  ApiResponse,
+  DataResponse,
+  ListResponse,
+} from '../types/index.js';
 import logger from '../utils/Logger.js';
-import { ApiErrorResponse } from './common.type.js';
-
-// Response interfaces
-interface CoinConfigResponse {
-  success: boolean;
-  message: string;
-  data: ICoinConfig;
-  timestamp: string;
-}
-
-interface CoinConfigListResponse {
-  success: boolean;
-  message: string;
-  data: ICoinConfig[];
-  count: number;
-  timestamp: string;
-}
-
-interface CoinConfigDeleteResponse {
-  success: boolean;
-  message: string;
-  timestamp: string;
-}
 
 // Create a new coin configuration
 const createCoinConfig = async (
   req: Request,
-  res: Response<CoinConfigResponse | ApiErrorResponse>,
+  res: Response<DataResponse<ICoinConfig> | ApiErrorResponse>,
 ): Promise<void> => {
   try {
     const coinConfigData: Omit<ICoinConfig, 'createdAt' | 'updatedAt'> =
@@ -82,7 +65,7 @@ const createCoinConfig = async (
 // Get all coin configurations
 const getAllCoinConfigs = async (
   req: Request,
-  res: Response<CoinConfigListResponse | ApiErrorResponse>,
+  res: Response<ListResponse<ICoinConfig> | ApiErrorResponse>,
 ): Promise<void> => {
   try {
     const configs = await CoinConfigModel.find({}).sort({ symbol: 1 });
@@ -114,7 +97,7 @@ const getAllCoinConfigs = async (
 // Get a specific coin configuration by symbol
 const getCoinConfigBySymbol = async (
   req: Request,
-  res: Response<CoinConfigResponse | ApiErrorResponse>,
+  res: Response<DataResponse<ICoinConfig> | ApiErrorResponse>,
 ): Promise<void> => {
   try {
     const { symbol } = req.params;
@@ -158,7 +141,7 @@ const getCoinConfigBySymbol = async (
 // Update a coin configuration
 const updateCoinConfig = async (
   req: Request,
-  res: Response<CoinConfigResponse | ApiErrorResponse>,
+  res: Response<DataResponse<ICoinConfig> | ApiErrorResponse>,
 ): Promise<void> => {
   try {
     const { symbol } = req.params;
@@ -227,7 +210,7 @@ const updateCoinConfig = async (
 // Delete a coin configuration
 const deleteCoinConfig = async (
   req: Request,
-  res: Response<CoinConfigDeleteResponse | ApiErrorResponse>,
+  res: Response<ApiResponse | ApiErrorResponse>,
 ): Promise<void> => {
   try {
     const { symbol } = req.params;

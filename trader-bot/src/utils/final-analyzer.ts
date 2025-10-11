@@ -1,6 +1,5 @@
 import axios from 'axios';
 import {
-  analyzeCandles,
   analyzeChoppiness,
   analyzeFunding,
   analyzeHigherMA,
@@ -9,10 +8,11 @@ import {
   analyzeLongShort,
   analyzeOpenInterest,
   analyzeRsiVolumeTrend,
+  analyzeTrend,
   analyzeTrendRegime,
   analyzeVolatility,
 } from '../analize-modules/index';
-import { saveDoc } from '../storage/storage';
+import { submitAnalysis } from '../api';
 import type { BinanceKline, Candle } from '../types/index';
 
 import logger from './db-logger';
@@ -110,10 +110,7 @@ export async function finalAnalyzer({
     choppiness: null,
   };
 
-  modules.trend = (await analyzeCandles(
-    symbol,
-    candles,
-  )) as ITrendModule | null;
+  modules.trend = (await analyzeTrend(symbol, candles)) as ITrendModule | null;
 
   modules.choppiness = (await analyzeChoppiness(
     symbol,
@@ -230,6 +227,6 @@ export async function finalAnalyzer({
     decision,
   };
 
-  await saveDoc('analysis', result as IAnalysis);
+  await submitAnalysis(result as IAnalysis);
   return result;
 }

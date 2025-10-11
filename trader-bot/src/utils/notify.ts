@@ -159,7 +159,7 @@ export async function notifyTrade(
 
       header = `${emoji} *${symbol}* — *CLOSED* (${reason})\n`;
     } else if (action === 'OPEN') {
-      header = `🟢 *${symbol}* — *OPENED* (${side})\n`;
+      header = `🔵 *${symbol}* — *OPENED* (${side})\n`;
     } else {
       header = `ℹ️ *${symbol}* — ${status}\n`;
     }

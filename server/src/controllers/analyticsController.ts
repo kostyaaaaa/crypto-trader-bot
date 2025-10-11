@@ -1,21 +1,13 @@
 import { AnalysisModel, IAnalysis } from 'crypto-trader-db';
 import { Request, Response } from 'express';
+import { DB_MAX_DOCUMENTS } from '../constants/database.js';
+import { ApiErrorResponse, ApiResponse, ListResponse } from '../types/index.js';
 import logger from '../utils/Logger.js';
-import { ApiErrorResponse } from './common.type.js';
-
-// Response interface
-interface AnalysisListResponse {
-  success: boolean;
-  message: string;
-  data: IAnalysis[];
-  count: number;
-  timestamp: string;
-}
 
 // Get analysis data by date range and symbol
 const getAnalysisByDateRangeAndSymbol = async (
   req: Request,
-  res: Response<AnalysisListResponse | ApiErrorResponse>,
+  res: Response<ListResponse<IAnalysis> | ApiErrorResponse>,
 ): Promise<void> => {
   try {
     const { symbol, dateFrom, dateTo } = req.query;
@@ -81,4 +73,90 @@ const getAnalysisByDateRangeAndSymbol = async (
   }
 };
 
-export { getAnalysisByDateRangeAndSymbol };
+// POST /analysis - Save an analysis document
+const saveAnalysis = async (
+  req: Request,
+  res: Response<ApiResponse | ApiErrorResponse>,
+): Promise<void> => {
+  try {
+    const doc: IAnalysis = req.body;
+
+    await AnalysisModel.create(doc);
+
+    // Clean up old documents if limit exceeded
+    const count = await AnalysisModel.countDocuments();
+    if (count > DB_MAX_DOCUMENTS) {
+      const oldest = await AnalysisModel.find()
+        .sort({ _id: 1 })
+        .limit(count - DB_MAX_DOCUMENTS);
+      const ids = oldest.map((d) => d._id);
+      await AnalysisModel.deleteMany({ _id: { $in: ids } });
+      logger.info(
+        `Cleaned up ${ids.length} old documents from analysis collection`,
+      );
+    }
+
+    logger.success('Successfully saved analysis document');
+
+    res.json({
+      success: true,
+      message: 'Analysis document saved successfully',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error('Error saving analysis document:', {
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
+    res.status(500).json({
+      error: 'Failed to save analysis document',
+      message: errorMessage,
+    });
+  }
+};
+
+// GET /analytics - Get analysis documents
+const getAnalysis = async (
+  req: Request,
+  res: Response<ListResponse<IAnalysis> | ApiErrorResponse>,
+): Promise<void> => {
+  try {
+    const { symbol, limit } = req.query;
+
+    const query = symbol ? { symbol } : {};
+    const limitNum = limit ? parseInt(limit as string, 10) : 100;
+
+    const docs = await AnalysisModel.find(query)
+      .sort({ time: -1 })
+      .limit(limitNum)
+      .lean()
+      .exec();
+
+    logger.success(
+      `Successfully loaded ${docs.length} analysis documents${symbol ? ` for symbol ${symbol}` : ''}`,
+    );
+
+    res.json({
+      success: true,
+      message: 'Analysis documents loaded successfully',
+      data: docs,
+      count: docs.length,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error('Error loading analysis documents:', {
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
+    res.status(500).json({
+      error: 'Failed to load analysis documents',
+      message: errorMessage,
+    });
+  }
+};
+
+export { getAnalysis, getAnalysisByDateRangeAndSymbol, saveAnalysis };

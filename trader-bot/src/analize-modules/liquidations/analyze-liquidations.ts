@@ -2,7 +2,7 @@ import {
   type ILiquidationsModule,
   type ILiquidations as LiquidationCandle,
 } from 'crypto-trader-db';
-import { loadDocs } from '../../storage/storage';
+import { getLiquidations } from '../../api';
 
 const MAX_COUNT = 10 as const;
 const MAX_AGE_MIN = 30 as const;
@@ -10,7 +10,7 @@ const MAX_AGE_MIN = 30 as const;
 export async function analyzeLiquidations(
   symbol: string = 'ETHUSDT',
 ): Promise<ILiquidationsModule | null> {
-  const raw = (await loadDocs('liquidations', symbol, MAX_COUNT)) as
+  const raw = (await getLiquidations(symbol, MAX_COUNT)) as
     | LiquidationCandle[]
     | null
     | undefined;

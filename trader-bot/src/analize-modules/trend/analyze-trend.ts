@@ -6,7 +6,7 @@ import { EMA, RSI } from '../../utils/getEMAAndRSI';
 const toFixedOrNull = (v: number | null | undefined, d = 2): number | null =>
   typeof v === 'number' && Number.isFinite(v) ? Number(v.toFixed(d)) : null;
 
-export async function analyzeCandles(
+export async function analyzeTrend(
   symbol: string = 'ETHUSDT',
   candles: Candle[] = [],
 ): Promise<ITrendModule | null> {

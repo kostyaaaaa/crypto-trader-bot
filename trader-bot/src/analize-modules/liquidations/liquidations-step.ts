@@ -1,6 +1,6 @@
 import { type ILiquidations, type ISide } from 'crypto-trader-db';
 import WebSocket from 'ws';
-import { saveDoc } from '../../storage/storage';
+import { submitLiquidations } from '../../api';
 import type { ForceOrderEvent } from '../../types/index';
 import logger from '../../utils/db-logger';
 
@@ -80,9 +80,9 @@ export function LiquidationsStepWS(
     };
 
     try {
-      await saveDoc('liquidations', candle);
+      await submitLiquidations(candle);
     } catch (e: any) {
-      logger.error('❌ Liquidations save error:', e?.message || e);
+      logger.error('❌ Failed to submit liquidations:', e?.message || e);
     } finally {
       bucket = [];
     }

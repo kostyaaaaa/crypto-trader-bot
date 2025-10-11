@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { saveDoc } from '../../storage/storage';
+import { submitLiquiditySnapshot } from '../../api';
 import type {
   BinanceDepthPartialUpdate,
   LiquidityCandle,
@@ -19,7 +19,7 @@ function isDepthPayload(x: unknown): x is BinanceDepthPartialUpdate {
   );
 }
 
-export function OrderBookStepWS(symbol: string = 'BTCUSDT'): () => void {
+export function LiquidityStepWS(symbol: string = 'BTCUSDT'): () => void {
   const ws = new WebSocket(
     `wss://fstream.binance.com/ws/${symbol.toLowerCase()}@depth10@100ms`,
   );
@@ -61,12 +61,12 @@ export function OrderBookStepWS(symbol: string = 'BTCUSDT'): () => void {
         spreads.push(spread);
       }
     } catch (e: any) {
-      logger.warn('⚠️ OrderBook WS parse/warn:', e?.message || e);
+      logger.warn('⚠️ Liquidity WS parse/warn:', e?.message || e);
     }
   });
 
   ws.on('error', (err: any) => {
-    logger.error('❌ OrderBook WS error:', err.message);
+    logger.error('❌ Liquidity WS error:', err.message);
   });
 
   interval = setInterval(async () => {
@@ -83,9 +83,9 @@ export function OrderBookStepWS(symbol: string = 'BTCUSDT'): () => void {
     };
 
     try {
-      await saveDoc('liquidity', liquidityCandle);
+      await submitLiquiditySnapshot(liquidityCandle as any);
     } catch (e: any) {
-      logger.error('❌ saveDoc(liquidity) failed:', e?.message || e);
+      logger.error('❌ Failed to submit liquidity snapshot:', e?.message || e);
     }
 
     imbalances = [];
