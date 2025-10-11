@@ -379,6 +379,21 @@ const Analysis: FC = () => {
     return (
       <Center className={styles.wrapper}>
         <Text>No analysis found for selected period.</Text>
+        <Select
+          size="xs"
+          label="Pick coin"
+          placeholder="Select"
+          data={symbols}
+          value={selectedCoin}
+          onChange={(v) => {
+            const newCoin = v || (symbols[0] ?? 'SOLUSDT');
+            localStorage.setItem(coinLocalStorageKey, newCoin);
+            setSelectedCoin(newCoin);
+          }}
+          searchable
+          nothingFoundMessage="No coins"
+          maw={200}
+        />
       </Center>
     );
   }
