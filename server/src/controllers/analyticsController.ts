@@ -1,5 +1,6 @@
 import { AnalysisModel, IAnalysis } from 'crypto-trader-db';
 import { Request, Response } from 'express';
+import type { FilterQuery } from 'mongoose';
 import { DB_MAX_DOCUMENTS } from '../constants/database.js';
 import { ApiErrorResponse, ApiResponse, ListResponse } from '../types/index.js';
 import logger from '../utils/Logger.js';
@@ -29,8 +30,6 @@ const saveAnalysis = async (
       );
     }
 
-    logger.success('Successfully saved analysis document');
-
     res.json({
       success: true,
       message: 'Analysis document saved successfully',
@@ -59,7 +58,8 @@ const getAnalysis = async (
     const { symbol, limit, dateFrom, dateTo } = req.query;
 
     // Build query object
-    const query: any = symbol ? { symbol } : {};
+    const query: FilterQuery<IAnalysis> = {};
+    if (symbol) query.symbol = String(symbol);
 
     // If date range is provided, validate and add to query
     if (dateFrom || dateTo) {
@@ -95,20 +95,16 @@ const getAnalysis = async (
       query.time = { $gte: startDate, $lte: endDate };
     }
 
-    const limitNum = limit ? parseInt(limit as string, 10) : 100;
+    const limitNum = Math.min(Number(limit ?? 100), 1000);
 
-    // Query with appropriate sorting and limit
-    let queryBuilder = AnalysisModel.find(query).sort({ time: 1 });
-
-    // Only apply limit if not using date range filtering
-    if (!dateFrom && !dateTo) {
-      queryBuilder = queryBuilder.limit(limitNum);
-    }
-
-    const docs = await queryBuilder.lean().exec();
+    const docs = await AnalysisModel.find(query)
+      .sort({ time: -1, _id: -1 })
+      .limit(limitNum)
+      .lean()
+      .exec();
 
     logger.success(
-      `Successfully loaded ${docs.length} analysis documents${symbol ? ` for symbol ${symbol}` : ''}${dateFrom ? ` from ${dateFrom} to ${dateTo}` : ''}`,
+      `Loaded ${docs.length} analysis docs (latest first by time)${symbol ? ` for symbol ${symbol}` : ''}${dateFrom ? ` from ${dateFrom} to ${dateTo}` : ''}`,
     );
 
     res.json({

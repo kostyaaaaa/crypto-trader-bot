@@ -1,5 +1,6 @@
 import { IPosition, PositionModel } from 'crypto-trader-db';
 import { Request, Response } from 'express';
+import type { FilterQuery } from 'mongoose';
 import {
   cancelStopOrders,
   closePosition as closeBinancePosition,
@@ -22,7 +23,12 @@ const getPositionsByDateRangeAndSymbol = async (
   res: Response<ListResponse<IPosition> | ApiErrorResponse>,
 ): Promise<void> => {
   try {
-    const { symbol, dateFrom, dateTo } = req.query;
+    const { symbol, dateFrom, dateTo, limit } = req.query as {
+      symbol?: string;
+      dateFrom?: string;
+      dateTo?: string;
+      limit?: string;
+    };
 
     if (!dateFrom || !dateTo) {
       res.status(400).json({
@@ -53,24 +59,24 @@ const getPositionsByDateRangeAndSymbol = async (
     }
 
     // Find closed positions data within the timestamp range
-    const query: Record<string, unknown> = {
+    const query: FilterQuery<IPosition> = {
       status: 'CLOSED',
-      closedAt: { $gte: startDate, $lte: endDate },
+      closedAt: { $gte: startDate, $lte: endDate } as any,
     };
 
-    // Only add symbol filter if provided
-    if (symbol) {
-      query.symbol = symbol;
-    }
+    if (symbol) query.symbol = String(symbol);
+
+    const limitNum = Math.min(Number(limit ?? 1000), 5000); // safety cap
 
     const positionsData = await PositionModel.find(query)
       .populate('analysis')
-      .sort({
-        closedAt: -1,
-      });
+      .sort({ closedAt: -1, _id: -1 }) // latest first, stable tie-breaker
+      .limit(limitNum)
+      .lean()
+      .exec();
 
     logger.success(
-      `Successfully fetched ${positionsData.length} closed position records for symbol: ${symbol || 'all'} between ${dateFrom} and ${dateTo}`,
+      `Fetched ${positionsData.length} CLOSED positions (latest first) for ${symbol || 'all'} between ${dateFrom} and ${dateTo}`,
     );
 
     res.json({
@@ -163,13 +169,19 @@ const closePosition = async (
     );
     logger.info(`Closed position on Binance for ${symbol}:`, closeResult);
 
-    // Calculate final PnL (this is a simplified calculation)
+    // Calculate final PnL using actual close price if available
     const entryPrice = parseFloat(binancePosition.entryPrice);
-    const currentPrice = parseFloat(binancePosition.markPrice);
+    const exitPriceStr =
+      (closeResult as any)?.avgPrice ??
+      (closeResult as any)?.price ??
+      binancePosition.markPrice;
+    const exitPrice =
+      Number(exitPriceStr) || parseFloat(binancePosition.markPrice);
+
     const pnl =
       positionSide === 'LONG'
-        ? (currentPrice - entryPrice) * positionSize
-        : (entryPrice - currentPrice) * positionSize;
+        ? (exitPrice - entryPrice) * positionSize
+        : (entryPrice - exitPrice) * positionSize;
 
     // Update position in MongoDB
     const updatedPosition = await PositionModel.findByIdAndUpdate(
@@ -269,13 +281,53 @@ const getPositions = async (
   res: Response<ListResponse<IPosition> | ApiErrorResponse>,
 ): Promise<void> => {
   try {
-    const { symbol, limit } = req.query;
+    const { symbol, limit, status, dateFrom, dateTo } = req.query as {
+      symbol?: string;
+      limit?: string;
+      status?: string;
+      dateFrom?: string;
+      dateTo?: string;
+    };
 
-    const query = symbol ? { symbol } : {};
-    const limitNum = limit ? parseInt(limit as string, 10) : 100;
+    const query: FilterQuery<IPosition> = {};
+    if (symbol) query.symbol = String(symbol);
+    if (status) query.status = String(status).toUpperCase() as any; // OPEN/CLOSED
+
+    if (dateFrom || dateTo) {
+      if (!dateFrom || !dateTo) {
+        res.status(400).json({
+          error: 'Missing parameters',
+          message:
+            'Both dateFrom and dateTo are required when using date filtering',
+        });
+        return;
+      }
+      const startDate = new Date(dateFrom);
+      const endDate = new Date(dateTo);
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        res.status(400).json({
+          error: 'Invalid date format',
+          message:
+            'Please provide valid ISO timestamp strings for dateFrom and dateTo',
+        });
+        return;
+      }
+      if (startDate >= endDate) {
+        res.status(400).json({
+          error: 'Invalid date range',
+          message: 'dateFrom must be earlier than dateTo',
+        });
+        return;
+      }
+      // By default filter by openedAt; if you need closedAt, use the dedicated endpoint
+      query.openedAt = { $gte: startDate, $lte: endDate } as any;
+    }
+
+    const limitNum = Math.min(Number(limit ?? 100), 1000);
 
     const docs = await PositionModel.find(query)
-      .sort({ openedAt: -1 })
+      .populate('analysis')
+      .sort({ openedAt: -1, _id: -1 }) // latest first, stable
       .limit(limitNum)
       .lean()
       .exec();
