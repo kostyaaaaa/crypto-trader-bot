@@ -1,9 +1,15 @@
+// Position management types
+import type { Side } from './common';
+
 export interface TakeProfitPlanEntry {
   price: number;
   sizePct: number;
-  pct?: number; // опційно (для realign)
+  pct?: number; // optional (for realignment)
 }
-export type Side = 'LONG' | 'SHORT' | null;
+
+export interface TakeProfitLevel extends TakeProfitPlanEntry {
+  // Alias for consistency with prepare.ts
+}
 
 export interface OrderIds {
   entry: string | number | null;
@@ -15,7 +21,7 @@ export interface PreparedPosition {
   id: string;
   symbol: string;
   side: Side;
-  size: number; // $ notionals (може оновитись після live підтвердження)
+  size: number; // $ notionals (may update after live confirmation)
   initialSizeUsd: number;
   leverage: number;
   qty: number;
@@ -31,7 +37,7 @@ export interface PreparedPosition {
   initialTPs: TakeProfitPlanEntry[];
   rrrToFirstTp: number | null;
   updates: Array<{ time: string; action: string; price?: number }>;
-  analysis: string | null; // ObjectId як string (опційно)
+  analysis: string | null; // ObjectId as string (optional)
   context?: Record<string, unknown>;
   trailing: null | {
     active: boolean;
@@ -45,16 +51,10 @@ export interface PreparedPosition {
 }
 
 export interface ExchangeFilters {
-  // мінімум того, що потрібно для quantize:
-  // твої реалізації adjustPrice/adjustQuantity можуть вимагати інші поля — тоді розшир.
+  // minimum required for quantize:
   pricePrecision?: number;
   quantityPrecision?: number;
   tickSize?: number;
   stepSize?: number;
   minQty?: number;
-}
-
-export interface LivePosition {
-  entryPrice: string | number;
-  positionAmt: string | number;
 }

@@ -1,9 +1,9 @@
+import type { OrderSide, Side } from '../../../types';
 import logger from '../../../utils/db-logger';
 import { adjustQuantity } from './adjust-quantity';
 import { client } from './client';
 import { getSymbolFilters } from './get-symbol-filters';
 import { normalizeOrderSide } from './normalize-order-side';
-import type { OrderSide, Side } from './types';
 
 export async function openMarketOrder(
   symbol: string,

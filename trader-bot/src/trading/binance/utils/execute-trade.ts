@@ -1,3 +1,11 @@
+import type {
+  ExchangeFilters,
+  LivePosition,
+  OrderIds,
+  PreparedPosition,
+  Side,
+  TakeProfitPlanEntry,
+} from '../../../types';
 import logger from '../../../utils/db-logger';
 import { updateStopPrice, updateTakeProfits } from '../../core/history-store';
 import { preparePosition } from '../../core/prepare';
@@ -13,14 +21,6 @@ import {
   setLeverage,
 } from '../binance-functions/index';
 import { normalizeTpPlan } from './normalize-tp-plan';
-import type {
-  ExchangeFilters,
-  LivePosition,
-  OrderIds,
-  PreparedPosition,
-  Side,
-  TakeProfitPlanEntry,
-} from './types';
 import { validateStop } from './validate-stop';
 
 export async function executeTrade(

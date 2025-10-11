@@ -1,6 +1,6 @@
+import type { FuturesPositionRisk } from '../../../types';
 import logger from '../../../utils/db-logger';
 import { getPositionRiskCached } from './state';
-import type { FuturesPositionRisk } from './types';
 
 export async function getPosition(
   symbol: string,

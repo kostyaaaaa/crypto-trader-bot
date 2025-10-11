@@ -1,4 +1,4 @@
-import type { OrderSide, Side } from './types';
+import type { OrderSide, Side } from '../../../types';
 
 export function normalizeOrderSide(side: Side | OrderSide): OrderSide {
   const s = String(side).toUpperCase();

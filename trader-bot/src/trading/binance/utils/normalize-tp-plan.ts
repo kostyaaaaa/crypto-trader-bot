@@ -1,4 +1,4 @@
-import type { TakeProfitPlanEntry } from './types';
+import type { TakeProfitPlanEntry } from '../../../types';
 export function normalizeTpPlan(
   tps: Array<Partial<TakeProfitPlanEntry>> = [],
 ): TakeProfitPlanEntry[] {

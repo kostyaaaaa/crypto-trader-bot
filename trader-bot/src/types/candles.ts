@@ -1,3 +1,5 @@
+// Candle and market data types
+
 export interface Candle {
   time: string;
   open: number;
@@ -6,6 +8,7 @@ export interface Candle {
   close: number;
   volume: number;
 }
+
 export interface LiquidityCandle {
   symbol: string;
   time: string;

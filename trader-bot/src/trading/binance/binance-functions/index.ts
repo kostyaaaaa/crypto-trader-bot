@@ -1,4 +1,5 @@
-export * from './types';
+// Types are now exported from the central types folder
+export type * from '../../../types';
 
 export { client } from './client';
 

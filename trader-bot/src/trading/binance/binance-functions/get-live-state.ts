@@ -4,7 +4,7 @@ import type {
   LivePosition,
   LiveState,
   OpenOrder,
-} from '../../../types/binance-res';
+} from '../../../types';
 import logger from '../../../utils/db-logger';
 import { getOpenOrdersCached, getPositionRiskCached } from './state';
 

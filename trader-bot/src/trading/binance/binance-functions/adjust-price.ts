@@ -1,4 +1,4 @@
-import type { PriceFilter, SymbolFilter } from './types';
+import type { PriceFilter, SymbolFilter } from '../../../types';
 
 function isPriceFilter(f: SymbolFilter): f is PriceFilter {
   return f?.filterType === 'PRICE_FILTER';

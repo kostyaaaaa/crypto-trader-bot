@@ -1,4 +1,4 @@
-import { isLotFilter, type SymbolFilter } from './types';
+import { isLotFilter, type SymbolFilter } from '../../../types';
 
 export function adjustQuantity(
   symbolFilters: SymbolFilter[],
