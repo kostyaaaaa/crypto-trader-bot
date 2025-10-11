@@ -1,6 +1,5 @@
 import axios from 'axios';
 import {
-  analyzeCandles,
   analyzeChoppiness,
   analyzeFunding,
   analyzeHigherMA,
@@ -9,6 +8,7 @@ import {
   analyzeLongShort,
   analyzeOpenInterest,
   analyzeRsiVolumeTrend,
+  analyzeTrend,
   analyzeTrendRegime,
   analyzeVolatility,
 } from '../analize-modules/index';
@@ -110,10 +110,7 @@ export async function finalAnalyzer({
     choppiness: null,
   };
 
-  modules.trend = (await analyzeCandles(
-    symbol,
-    candles,
-  )) as ITrendModule | null;
+  modules.trend = (await analyzeTrend(symbol, candles)) as ITrendModule | null;
 
   modules.choppiness = (await analyzeChoppiness(
     symbol,

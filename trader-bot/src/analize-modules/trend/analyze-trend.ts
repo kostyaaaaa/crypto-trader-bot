@@ -38,7 +38,7 @@ function computeRSISeries(
   return out.map((v) => (v == null ? null : parseFloat(v.toFixed(2))));
 }
 
-export async function analyzeCandles(
+export async function analyzeTrend(
   symbol: string = 'ETHUSDT',
   candles: Candle[] = [],
 ): Promise<ITrendModule | null> {
