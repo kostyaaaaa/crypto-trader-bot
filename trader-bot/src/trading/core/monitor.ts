@@ -1,6 +1,6 @@
 // src/trading/core/monitor.ts
 import type { IPosition } from 'crypto-trader-db';
-import { loadDocs } from '../../storage/storage';
+import { getAnalysis } from '../../api';
 import type { BinanceSide, LiveStateFlat, Side } from '../../types/binance-res'; // use canonical Binance types
 import logger from '../../utils/db-logger';
 import {
@@ -106,8 +106,7 @@ export async function monitorPositions(params: {
   let recentAnalyses: AnalysisRecord[] = [];
   try {
     const docCount = oppExitN > 0 ? oppExitN : 1;
-    const analysisDocs = (await loadDocs(
-      'analysis',
+    const analysisDocs = (await getAnalysis(
       symbol,
       docCount,
     )) as AnalysisRecord[];

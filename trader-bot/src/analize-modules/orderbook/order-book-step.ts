@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { saveDoc } from '../../storage/storage';
+import { submitLiquiditySnapshot } from '../../api';
 import type {
   BinanceDepthPartialUpdate,
   LiquidityCandle,
@@ -83,9 +83,9 @@ export function OrderBookStepWS(symbol: string = 'BTCUSDT'): () => void {
     };
 
     try {
-      await saveDoc('liquidity', liquidityCandle);
+      await submitLiquiditySnapshot(liquidityCandle as any);
     } catch (e: any) {
-      logger.error('❌ saveDoc(liquidity) failed:', e?.message || e);
+      logger.error('❌ Failed to submit liquidity snapshot:', e?.message || e);
     }
 
     imbalances = [];

@@ -9,8 +9,8 @@ import { tradingEngine } from './trading/core/engine';
 import markPriceHub from './trading/core/mark-price-hub';
 import { monitorPositions } from './trading/core/monitor';
 import logger from './utils/db-logger';
-
 import { finalAnalyzer } from './utils/final-analyzer';
+
 type CoinConfigWithId = ICoinConfig & { _id: Types.ObjectId };
 interface ActiveService {
   analysisInterval: NodeJS.Timeout;

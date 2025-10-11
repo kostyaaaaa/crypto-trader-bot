@@ -7,7 +7,7 @@ import type {
   IStrategyConfig,
   ITakeProfit,
 } from 'crypto-trader-db';
-import { loadDocs } from '../../storage/storage';
+import { getAnalysis } from '../../api';
 import logger from '../../utils/db-logger';
 import { notifyTrade } from '../../utils/notify';
 import { executeTrade } from '../binance/utils/index';
@@ -40,7 +40,7 @@ export async function tradingEngine({
   if (!cooldownHub.isStarted()) cooldownHub.start();
 
   const lookback = strategy?.entry?.lookback || 3;
-  const analysisHistory = (await loadDocs('analysis', symbol, lookback)) as
+  const analysisHistory = (await getAnalysis(symbol, lookback)) as
     | IAnalysis[]
     | null;
   const entryPrice = await getRealtimeMark(symbol);

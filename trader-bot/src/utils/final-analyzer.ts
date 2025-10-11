@@ -12,7 +12,7 @@ import {
   analyzeTrendRegime,
   analyzeVolatility,
 } from '../analize-modules/index';
-import { saveDoc } from '../storage/storage';
+import { submitAnalysis } from '../api';
 import type { BinanceKline, Candle } from '../types/index';
 
 import logger from './db-logger';
@@ -230,6 +230,6 @@ export async function finalAnalyzer({
     decision,
   };
 
-  await saveDoc('analysis', result as IAnalysis);
+  await submitAnalysis(result as IAnalysis);
   return result;
 }

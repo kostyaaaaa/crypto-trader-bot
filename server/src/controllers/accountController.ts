@@ -3,8 +3,8 @@ import { getAccountFuturesBalance } from '../api/futures/futures.js';
 import { FuturesAccountResponse } from '../api/futures/futures.type.js';
 import { getPnL } from '../api/pnl/pnl.js';
 import { PnLSummaryResponse } from '../api/pnl/pnl.type.js';
+import { ApiErrorResponse } from '../types/index.js';
 import logger from '../utils/Logger.js';
-import { ApiErrorResponse } from './common.type.js';
 
 // Get futures account balance
 const getFuturesBalance = async (

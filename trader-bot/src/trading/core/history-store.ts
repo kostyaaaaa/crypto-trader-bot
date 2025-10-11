@@ -6,7 +6,7 @@ import type {
   ITakeProfit,
 } from 'crypto-trader-db';
 import { Types } from 'mongoose';
-import { loadDocs, saveDoc, updateDoc } from '../../storage/storage';
+import { createPosition, getPositions, updatePosition } from '../../api';
 import logger from '../../utils/db-logger';
 import { notifyTrade } from '../../utils/notify';
 import { getPosition, getUserTrades } from '../binance/binance-functions/index';
@@ -67,8 +67,8 @@ const asWithId = <T extends object>(x: T): WithMongoId<T> =>
 export async function getOpenPosition(
   symbol: string,
 ): Promise<IPosition | null> {
-  const db = (await loadDocs(COLLECTION, symbol)) as IPosition[];
-  return db.find((p) => p.symbol === symbol && p.status === 'OPEN') || null;
+  const docs = await getPositions(symbol, 1);
+  return docs.find((p) => p.symbol === symbol && p.status === 'OPEN') || null;
 }
 
 interface OpenPositionArgs {
@@ -152,7 +152,7 @@ export async function openPosition(
   };
 
   try {
-    await saveDoc(COLLECTION, newPos);
+    await createPosition(newPos);
   } catch (e: unknown) {
     logger.error(`❌ openPosition save failed for ${symbol}: ${errMsg(e)}`);
   }
@@ -192,18 +192,29 @@ export async function addToPosition(
     pnl: 0,
   };
 
-  const incOps: Record<string, number> = { size: addNotional };
-  if (feeNum) incOps.fees = feeNum;
+  const posId = String(asWithId(pos)._id);
 
-  const posId = asWithId(pos)._id;
-
-  await updateDoc(COLLECTION, { _id: posId } as unknown as Partial<IPosition>, {
-    $inc: incOps,
-    $push: {
-      adds: { qty: q, price: effectivePrice, ts },
-      executions: exec,
+  // Update position with add data
+  const newSize = (pos.size || 0) + addNotional;
+  const newFees = (pos.fees || 0) + feeNum;
+  const newAdds = [
+    ...(pos.adds || []),
+    {
+      size: addNotional,
+      fees: feeNum,
+      qty: q,
+      price: effectivePrice,
+      ts,
     },
-    $set: { updatedAt: new Date() },
+  ];
+  const newExecutions = [...(pos.executions || []), exec];
+
+  await updatePosition(posId, {
+    size: newSize,
+    fees: newFees,
+    adds: newAdds,
+    executions: newExecutions,
+    updatedAt: new Date(),
   });
 
   return true;
@@ -315,13 +326,52 @@ export async function adjustPosition(
     }
   }
 
-  const posId = asWithId(pos)._id;
-  await updateDoc(
-    COLLECTION,
-    { _id: posId } as unknown as Partial<IPosition>,
-    update,
-  );
-  return { ...pos, adjustments: newAdjustments };
+  const posId = String(asWithId(pos)._id);
+
+  // Prepare update data
+  const updateData: Partial<IPosition> = {
+    adjustments: newAdjustments,
+  };
+
+  // Handle $set fields
+  const updateSet = (update as any).$set;
+  if (updateSet) {
+    if (updateSet.stopPrice !== undefined)
+      updateData.stopPrice = updateSet.stopPrice;
+    if (updateSet.takeProfits !== undefined)
+      updateData.takeProfits = updateSet.takeProfits;
+    if (updateSet.status !== undefined) updateData.status = updateSet.status;
+    if (updateSet.closedAt !== undefined)
+      updateData.closedAt = updateSet.closedAt;
+    if (updateSet.closedBy !== undefined)
+      updateData.closedBy = updateSet.closedBy;
+    if (updateSet.finalPnl !== undefined)
+      updateData.finalPnl = updateSet.finalPnl;
+    if (updateSet.size !== undefined) updateData.size = updateSet.size;
+  }
+
+  // Handle $inc fields
+  const updateInc = (update as any).$inc;
+  if (updateInc) {
+    if (updateInc.realizedPnl !== undefined)
+      updateData.realizedPnl = (pos.realizedPnl || 0) + updateInc.realizedPnl;
+    if (updateInc.fees !== undefined)
+      updateData.fees = (pos.fees || 0) + updateInc.fees;
+  }
+
+  // Handle $push fields
+  const updatePush = (update as any).$push;
+  if (updatePush) {
+    if (updatePush.executions) {
+      const execToPush = (updatePush.executions as any).$each
+        ? (updatePush.executions as any).$each
+        : [updatePush.executions];
+      updateData.executions = [...(pos.executions || []), ...execToPush];
+    }
+  }
+
+  await updatePosition(posId, updateData);
+  return { ...pos, ...updateData };
 }
 
 // Закриття позиції з історією
@@ -354,21 +404,23 @@ export async function closePositionHistory(
     }
   }
 
-  const posId = asWithId(pos)._id;
-  await updateDoc(COLLECTION, { _id: posId } as unknown as Partial<IPosition>, {
-    $set: {
-      status: 'CLOSED',
-      closedAt: new Date(),
-      finalPnl: round(finalPnl, 8),
-      closedBy,
-    },
+  const posId = String(asWithId(pos)._id);
+  const closedAt = new Date();
+  const roundedPnl = round(finalPnl, 8);
+
+  await updatePosition(posId, {
+    adjustments: pos.adjustments || [],
+    status: 'CLOSED',
+    closedAt,
+    finalPnl: roundedPnl,
+    closedBy,
   });
 
   return {
     ...pos,
     status: 'CLOSED',
-    closedAt: new Date(),
-    finalPnl: round(finalPnl, 8),
+    closedAt,
+    finalPnl: roundedPnl,
     closedBy,
   };
 }
@@ -378,12 +430,12 @@ export async function getHistory(
   symbol: string,
   limit = 50,
 ): Promise<IPosition[]> {
-  return (await loadDocs(COLLECTION, symbol, limit)) as IPosition[];
+  return (await getPositions(symbol, limit)) as IPosition[];
 }
 
 // Синхронізація локальних OPEN із live-станом Binance
 export async function reconcilePositions(): Promise<IPosition[]> {
-  const all = (await loadDocs(COLLECTION)) as IPosition[];
+  const all = (await getPositions()) as IPosition[];
   const openPositions = all.filter((p) => p.status === 'OPEN');
   const closed: IPosition[] = [];
 
@@ -427,9 +479,11 @@ export async function updateStopPrice(
   if (newAdjustments.length > 20)
     newAdjustments.splice(0, newAdjustments.length - 20);
 
-  const posId = asWithId(pos)._id;
-  await updateDoc(COLLECTION, { _id: posId } as unknown as Partial<IPosition>, {
-    $set: { stopPrice: price, adjustments: newAdjustments },
+  const posId = String(asWithId(pos)._id);
+
+  await updatePosition(posId, {
+    adjustments: newAdjustments,
+    stopPrice: price,
   });
 
   return { ...pos, stopPrice: price, adjustments: newAdjustments };
@@ -458,9 +512,11 @@ export async function updateTakeProfits(
     filled: false,
   }));
 
-  const posId = asWithId(pos)._id;
-  await updateDoc(COLLECTION, { _id: posId } as unknown as Partial<IPosition>, {
-    $set: { takeProfits: mapped, adjustments: newAdjustments },
+  const posId = String(asWithId(pos)._id);
+
+  await updatePosition(posId, {
+    adjustments: newAdjustments,
+    takeProfits: mapped,
   });
 
   return { ...pos, takeProfits: mapped, adjustments: newAdjustments };
