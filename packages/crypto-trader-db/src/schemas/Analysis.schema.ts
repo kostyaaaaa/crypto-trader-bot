@@ -133,6 +133,8 @@ export interface IRsiVolTrendMeta {
   deadZone?: number;
   candleOpen?: string;
   candleDurationMs?: number;
+  rsiBoostLong?: number;
+  rsiBoostShort?: number;
 }
 
 export interface IChoppinessMeta {
