@@ -1,5 +1,6 @@
 import { ILiquidations, LiquidationsModel } from 'crypto-trader-db';
 import { Request, Response } from 'express';
+import type { FilterQuery } from 'mongoose';
 import { DB_MAX_DOCUMENTS } from '../constants/database.js';
 import { ApiErrorResponse, ApiResponse, ListResponse } from '../types/index.js';
 import logger from '../utils/Logger.js';
@@ -56,19 +57,56 @@ export const getLiquidations = async (
   res: Response<ListResponse<ILiquidations> | ApiErrorResponse>,
 ): Promise<void> => {
   try {
-    const { symbol, limit } = req.query;
+    const { symbol, limit, dateFrom, dateTo } = req.query as {
+      symbol?: string;
+      limit?: string;
+      dateFrom?: string;
+      dateTo?: string;
+    };
 
-    const query = symbol ? { symbol } : {};
-    const limitNum = limit ? parseInt(limit as string, 10) : 100;
+    // Build query with optional symbol and date range
+    const query: FilterQuery<ILiquidations> = {};
+    if (symbol) query.symbol = String(symbol);
+
+    if (dateFrom || dateTo) {
+      if (!dateFrom || !dateTo) {
+        res.status(400).json({
+          error: 'Missing parameters',
+          message:
+            'Both dateFrom and dateTo are required when using date filtering',
+        });
+        return;
+      }
+      const startDate = new Date(dateFrom);
+      const endDate = new Date(dateTo);
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        res.status(400).json({
+          error: 'Invalid date format',
+          message:
+            'Please provide valid ISO timestamp strings for dateFrom and dateTo',
+        });
+        return;
+      }
+      if (startDate >= endDate) {
+        res.status(400).json({
+          error: 'Invalid date range',
+          message: 'dateFrom must be earlier than dateTo',
+        });
+        return;
+      }
+      query.time = { $gte: startDate, $lte: endDate } as any;
+    }
+
+    const limitNum = Math.min(Number(limit ?? 100), 1000); // safety cap
 
     const docs = await LiquidationsModel.find(query)
-      .sort({ time: -1 })
+      .sort({ time: -1, _id: -1 }) // latest first, stable tie-breaker
       .limit(limitNum)
       .lean()
       .exec();
 
     logger.success(
-      `Successfully loaded ${docs.length} liquidations documents${symbol ? ` for symbol ${symbol}` : ''}`,
+      `Loaded ${docs.length} liquidations docs (latest first by time)${symbol ? ` for symbol ${symbol}` : ''}${dateFrom ? ` from ${dateFrom} to ${dateTo}` : ''}`,
     );
 
     res.json({
