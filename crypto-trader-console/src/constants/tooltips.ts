@@ -87,10 +87,16 @@ export const TIPS: Record<string, string> = {
     'Дозволена різниця між LONG і SHORT скором, щоб прийняти сторону. Менше — суворіше.',
 
   // ====== STRATEGY — VOLATILITY FILTER ======
-  'strategy.volatilityFilter.deadBelow':
-    'ATR% нижче якого ринок вважаємо DEAD (млявий).',
-  'strategy.volatilityFilter.extremeAbove':
-    'ATR% вище якого ринок EXTREME (ризик ривків/слипейджу).',
+  'strategy.volatilityFilter.minThreshold':
+    'Min ATR% threshold - below this level, volatility is too low (INACTIVE).',
+  'strategy.volatilityFilter.maxThreshold':
+    'Max ATR% threshold - above this level, volatility is too high (INACTIVE).',
+
+  // ====== STRATEGY — LIQUIDATIONS FILTER ======
+  'strategy.liquidationsFilter.minThreshold':
+    'Min liquidations threshold - below this level, liquidation activity is too low (INACTIVE).',
+  'strategy.liquidationsFilter.maxThreshold':
+    'Max liquidations threshold - above this level, liquidation activity is too extreme (INACTIVE).',
 
   // ====== STRATEGY — CAPITAL ======
   'strategy.capital.account':

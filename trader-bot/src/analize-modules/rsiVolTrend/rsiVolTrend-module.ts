@@ -62,10 +62,9 @@ export async function analyzeRsiVolumeTrend(
 
   if (!Array.isArray(candles) || candles.length < needBars) {
     return {
+      type: 'scoring',
       module: 'rsiVolTrend',
       symbol,
-      signal: 'NEUTRAL',
-      strength: 0,
       meta: {
         LONG: 0,
         SHORT: 0,
@@ -101,10 +100,9 @@ export async function analyzeRsiVolumeTrend(
 
   if (!avgVol || !lastVol) {
     return {
+      type: 'scoring',
       module: 'rsiVolTrend',
       symbol,
-      signal: 'NEUTRAL',
-      strength: 0,
       meta: {
         LONG: 0,
         SHORT: 0,
@@ -165,19 +163,12 @@ export async function analyzeRsiVolumeTrend(
   SHORT = applyVolumeDamping(SHORT, volRatio);
 
   const deadZone = volRatio > 1.5 ? 5 : 15;
-  let signal: string = 'NEUTRAL';
-  if (Math.abs(LONG - SHORT) >= deadZone) {
-    signal = LONG > SHORT ? 'LONG' : 'SHORT';
-  }
-
-  const strength = Math.max(LONG, SHORT);
 
   // ---------- output ----------
   return {
+    type: 'scoring',
     module: 'rsiVolTrend',
     symbol,
-    signal,
-    strength: Number(strength.toFixed(2)),
     meta: {
       LONG: Number(LONG.toFixed(2)),
       SHORT: Number(SHORT.toFixed(2)),
@@ -203,6 +194,8 @@ export async function analyzeRsiVolumeTrend(
       deadZone,
       candleOpen: lastCandle.time,
       candleDurationMs: durationMs,
+      rsiBoostLong,
+      rsiBoostShort,
     },
   };
 }

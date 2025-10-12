@@ -187,7 +187,11 @@ export async function preparePosition(
     analysis: (analysis as any)?._id ?? null,
     context: {
       volatilityStatus: volMeta.regime ?? null,
-      trendRegimeSignal: analysis?.modules?.trendRegime?.signal ?? null,
+      trendRegimeScores: {
+        LONG: Number((analysis as any)?.modules?.trendRegime?.meta?.LONG) || 0,
+        SHORT:
+          Number((analysis as any)?.modules?.trendRegime?.meta?.SHORT) || 0,
+      },
       atr: Number.isFinite(atr) ? atr : null,
       atrAbs: Number.isFinite(atr) ? atr : null,
       atrPct: Number.isFinite(atrPct) ? atrPct : null,

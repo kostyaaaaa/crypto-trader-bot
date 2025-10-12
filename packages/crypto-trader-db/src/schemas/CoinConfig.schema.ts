@@ -100,8 +100,13 @@ export interface ITrailingConfig {
   trailStepPct: number;
 }
 export interface IVolatilityFilterConfig {
-  deadBelow: number;
-  extremeAbove: number;
+  minThreshold: number;
+  maxThreshold: number;
+}
+
+export interface ILiquidationsFilterConfig {
+  minThreshold: number;
+  maxThreshold: number;
 }
 
 export interface IExitsConfig {
@@ -118,6 +123,7 @@ export interface IStrategyConfig {
   sizing: ISizingConfig;
   exits: IExitsConfig;
   volatilityFilter: IVolatilityFilterConfig;
+  liquidationsFilter: ILiquidationsFilterConfig;
 }
 
 // Main coin configuration interface
@@ -310,8 +316,16 @@ const exitsConfigSchema = new Schema(
 );
 const volatilityFilterSchema = new Schema(
   {
-    deadBelow: { type: Number, required: true },
-    extremeAbove: { type: Number, required: true },
+    minThreshold: { type: Number, required: true },
+    maxThreshold: { type: Number, required: true },
+  },
+  { _id: false },
+);
+
+const liquidationsFilterSchema = new Schema(
+  {
+    minThreshold: { type: Number, required: true },
+    maxThreshold: { type: Number, required: true },
   },
   { _id: false },
 );
@@ -319,6 +333,7 @@ const strategyConfigSchema = new Schema(
   {
     entry: { type: entryConfigSchema, required: true },
     volatilityFilter: { type: volatilityFilterSchema, required: true },
+    liquidationsFilter: { type: liquidationsFilterSchema, required: true },
     capital: { type: capitalConfigSchema, required: true },
     sizing: { type: sizingConfigSchema, required: true },
     exits: { type: exitsConfigSchema, required: true },

@@ -54,7 +54,8 @@ export const scalpingPreset: TCoinConfig = {
       avoidWhen: { volatility: 'DEAD' },
       sideBiasTolerance: 2,
     },
-    volatilityFilter: { deadBelow: 0.08, extremeAbove: 3.5 },
+    volatilityFilter: { minThreshold: 0.08, maxThreshold: 3.5 },
+    liquidationsFilter: { minThreshold: 5000, maxThreshold: 500000 },
     capital: {
       account: 100,
       riskPerTradePct: 5,

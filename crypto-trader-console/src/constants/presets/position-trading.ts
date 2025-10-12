@@ -54,7 +54,8 @@ export const positionTradingPreset: TCoinConfig = {
       avoidWhen: { volatility: 'DEAD' },
       sideBiasTolerance: 10,
     },
-    volatilityFilter: { deadBelow: 0.8, extremeAbove: 6.0 },
+    volatilityFilter: { minThreshold: 0.8, maxThreshold: 6.0 },
+    liquidationsFilter: { minThreshold: 50000, maxThreshold: 2000000 },
     capital: {
       account: 100,
       riskPerTradePct: 5,

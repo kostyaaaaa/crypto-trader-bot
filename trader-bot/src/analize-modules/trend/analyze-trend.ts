@@ -41,39 +41,34 @@ export async function analyzeTrend(
     ? ((((emaFast as number) - emaSlow) as number) / (emaSlow as number)) * 100
     : 0;
 
-  let longScore = 50;
-  let shortScore = 50;
+  // Calculate independent scores for LONG and SHORT (0-100 each)
+  let longScore = 0;
+  let shortScore = 0;
 
   const gapAbs = Math.abs(emaGapPct);
   const gapEff = gapAbs < 0.1 ? 0 : gapAbs;
+
+  // EMA contribution (0-60 points)
   if (emaGapPct > 0) {
-    longScore += Math.min(30, gapEff * 5);
-    shortScore -= Math.min(30, gapEff * 5);
+    longScore += Math.min(60, gapEff * 10);
   } else if (emaGapPct < 0) {
-    shortScore += Math.min(30, gapEff * 5);
-    longScore -= Math.min(30, gapEff * 5);
+    shortScore += Math.min(60, gapEff * 10);
   }
 
+  // RSI contribution (0-40 points)
   if (rsiUsed < 30) {
-    longScore += 20;
-    shortScore -= 20;
+    longScore += Math.min(40, (30 - rsiUsed) * 1.33);
   } else if (rsiUsed > 70) {
-    shortScore += 20;
-    longScore -= 20;
+    shortScore += Math.min(40, (rsiUsed - 70) * 1.33);
   }
 
   longScore = Math.max(0, Math.min(100, longScore));
   shortScore = Math.max(0, Math.min(100, shortScore));
 
-  let signal: string = 'NEUTRAL';
-  if (longScore > shortScore) signal = 'LONG';
-  else if (shortScore > longScore) signal = 'SHORT';
-
   return {
+    type: 'scoring',
     module: 'trend',
     symbol,
-    signal,
-    strength: Math.max(longScore, shortScore),
     meta: {
       LONG: longScore,
       SHORT: shortScore,

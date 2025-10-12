@@ -109,10 +109,29 @@ export async function finalAnalyzer({
     candles,
     volWindow,
     (strategy as IStrategyConfig).volatilityFilter || {
-      deadBelow: 0.2,
-      extremeAbove: 2.5,
+      minThreshold: 0.2,
+      maxThreshold: 2.5,
     },
   )) as IVolatilityModule | null;
+
+  modules.liquidations = (await analyzeLiquidations(
+    symbol,
+    (strategy as IStrategyConfig).liquidationsFilter || {
+      minThreshold: 10000,
+      maxThreshold: 1000000,
+    },
+  )) as ILiquidationsModule | null;
+
+  // Check validation modules first - if any return INACTIVE, we can't trade
+  const validationModules = [modules.volatility, modules.liquidations];
+  for (const module of validationModules) {
+    if (module && module.signal === 'INACTIVE') {
+      logger.warn(
+        `⚠️ ${symbol} blocked by ${module.module} validation (${module.signal})`,
+      );
+      return null;
+    }
+  }
 
   modules.trendRegime = (await analyzeTrendRegime(symbol, candles, {
     period: 14,
@@ -129,10 +148,6 @@ export async function finalAnalyzer({
     liqWindow,
     lastPrice,
   )) as ILiquidityModule | null;
-
-  modules.liquidations = (await analyzeLiquidations(
-    symbol,
-  )) as ILiquidationsModule | null;
 
   modules.openInterest = (await analyzeOpenInterest(
     symbol,
@@ -157,15 +172,25 @@ export async function finalAnalyzer({
     },
   )) as IHigherMAModule | null;
 
-  // --- скоринг ---
+  // --- скоринг (only scoring modules, not validation) ---
+  const scoringModuleNames = [
+    'trend',
+    'trendRegime',
+    'liquidity',
+    'openInterest',
+    'longShort',
+    'higherMA',
+    'rsiVolTrend',
+  ];
+
   function weightedScore(side: 'LONG' | 'SHORT'): number {
-    return Object.entries(modules).reduce((acc, [, v]) => {
-      if (!v) return acc;
+    return Object.entries(modules).reduce((acc, [key, v]) => {
+      if (!v || !scoringModuleNames.includes(key)) return acc; // Skip validation modules
       const value = Number(v.meta?.[side]) || 0;
-      const key = v.module as keyof typeof weights;
-      const threshold = Number(moduleThresholds[key]) || 0;
+      const moduleKey = v.module as keyof typeof weights;
+      const threshold = Number(moduleThresholds[moduleKey]) || 0;
       if (value < threshold) return acc;
-      const w = Number(weights[key]) || 0;
+      const w = Number(weights[moduleKey]) || 0;
       return acc + value * w;
     }, 0);
   }
@@ -192,9 +217,15 @@ export async function finalAnalyzer({
         ? 'SHORT'
         : 'NEUTRAL';
 
-  const filledModules = Object.values(modules).filter(
-    (m) => m && (Number(m.meta?.LONG) || 0) + (Number(m.meta?.SHORT) || 0) > 0,
-  ).length;
+  // Count only scoring modules with non-zero scores
+  const filledModules = Object.entries(modules).filter(([key, m]) => {
+    if (!m || !scoringModuleNames.includes(key)) return false;
+    const longScore = Number(m.meta?.LONG) || 0;
+    const shortScore = Number(m.meta?.SHORT) || 0;
+    return longScore > 0 || shortScore > 0;
+  }).length;
+
+  const totalScoringModules = scoringModuleNames.length;
 
   const result: IAnalysis = {
     time: new Date(),
@@ -205,7 +236,7 @@ export async function finalAnalyzer({
       LONG: Number(scoreLONG.toFixed(1)),
       SHORT: Number(scoreSHORT.toFixed(1)),
     },
-    coverage: `${filledModules}/${Object.keys(modules).length}`,
+    coverage: `${filledModules}/${totalScoringModules}`,
     bias,
     decision,
   };

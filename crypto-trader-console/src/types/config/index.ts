@@ -40,8 +40,12 @@ export type TCoinConfig = {
       sideBiasTolerance: number;
     };
     volatilityFilter: {
-      deadBelow: number;
-      extremeAbove: number;
+      minThreshold: number;
+      maxThreshold: number;
+    };
+    liquidationsFilter: {
+      minThreshold: number;
+      maxThreshold: number;
     };
     capital: {
       account: number;

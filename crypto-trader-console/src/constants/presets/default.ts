@@ -58,8 +58,12 @@ export const defaultPreset: TCoinConfig = {
       sideBiasTolerance: 5,
     },
     volatilityFilter: {
-      deadBelow: 0.25,
-      extremeAbove: 2.5,
+      minThreshold: 0.25,
+      maxThreshold: 2.5,
+    },
+    liquidationsFilter: {
+      minThreshold: 10000,
+      maxThreshold: 1000000,
     },
     capital: {
       account: 100,

@@ -53,7 +53,8 @@ export const dayTradingPreset: TCoinConfig = {
       sideBiasTolerance: 8,
       lookback: 3,
     },
-    volatilityFilter: { deadBelow: 0.3, extremeAbove: 1.6 },
+    volatilityFilter: { minThreshold: 0.3, maxThreshold: 1.6 },
+    liquidationsFilter: { minThreshold: 10000, maxThreshold: 800000 },
     capital: {
       account: 100,
       riskPerTradePct: 10,
