@@ -1,18 +1,4 @@
-export type Side = 'LONG' | 'SHORT';
-export type VolRegime = 'DEAD' | 'EXTREME' | 'NORMAL' | string;
-
-export interface AutoTPParams {
-  entryPrice: number;
-  side: Side; // 'LONG' | 'SHORT'
-  atr?: number | null; // може бути null
-  stopPrice?: number | null; // може бути null
-  regime?: VolRegime; // 'DEAD' | 'EXTREME' | інше
-}
-
-export interface TakeProfitItem {
-  price: number;
-  sizePct: number; // 0..100
-}
+import type { AutoTPParams, TakeProfitItem } from '../../types';
 
 export function autoTakeProfits({
   entryPrice,

@@ -1,6 +1,6 @@
+import type { FuturesPositionRisk } from '../../../types';
 import logger from '../../../utils/db-logger';
 import { client } from './client';
-import type { FuturesPositionRisk } from './types';
 
 export async function getOpenPositions(): Promise<FuturesPositionRisk[]> {
   try {

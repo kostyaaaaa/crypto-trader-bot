@@ -5,7 +5,7 @@ import type {
   LiveState,
   LiveStateFlat,
   Side,
-} from '../../types/binance-res';
+} from '../../types';
 import logger from '../../utils/db-logger';
 import {
   adjustPrice,
@@ -40,13 +40,13 @@ export async function getActivePositions(
     ? [
         {
           side: position.side as Side,
-          entryPrice: position.entryPrice ?? null,
+          entryPrice: Number(position.entryPrice) || null,
           size: Number(position.size) || 0,
-          leverage: position.leverage ?? null,
-          unRealizedProfit: position.unRealizedProfit ?? null,
-          isolatedMargin: position.isolatedMargin ?? null,
-          initialMargin: position.initialMargin ?? null,
-          markPrice: position.markPrice ?? null,
+          leverage: Number(position.leverage) || null,
+          unRealizedProfit: Number(position.unRealizedProfit) || null,
+          isolatedMargin: Number(position.isolatedMargin) || null,
+          initialMargin: Number(position.initialMargin) || null,
+          markPrice: Number(position.markPrice) || null,
           orders: (orders || []).map((o) => ({
             type: o.type,
             price: o.price,
