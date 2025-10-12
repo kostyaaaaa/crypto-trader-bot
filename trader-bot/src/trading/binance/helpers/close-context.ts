@@ -69,6 +69,9 @@ export async function maybeFinalizeClose(symbol: string): Promise<boolean> {
     const ctx = _closeCtx.get(symbol);
     if (!ctx || ctx.closed) return false;
 
+    // Mark as closed immediately to prevent concurrent calls from duplicating
+    ctx.closed = true;
+
     const finalGross = n(ctx.tp) + n(ctx.sl) + n(ctx.leftover);
 
     const closed = await closePositionHistory(symbol, { closedBy: 'SL' });
@@ -90,7 +93,6 @@ export async function maybeFinalizeClose(symbol: string): Promise<boolean> {
       await notifyTrade(closed as any, 'CLOSED');
     }
 
-    ctx.closed = true;
     _closeCtx.delete(symbol);
     return true;
   } catch (e) {
