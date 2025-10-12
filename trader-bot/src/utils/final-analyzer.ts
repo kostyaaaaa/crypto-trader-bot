@@ -1,7 +1,5 @@
 import axios from 'axios';
 import {
-  analyzeChoppiness,
-  analyzeFunding,
   analyzeHigherMA,
   analyzeLiquidations,
   analyzeLiquidity,
@@ -21,8 +19,6 @@ import type {
   IAnalysis,
   IAnalysisConfig,
   IAnalysisModules,
-  IChoppinessModule,
-  IFundingModule,
   IHigherMAModule,
   ILiquidationsModule,
   ILiquidityModule,
@@ -49,7 +45,6 @@ export async function finalAnalyzer({
     candleTimeframe = '1m',
     oiWindow = 10,
     liqWindow = 20,
-    fundingWindow = 60,
     volWindow = 14,
     corrWindow = 5,
     longShortWindow = 5,
@@ -65,7 +60,6 @@ export async function finalAnalyzer({
       volWindow,
       corrWindow,
       oiWindow,
-      fundingWindow,
       longShortWindow,
       neededRsiVol,
     ) + 5;
@@ -101,21 +95,15 @@ export async function finalAnalyzer({
     volatility: null,
     trendRegime: null,
     liquidity: null,
-    funding: null,
     liquidations: null,
     openInterest: null,
     longShort: null,
     higherMA: null,
     rsiVolTrend: null,
-    choppiness: null,
   };
 
   modules.trend = (await analyzeTrend(symbol, candles)) as ITrendModule | null;
 
-  modules.choppiness = (await analyzeChoppiness(
-    symbol,
-    21,
-  )) as IChoppinessModule | null;
   modules.volatility = (await analyzeVolatility(
     symbol,
     candles,
@@ -141,11 +129,6 @@ export async function finalAnalyzer({
     liqWindow,
     lastPrice,
   )) as ILiquidityModule | null;
-
-  modules.funding = (await analyzeFunding(
-    symbol,
-    fundingWindow,
-  )) as IFundingModule | null;
 
   modules.liquidations = (await analyzeLiquidations(
     symbol,

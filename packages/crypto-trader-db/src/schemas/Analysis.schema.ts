@@ -61,14 +61,6 @@ export interface ILiquidityMeta {
   SHORT: number;
 }
 
-export interface IFundingMeta {
-  LONG: number;
-  SHORT: number;
-  candlesUsed: number;
-  avgFunding: number;
-  periodCovered: string;
-}
-
 export interface IOpenInterestMeta {
   LONG: number;
   SHORT: number;
@@ -137,15 +129,6 @@ export interface IRsiVolTrendMeta {
   rsiBoostShort?: number;
 }
 
-export interface IChoppinessMeta {
-  LONG: number;
-  SHORT: number;
-  chop: number | null;
-  candlesUsed: number;
-  period: number;
-  interpretation: string;
-}
-
 // Module interfaces
 export interface IModuleBase {
   module: string;
@@ -170,9 +153,6 @@ export interface ILiquidityModule extends IModuleBase {
   meta: ILiquidityMeta;
 }
 
-export interface IFundingModule extends IModuleBase {
-  meta: IFundingMeta;
-}
 export interface ILiquidationsModule extends IModuleBase {
   meta: ILiquidationsMeta;
 }
@@ -207,16 +187,11 @@ export interface IAnalysisModules {
   volatility: IVolatilityModule | null;
   trendRegime: ITrendRegimeModule | null;
   liquidity: ILiquidityModule | null;
-  funding: IFundingModule | null;
   liquidations: ILiquidationsModule | null;
   openInterest: IOpenInterestModule | null;
   longShort: ILongShortModule | null;
   higherMA: IHigherMAModule | null;
   rsiVolTrend: IRsiVolTrendModule | null;
-  choppiness: IChoppinessModule | null;
-}
-export interface IChoppinessModule extends IModuleBase {
-  meta: IChoppinessMeta;
 }
 
 // Scores interface
@@ -327,17 +302,6 @@ const liquidityModuleSchema = new Schema(
   { _id: false },
 );
 
-const fundingMetaSchema = new Schema(
-  {
-    LONG: { type: Number, required: true },
-    SHORT: { type: Number, required: true },
-    candlesUsed: { type: Number, required: true },
-    avgFunding: { type: Number, required: true },
-    periodCovered: { type: String, required: true },
-  },
-  { _id: false },
-);
-
 const openInterestMetaSchema = new Schema(
   {
     LONG: { type: Number, required: true },
@@ -420,18 +384,6 @@ const rsiVolTrendMetaSchema = new Schema(
   { _id: false },
 );
 
-const choppinessMetaSchema = new Schema(
-  {
-    LONG: { type: Number, required: true },
-    SHORT: { type: Number, required: true },
-    chop: { type: Number, required: true },
-    candlesUsed: { type: Number, required: true },
-    period: { type: Number, required: true },
-    interpretation: { type: String, required: true },
-  },
-  { _id: false },
-);
-
 const trendModuleSchema = new Schema(
   {
     module: { type: String, required: true },
@@ -461,17 +413,6 @@ const trendRegimeModuleSchema = new Schema(
     signal: { type: String, required: true },
     strength: { type: Number, required: true },
     meta: { type: trendRegimeMetaSchema, required: true },
-  },
-  { _id: false },
-);
-
-const fundingModuleSchema = new Schema(
-  {
-    module: { type: String, required: true },
-    symbol: { type: String, required: true },
-    signal: { type: String, required: true },
-    strength: { type: Number, required: true },
-    meta: { type: fundingMetaSchema, required: true },
   },
   { _id: false },
 );
@@ -544,17 +485,6 @@ const rsiVolTrendModuleSchema = new Schema(
   { _id: false },
 );
 
-const choppinessModuleSchema = new Schema(
-  {
-    module: { type: String, required: true },
-    symbol: { type: String, required: true },
-    signal: { type: String, required: true },
-    strength: { type: Number, required: true },
-    meta: { type: choppinessMetaSchema, required: true },
-  },
-  { _id: false },
-);
-
 const analysisModulesSchema = new Schema(
   {
     trend: { type: trendModuleSchema, required: false, default: null },
@@ -569,7 +499,6 @@ const analysisModulesSchema = new Schema(
       default: null,
     },
     liquidity: { type: liquidityModuleSchema, required: false, default: null },
-    funding: { type: fundingModuleSchema, required: false, default: null },
     liquidations: {
       type: liquidationsModuleSchema,
       required: false,
@@ -582,7 +511,6 @@ const analysisModulesSchema = new Schema(
     },
     longShort: { type: longShortModuleSchema, required: false, default: null },
     higherMA: { type: higherMAModuleSchema, required: false, default: null },
-    choppiness: { type: choppinessModuleSchema, required: true, default: null },
     rsiVolTrend: {
       type: rsiVolTrendModuleSchema,
       required: false,

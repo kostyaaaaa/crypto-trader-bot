@@ -167,23 +167,6 @@ export function validateSpread(ctx: ValidationContext): boolean {
 }
 
 /**
- * Validates funding rate is not extreme
- */
-export function validateFunding(ctx: ValidationContext): boolean {
-  const { symbol, analysis, strategy } = ctx;
-  const { modules } = analysis;
-
-  const fr = Number(modules?.funding?.meta?.avgFunding ?? 0);
-  const absOver = strategy.entry.avoidWhen?.fundingExtreme?.absOver;
-
-  if (absOver && Math.abs(fr) > absOver) {
-    logger.info(`⏸️ ${symbol}: skip, funding extreme abs(${fr}) > ${absOver}`);
-    return false;
-  }
-  return true;
-}
-
-/**
  * Runs all entry validators
  * @returns true if all validations pass, false otherwise
  */
@@ -196,7 +179,6 @@ export function validateEntry(ctx: ValidationContext): boolean {
     validateSideBias,
     validateVolatility,
     validateSpread,
-    validateFunding,
   ];
 
   for (const validator of validators) {

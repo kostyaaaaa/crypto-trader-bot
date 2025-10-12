@@ -8,7 +8,6 @@ export const scalpingPreset: TCoinConfig = {
     oiWindow: 10,
     liqWindow: 10,
     liqSentWindow: 5,
-    fundingWindow: 1,
     volWindow: 14,
     corrWindow: 5,
     longShortWindow: 5,
@@ -25,7 +24,6 @@ export const scalpingPreset: TCoinConfig = {
       trend: 0.157,
       trendRegime: 0.05,
       liquidity: 0.176,
-      funding: 0.0,
       liquidations: 0.157,
       openInterest: 0.44,
 
@@ -37,7 +35,6 @@ export const scalpingPreset: TCoinConfig = {
       trend: 25,
       trendRegime: 12,
       liquidity: 5,
-      funding: 10,
       liquidations: 5,
       openInterest: 10,
 
@@ -54,7 +51,7 @@ export const scalpingPreset: TCoinConfig = {
       maxSpreadPct: 0.02,
       cooldownMin: 2,
       lookback: 3,
-      avoidWhen: { volatility: 'DEAD', fundingExtreme: { absOver: 0.08 } },
+      avoidWhen: { volatility: 'DEAD' },
       sideBiasTolerance: 2,
     },
     volatilityFilter: { deadBelow: 0.08, extremeAbove: 3.5 },

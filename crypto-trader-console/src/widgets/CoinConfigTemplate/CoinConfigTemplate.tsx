@@ -239,13 +239,6 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
               control={control}
             />
             <FormField
-              name="analysisConfig.fundingWindow"
-              label="Funding Window"
-              type="number"
-              register={register}
-              control={control}
-            />
-            <FormField
               name="analysisConfig.volWindow"
               label="Vol Window"
               type="number"
@@ -422,13 +415,6 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
               name="strategy.entry.avoidWhen.volatility"
               label="Avoid Volatility"
               type="string"
-              register={register}
-              control={control}
-            />
-            <FormField
-              name="strategy.entry.avoidWhen.fundingExtreme.absOver"
-              label="Avoid FundingExtreme AbsOver"
-              type="number"
               register={register}
               control={control}
             />
@@ -670,7 +656,6 @@ const moduleKeys = [
   'trend',
   'trendRegime',
   'liquidity',
-  'funding',
   'liquidations',
   'openInterest',
   'longShort',

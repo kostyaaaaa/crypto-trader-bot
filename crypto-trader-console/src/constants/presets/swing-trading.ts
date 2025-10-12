@@ -8,7 +8,6 @@ export const swingTradingPreset: TCoinConfig = {
     oiWindow: 40,
     liqWindow: 40,
     liqSentWindow: 12,
-    fundingWindow: 72,
     volWindow: 30,
     corrWindow: 15,
     longShortWindow: 15,
@@ -25,7 +24,6 @@ export const swingTradingPreset: TCoinConfig = {
       trend: 0.35,
       trendRegime: 0.25,
       liquidity: 0.15,
-      funding: 0.05,
       liquidations: 0.08,
       openInterest: 0.08,
 
@@ -37,7 +35,6 @@ export const swingTradingPreset: TCoinConfig = {
       trend: 25,
       trendRegime: 20,
       liquidity: 15,
-      funding: 12,
       liquidations: 10,
       openInterest: 10,
 
@@ -54,7 +51,7 @@ export const swingTradingPreset: TCoinConfig = {
       maxSpreadPct: 0.04,
       cooldownMin: 60,
       lookback: 3,
-      avoidWhen: { volatility: 'DEAD', fundingExtreme: { absOver: 0.08 } },
+      avoidWhen: { volatility: 'DEAD' },
       sideBiasTolerance: 8,
     },
     volatilityFilter: { deadBelow: 0.6, extremeAbove: 5.0 },

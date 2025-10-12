@@ -27,7 +27,6 @@ import CoinIcon from '../../components/SymbolIcon';
 import styles from './PositionsPage.module.scss';
 import type {
   IAnalysis,
-  IFundingMeta,
   IHigherMAMeta,
   ILiquidityMeta,
   ILongShortMeta,
@@ -46,7 +45,6 @@ type ModuleMetaWithScores =
   | IVolatilityMeta
   | ITrendRegimeMeta
   | ILiquidityMeta
-  | IFundingMeta
   | IOpenInterestMeta
   | ILongShortMeta
   | IHigherMAMeta
