@@ -122,17 +122,6 @@ export async function finalAnalyzer({
     },
   )) as ILiquidationsModule | null;
 
-  // Check validation modules first - if any return INACTIVE, we can't trade
-  const validationModules = [modules.volatility, modules.liquidations];
-  for (const module of validationModules) {
-    if (module && module.signal === 'INACTIVE') {
-      logger.warn(
-        `⚠️ ${symbol} blocked by ${module.module} validation (${module.signal})`,
-      );
-      return null;
-    }
-  }
-
   modules.trendRegime = (await analyzeTrendRegime(symbol, candles, {
     period: 14,
     adxSignalMin: moduleThresholds['trendRegime'] ?? 20,

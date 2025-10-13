@@ -183,6 +183,23 @@ export function validateVolatility(ctx: ValidationContext): boolean {
 }
 
 /**
+ * Validates liquidations activity is within acceptable range
+ */
+export function validateLiquidations(ctx: ValidationContext): boolean {
+  const { symbol, analysis } = ctx;
+  const { modules } = analysis;
+
+  const liq = modules?.liquidations;
+  if (liq && liq.signal === 'INACTIVE') {
+    logger.info(
+      `⏸️ ${symbol}: skip, liquidations INACTIVE (no data or out of range)`,
+    );
+    return false;
+  }
+  return true;
+}
+
+/**
  * Validates spread is within acceptable limits
  */
 export function validateSpread(ctx: ValidationContext): boolean {
@@ -211,6 +228,7 @@ export function validateEntry(ctx: ValidationContext): boolean {
     validateHigherMA,
     validateSideBias,
     validateVolatility,
+    validateLiquidations,
     validateSpread,
   ];
 
