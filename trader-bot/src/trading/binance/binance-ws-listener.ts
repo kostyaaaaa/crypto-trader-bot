@@ -5,6 +5,8 @@ import { PositionModel, type IPosition } from 'crypto-trader-db';
 import 'dotenv/config';
 import { Types } from 'mongoose';
 import logger from '../../utils/db-logger';
+import notifyTrade from '../../utils/notify';
+import { cancelAllOrders } from './binance-functions/index';
 
 const BINANCE_BASE = 'https://fapi.binance.com';
 
@@ -34,29 +36,6 @@ async function binanceGet<T>(
     timeout: 15_000,
   });
   return data;
-}
-
-async function binanceDelete(
-  path: string,
-  params: Record<string, any> = {},
-): Promise<void> {
-  const apiKey = process.env.BINANCE_API_KEY || '';
-  const apiSecret = process.env.BINANCE_API_SECRET || '';
-  if (!apiKey || !apiSecret)
-    throw new Error('BINANCE_API_KEY / BINANCE_API_SECRET are required');
-
-  const timestamp = Date.now();
-  const query = new URLSearchParams({
-    ...params,
-    timestamp: String(timestamp),
-  }).toString();
-  const signature = sign(query, apiSecret);
-  const url = `${BINANCE_BASE}${path}?${query}&signature=${signature}`;
-
-  await axios.delete(url, {
-    headers: { 'X-MBX-APIKEY': apiKey },
-    timeout: 15_000,
-  });
 }
 
 /* ========= Types (мінімальний зріз) ========= */
@@ -185,7 +164,6 @@ function markTpFills(
     }
   }
 
-  // Інкрементально визначаємо, чи вистачило к-сті на кожен ТР (без подвійного рахунку)
   let alreadyAllocated = 0;
   const updated = tps.map((t) => ({ ...t }));
   for (const idx of sortedIdx) {
@@ -201,7 +179,6 @@ function markTpFills(
     }
   }
 
-  // Хінт чим закривалось: якщо більшість к-сті закривалося "біля" ТР → TP, інакше SL
   const tpClosedQty =
     side === 'LONG'
       ? sum(
@@ -241,12 +218,10 @@ function markTpFills(
 
 /* ========= Public API ========= */
 
-/** Фіналізує всі позиції зі статусом OPEN, які на біржі вже закриті */
 export async function reconcileAllSymbols(): Promise<void> {
-  // 1) Взяти OPEN з БД
   const openPositions = await PositionModel.find({ status: 'OPEN' })
     .select(
-      '_id symbol openedAt takeProfits initialTPs stopPrice closedBy side',
+      '_id symbol openedAt takeProfits initialTPs stopPrice closedBy side entryPrice size meta',
     )
     .lean<(IPosition & { _id: Types.ObjectId })[]>()
     .exec();
@@ -271,11 +246,9 @@ export async function reconcileAllSymbols(): Promise<void> {
     bySymbol.set(r.symbol, arr);
   }
 
-  // 3) Пройтись по кожній OPEN з БД
   for (const pos of openPositions) {
     const symbol = pos.symbol;
     const risksForSymbol = bySymbol.get(symbol) || [];
-    // Якщо hedge-mode не юзаєш: достатньо перевірити, що для символу всюди 0
     const onExchange = risksForSymbol.some(
       (r) => Math.abs(Number(r.positionAmt)) > 0,
     );
@@ -287,7 +260,6 @@ export async function reconcileAllSymbols(): Promise<void> {
       continue;
     }
 
-    // 4) Позиції на біржі вже немає → рахуємо PnL по трейдах і закриваємо в БД
     const openedAt = new Date(pos.openedAt).getTime();
     const startTime = Math.max(0, openedAt - 60_000); // невеликий буфер назад
     const endTime = Date.now();
@@ -307,12 +279,11 @@ export async function reconcileAllSymbols(): Promise<void> {
     const { realized, fees, finalPnl, closedAt } =
       computeFinalFromTrades(trades);
 
-    // визначити, які ТР були взяті
     const { updatedTPs, closedByHint } = markTpFills(pos, trades);
 
     try {
-      await PositionModel.findByIdAndUpdate(
-        pos._id,
+      const prev = await PositionModel.findOneAndUpdate(
+        { _id: pos._id, status: 'OPEN' },
         {
           $set: {
             status: 'CLOSED',
@@ -336,20 +307,39 @@ export async function reconcileAllSymbols(): Promise<void> {
         { new: false },
       ).exec();
 
-      logger.success(
-        `✅ ${symbol}: finalized — realized=${realized.toFixed(6)}, fees=${fees.toFixed(6)}, final=${finalPnl.toFixed(6)}; closedBy=${(pos as any).closedBy ?? closedByHint}`,
-      );
+      // Notify in TG only if we actually transitioned OPEN -> CLOSED
+      if (prev) {
+        try {
+          await notifyTrade(
+            {
+              _id: pos._id,
+              symbol,
+              side: (pos as any).side,
+              closedBy: (pos as any).closedBy ?? closedByHint,
+              finalPnl,
+              realizedPnl: realized,
+              fees,
+              closedAt,
+              entryPrice: (pos as any).entryPrice,
+              size: (pos as any).size,
+              stopPrice: (pos as any).stopPrice ?? null,
+              takeProfits: updatedTPs as any,
+              initialTPs: (pos as any).initialTPs as any,
+              meta: (pos as any).meta,
+            },
+            'CLOSED',
+          );
+        } catch (notifyErr) {
+          logger.warn(`⚠️ ${symbol}: telegram notify failed`, notifyErr);
+        }
+      }
     } catch (e) {
       logger.error(`❌ ${symbol}: failed to update position in DB`, e);
       continue;
     }
 
-    // 5) На всякий випадок — прибрати залишкові ордери
     try {
-      // Якщо у вас є власна функція cancelAllOrders(symbol) — використайте її тут замість REST:
-      // await cancelAllOrders(symbol);
-      await binanceDelete('/fapi/v1/allOpenOrders', { symbol });
-      logger.info(`🧹 ${symbol}: canceled all leftover open orders`);
+      await cancelAllOrders(symbol);
     } catch (e) {
       // Якщо ордерів нема — Binance може повернути помилку; це ок
       logger.warn(`⚠️ ${symbol}: cancelAllOpenOrders returned`, e);
