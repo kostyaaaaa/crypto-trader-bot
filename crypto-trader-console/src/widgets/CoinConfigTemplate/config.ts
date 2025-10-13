@@ -27,6 +27,11 @@ export const tabs: TabItem[] = [
     group: 'Entry & Capital',
   },
   {
+    value: 'strategy_liquidations_filter',
+    label: 'Liquidations Filter',
+    group: 'Entry & Capital',
+  },
+  {
     value: 'strategy_capital',
     label: 'Strategy Capital',
     group: 'Entry & Capital',

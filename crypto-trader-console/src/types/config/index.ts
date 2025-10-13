@@ -15,7 +15,6 @@ export type TCoinConfig = {
     candleTimeframe: string;
     oiWindow: number;
     liqWindow: number;
-    liqSentWindow: number;
     volWindow: number;
     corrWindow: number;
     longShortWindow: number;
@@ -97,7 +96,6 @@ type TAnalysisModule = {
   trend: number;
   trendRegime: number;
   liquidity: number;
-  liquidations: number;
   openInterest: number;
   longShort: number;
   higherMA: number;

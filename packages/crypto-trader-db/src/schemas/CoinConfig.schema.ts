@@ -4,7 +4,6 @@ export interface IModules {
   trend: number;
   trendRegime: number;
   liquidity: number;
-  liquidations: number;
   openInterest: number;
   longShort: number;
   higherMA: number;
@@ -142,7 +141,6 @@ const weightsSchema = new Schema(
     trend: { type: Number, required: true },
     trendRegime: { type: Number, required: true },
     liquidity: { type: Number, required: true },
-    liquidations: { type: Number, required: true },
     openInterest: { type: Number, required: true },
     longShort: { type: Number, required: true },
     higherMA: { type: Number, required: true },
@@ -156,7 +154,6 @@ const moduleThresholdsSchema = new Schema(
     trend: { type: Number, required: true },
     trendRegime: { type: Number, required: true },
     liquidity: { type: Number, required: true },
-    liquidations: { type: Number, required: true },
     openInterest: { type: Number, required: true },
     longShort: { type: Number, required: true },
     higherMA: { type: Number, required: true },

@@ -232,13 +232,6 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
               control={control}
             />
             <FormField
-              name="analysisConfig.liqSentWindow"
-              label="Liq Sent Window"
-              type="number"
-              register={register}
-              control={control}
-            />
-            <FormField
               name="analysisConfig.volWindow"
               label="Vol Window"
               type="number"
@@ -426,28 +419,34 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
           <div className={styles['wrapper__form-list']}>
             <FormField
               name="strategy.volatilityFilter.minThreshold"
-              label="Volatility Min Threshold"
+              label="Min Threshold"
               type="number"
               register={register}
               control={control}
             />
             <FormField
               name="strategy.volatilityFilter.maxThreshold"
-              label="Volatility Max Threshold"
+              label="Max Threshold"
               type="number"
               register={register}
               control={control}
             />
+          </div>
+        </Tabs.Panel>
+
+        {/* Strategy Liquidations Filter */}
+        <Tabs.Panel value="strategy_liquidations_filter">
+          <div className={styles['wrapper__form-list']}>
             <FormField
               name="strategy.liquidationsFilter.minThreshold"
-              label="Liquidations Min Threshold"
+              label="Min Threshold"
               type="number"
               register={register}
               control={control}
             />
             <FormField
               name="strategy.liquidationsFilter.maxThreshold"
-              label="Liquidations Max Threshold"
+              label="Max Threshold"
               type="number"
               register={register}
               control={control}
@@ -670,7 +669,6 @@ const moduleKeys = [
   'trend',
   'trendRegime',
   'liquidity',
-  'liquidations',
   'openInterest',
   'longShort',
   'higherMA',

@@ -16,11 +16,28 @@ export interface IAnalysis {
   updatedAt?: Date;
 }
 
-export interface IModuleBase {
+// Base for validation modules
+export interface IValidationModuleBase {
+  type: 'validation';
   module: string;
   symbol: string;
-  signal: string;
-  strength: number;
+  signal: 'ACTIVE' | 'NEUTRAL' | 'INACTIVE';
+}
+
+// Base for scoring modules
+export interface IScoringModuleBase {
+  type: 'scoring';
+  module: string;
+  symbol: string;
+}
+
+// Legacy base (for backward compatibility)
+export interface IModuleBase {
+  type?: 'validation' | 'scoring';
+  module: string;
+  symbol: string;
+  signal?: string;
+  strength?: number;
 }
 
 // Meta interfaces with LONG/SHORT scores
@@ -34,16 +51,14 @@ export interface ITrendMeta {
 }
 
 export interface IVolatilityMeta {
-  LONG: number;
-  SHORT: number;
   regime: string;
   candlesUsed: number;
   atrAbs: number;
   atrPct: number;
   window: number;
   thresholds: {
-    deadBelow: number;
-    extremeAbove: number;
+    minThreshold: number;
+    maxThreshold: number;
   };
 }
 
@@ -117,49 +132,50 @@ export interface IRsiVolTrendMeta {
   maLong: number;
 }
 
-// Module interfaces
-export interface ITrendModule extends IModuleBase {
+// Module interfaces - Scoring modules
+export interface ITrendModule extends IScoringModuleBase {
   meta: ITrendMeta;
 }
 
-export interface IVolatilityModule extends IModuleBase {
+// Module interfaces - Validation modules
+export interface IVolatilityModule extends IValidationModuleBase {
   meta: IVolatilityMeta;
 }
 
-export interface ITrendRegimeModule extends IModuleBase {
+export interface ITrendRegimeModule extends IScoringModuleBase {
   meta: ITrendRegimeMeta;
 }
 
-export interface ILiquidityModule extends IModuleBase {
+export interface ILiquidityModule extends IScoringModuleBase {
   meta: ILiquidityMeta;
   spreadPct: number;
 }
 
-export interface ILiquidationsModule {
-  symbol: string;
-  time: Date;
-  count: number;
-  buysCount: number;
-  sellsCount: number;
-  buysValue: number;
-  sellsValue: number;
-  totalValue: number;
-  minValue: number;
+export interface ILiquidationsMeta {
+  candlesUsed: number;
+  avgBuy: number;
+  avgSell: number;
+  buyPct: number;
+  sellPct: number;
 }
 
-export interface IOpenInterestModule extends IModuleBase {
+export interface ILiquidationsModule extends IValidationModuleBase {
+  meta: ILiquidationsMeta;
+}
+
+export interface IOpenInterestModule extends IScoringModuleBase {
   meta: IOpenInterestMeta;
 }
 
-export interface ILongShortModule extends IModuleBase {
+export interface ILongShortModule extends IScoringModuleBase {
   meta: ILongShortMeta;
 }
 
-export interface IHigherMAModule extends IModuleBase {
+export interface IHigherMAModule extends IScoringModuleBase {
   meta: IHigherMAMeta;
 }
 
-export interface IRsiVolTrendModule extends IModuleBase {
+export interface IRsiVolTrendModule extends IScoringModuleBase {
   meta: IRsiVolTrendMeta;
 }
 
