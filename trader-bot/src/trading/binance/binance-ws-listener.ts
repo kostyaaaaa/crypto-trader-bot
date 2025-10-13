@@ -1,150 +1,361 @@
-// trading/binance/binance-ws-listener.ts
+// trader-bot/src/trading/binance/reconciler.ts
 import axios from 'axios';
-import type { IPosition } from 'crypto-trader-db';
-import WebSocket from 'ws';
-import type { OrderTradeUpdateEvent, UserDataEvent } from '../../types/index';
+import crypto from 'crypto';
+import { PositionModel, type IPosition } from 'crypto-trader-db';
+import 'dotenv/config';
+import { Types } from 'mongoose';
 import logger from '../../utils/db-logger';
-import { getOpenPosition } from '../core/history-store';
+import notifyTrade from '../../utils/notify';
 import { cancelAllOrders } from './binance-functions/index';
-import { handleMarketOrder } from './handlers/market-order-handler';
-import { handleStopLoss } from './handlers/stop-loss-handler';
-import { handleTakeProfit } from './handlers/take-profit-handler';
-import { addFillToAgg, isDuplicateOrderEvent } from './helpers/fill-aggregator';
-import { forceCloseIfLeftover } from './helpers/force-close';
 
-function errMsg(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
+const BINANCE_BASE = 'https://fapi.binance.com';
+
+function sign(query: string, secret: string) {
+  return crypto.createHmac('sha256', secret).update(query).digest('hex');
 }
 
-// -------------------------
-// 1. Отримання listenKey
-// -------------------------
-async function getListenKey(): Promise<string | null> {
-  try {
-    const res = await axios.post(
-      'https://fapi.binance.com/fapi/v1/listenKey',
-      {},
-      { headers: { 'X-MBX-APIKEY': process.env.BINANCE_API_KEY } },
-    );
-    return (res.data && (res.data as { listenKey?: string }).listenKey) || null;
-  } catch (err) {
-    logger.error('❌ Failed to get listenKey:', errMsg(err));
-    return null;
-  }
+async function binanceGet<T>(
+  path: string,
+  params: Record<string, any> = {},
+): Promise<T> {
+  const apiKey = process.env.BINANCE_API_KEY || '';
+  const apiSecret = process.env.BINANCE_ACCOUNT_SECRET_KEY || '';
+  if (!apiKey || !apiSecret)
+    throw new Error('BINANCE_API_KEY / BINANCE_API_SECRET are required');
+
+  const timestamp = Date.now();
+  const query = new URLSearchParams({
+    ...params,
+    timestamp: String(timestamp),
+  }).toString();
+  const signature = sign(query, apiSecret);
+  const url = `${BINANCE_BASE}${path}?${query}&signature=${signature}`;
+
+  const { data } = await axios.get<T>(url, {
+    headers: { 'X-MBX-APIKEY': apiKey },
+    timeout: 15_000,
+  });
+  return data;
 }
 
-// -------------------------
-// 2. Запуск WS стріму
-// -------------------------
-export async function startUserStream(): Promise<void> {
-  const listenKey = await getListenKey();
-  if (!listenKey) return;
+/* ========= Types (мінімальний зріз) ========= */
 
-  const wsUrl = `wss://fstream.binance.com/ws/${listenKey}`;
-  const ws = new WebSocket(wsUrl);
+type PositionRisk = {
+  symbol: string;
+  positionAmt: string; // "0", "10.5", "-3"
+  entryPrice: string;
+  markPrice: string;
+  unRealizedProfit: string;
+  positionSide?: 'BOTH' | 'LONG' | 'SHORT';
+};
 
-  ws.on('open', () => {
-    logger.info('🔌 Binance user stream connected');
-  });
+type UserTrade = {
+  symbol: string;
+  id: number; // tradeId
+  orderId: number;
+  price: string;
+  qty: string;
+  commission: string;
+  commissionAsset: string; // USDT для USDⓈ-M
+  realizedPnl: string;
+  time: number; // ms
+  buyer: boolean; // true = buy, false = sell
+  maker: boolean;
+};
 
-  ws.on('message', async (raw: WebSocket.RawData) => {
-    try {
-      const msg = JSON.parse(raw.toString()) as UserDataEvent;
-      await handleEvent(msg);
-    } catch (err) {
-      logger.error('❌ WS message handling error:', errMsg(err));
-    }
-  });
+type TakeProfitCfg = { price: number; sizePct: number; filled?: boolean };
 
-  ws.on('close', () => {
-    logger.info('⚠️ Binance user stream closed. Reconnecting...');
-    setTimeout(() => void startUserStream(), 5000);
-  });
+/* ========= Core helpers ========= */
 
-  ws.on('error', (err) => {
-    logger.error('❌ WS error:', errMsg(err));
-    ws.close();
-  });
+const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
 
-  // оновлення listenKey раз на 25 хв
-  setInterval(
-    async () => {
-      try {
-        await axios.put(
-          'https://fapi.binance.com/fapi/v1/listenKey',
-          {},
-          { headers: { 'X-MBX-APIKEY': process.env.BINANCE_API_KEY } },
-        );
-        logger.info('♻️ listenKey refreshed');
-      } catch (err) {
-        logger.error('❌ Failed to refresh listenKey:', errMsg(err));
-      }
-    },
-    25 * 60 * 1000,
+/** Біржовий підрахунок: Σ realizedPnl − Σ commission (USDT) */
+function computeFinalFromTrades(trades: UserTrade[]) {
+  const realized = sum(trades.map((t) => Number(t.realizedPnl || 0)));
+  const fees = sum(trades.map((t) => Number(t.commission || 0))); // припускаємо USDT-маржин
+  const finalPnl = realized - fees;
+  const lastTs = trades.length
+    ? Math.max(...trades.map((t) => t.time))
+    : Date.now();
+  return { realized, fees, finalPnl, closedAt: new Date(lastTs) };
+}
+
+/**
+ * Обрати мапу ТР для перевірки: пріоритет поточним takeProfits, інакше initialTPs
+ */
+function getTpConfig(pos: IPosition): TakeProfitCfg[] {
+  const fromCurrent =
+    (pos as any).takeProfits?.map((t: any) => ({
+      price: Number(t.price),
+      sizePct: Number(t.sizePct),
+      filled: Boolean(t.filled),
+    })) ?? [];
+  const fromInitial =
+    (pos as any).initialTPs?.map((t: any) => ({
+      price: Number(t.price),
+      sizePct: Number(t.sizePct),
+      filled: false,
+    })) ?? [];
+  const tps = fromCurrent.length ? fromCurrent : fromInitial;
+  // відфільтруємо сміття
+  return tps.filter(
+    (t: any) =>
+      Number.isFinite(t.price) && Number.isFinite(t.sizePct) && t.sizePct > 0,
   );
 }
 
-// -------------------------
-// 4. Обробка івентів
-// -------------------------
-async function handleEvent(msg: UserDataEvent): Promise<void> {
-  switch (msg.e) {
-    case 'ACCOUNT_UPDATE':
-      break;
+/**
+ * Позначити, які ТР були досягнуті, порівнюючи ціни філів та цільові ТР.
+ * NB: це "best-effort" без WS, але працює коректно у 99% випадків.
+ */
+function markTpFills(
+  pos: IPosition,
+  trades: UserTrade[],
+): { updatedTPs: TakeProfitCfg[]; closedByHint: 'TP' | 'SL' | 'AUTO' } {
+  const side = (pos as any).side as 'LONG' | 'SHORT';
+  const tps = getTpConfig(pos);
+  if (!tps.length || !side) {
+    return { updatedTPs: tps, closedByHint: 'AUTO' };
+  }
 
-    case 'ORDER_TRADE_UPDATE': {
-      const m = msg as OrderTradeUpdateEvent;
+  // початковий розмір для розподілу %, якщо є adds — беремо фактичний сумарний закритий обсяг
+  const totalClosedQty =
+    side === 'LONG'
+      ? sum(trades.filter((t) => t.buyer === false).map((t) => Number(t.qty)))
+      : sum(trades.filter((t) => t.buyer === true).map((t) => Number(t.qty)));
 
-      const o = m.o;
-      const symbol = o.s; // символ (наприклад "BTCUSDT")
-      const status = o.X; // статус ордера (NEW, PARTIALLY_FILLED, FILLED, CANCELED...)
-      const side = o.S; // BUY / SELL
-      const type = o.ot; // тип ордера (MARKET, STOP_MARKET, TAKE_PROFIT_MARKET)
-      const lastPx = Number(o.L); // ціна останньої угоди в рамках цього ордера
-      const lastQty = Number(o.l); // кількість останньої угоди
-      logger.info(
-        `📦 Order update: ${symbol} ${side} status=${status}, type=${type}, lastPx=${lastPx}, lastQty=${lastQty}, orderId=${o.i}`,
-      );
+  if (totalClosedQty <= 0) {
+    return { updatedTPs: tps, closedByHint: 'AUTO' };
+  }
 
-      // Aggregate fills for VWAP (avg execution price)
-      if (Number.isFinite(lastPx) && Number.isFinite(lastQty) && lastQty > 0) {
-        addFillToAgg(o.i, lastQty, lastPx);
+  // толеранс до ціни (без exchangeInfo): 0.1% або 2e-6 для дуже дрібних цін
+  const tolPct = 0.001;
+  const granularTol = (p: number) => Math.max(p * tolPct, 2e-6);
+
+  // Сортуємо ТР у порядку їх досягнення (для коректного розподілу кількості)
+  const sortedIdx = tps
+    .map((_, i) => i)
+    .sort(
+      (a, b) =>
+        side === 'LONG'
+          ? tps[a].price - tps[b].price // LONG: від ближчого до дальшого (нижча → вища)
+          : tps[b].price - tps[a].price, // SHORT: від ближчого до дальшого (вища → нижча)
+    );
+
+  // Рахуємо, скільки к-сті було закрито "за/краще ніж" кожен ТР
+  const eligibleQtyPerTp = new Array(tps.length).fill(0) as number[];
+  for (const tr of trades) {
+    const price = Number(tr.price);
+    const qty = Number(tr.qty);
+
+    // закриваючі трейди: для LONG — sell (buyer=false), для SHORT — buy (buyer=true)
+    const isClosing = side === 'LONG' ? tr.buyer === false : tr.buyer === true;
+    if (!isClosing) continue;
+
+    for (let i = 0; i < tps.length; i++) {
+      const tp = tps[i];
+      const ok =
+        side === 'LONG'
+          ? price >= tp.price - granularTol(tp.price)
+          : price <= tp.price + granularTol(tp.price);
+      if (ok) {
+        eligibleQtyPerTp[i] += qty;
       }
+    }
+  }
 
-      // Deduplicate identical updates (e.g., WS reconnects / repeats)
-      const dedupKey = `${o.i}:${status}:${o.z || o.l || 0}:${m.T || m.E || ''}`;
-      if (isDuplicateOrderEvent(dedupKey)) {
-        logger.info(`↩️ Skipping duplicate order update ${dedupKey}`);
-        break;
-      }
+  let alreadyAllocated = 0;
+  const updated = tps.map((t) => ({ ...t }));
+  for (const idx of sortedIdx) {
+    const tp = updated[idx];
+    const needQty = (totalClosedQty * tp.sizePct) / 100;
+    const available = Math.max(0, eligibleQtyPerTp[idx] - alreadyAllocated);
+    const filled = available + 1e-12 >= needQty && needQty > 0; // невеликий epsilon
+    if (filled) {
+      alreadyAllocated += needQty;
+      updated[idx].filled = true;
+    } else {
+      updated[idx].filled = false;
+    }
+  }
 
-      // Act only on FILLED; ignore NEW/EXPIRED/PARTIALLY_FILLED, etc.
-      if (status !== 'FILLED') break;
-
-      // Fetch current DB position once (before using `pos`)
-      const pos = (await getOpenPosition(symbol)) as IPosition | null;
-
-      if (!pos && (type === 'STOP_MARKET' || type === 'TAKE_PROFIT_MARKET')) {
-        logger.warn(
-          `⚠️ ${symbol}: FILLED ${type} but no OPEN position in DB. Skipping DB close; cleaning leftovers only.`,
+  const tpClosedQty =
+    side === 'LONG'
+      ? sum(
+          trades
+            .filter((t) => t.buyer === false)
+            .filter((t) =>
+              updated.some(
+                (tp) =>
+                  tp.filled &&
+                  Number(t.price) >= tp.price - granularTol(tp.price),
+              ),
+            )
+            .map((t) => Number(t.qty)),
+        )
+      : sum(
+          trades
+            .filter((t) => t.buyer === true)
+            .filter((t) =>
+              updated.some(
+                (tp) =>
+                  tp.filled &&
+                  Number(t.price) <= tp.price + granularTol(tp.price),
+              ),
+            )
+            .map((t) => Number(t.qty)),
         );
-        await cancelAllOrders(symbol);
-        await forceCloseIfLeftover(symbol);
-        return;
-      }
 
-      // Route to appropriate handler based on order type
-      if (type === 'STOP_MARKET') {
-        await handleStopLoss(m, pos);
-      } else if (type === 'TAKE_PROFIT_MARKET') {
-        await handleTakeProfit(m, pos);
-      } else if (type === 'MARKET') {
-        await handleMarketOrder(m);
-      }
-      break;
+  const closedByHint =
+    tpClosedQty >= 0.5 * totalClosedQty
+      ? 'TP'
+      : (pos as any).stopPrice
+        ? 'SL'
+        : 'AUTO';
+
+  return { updatedTPs: updated, closedByHint };
+}
+
+/* ========= Public API ========= */
+
+export async function reconcileAllSymbols(): Promise<void> {
+  const openPositions = await PositionModel.find({ status: 'OPEN' })
+    .select(
+      '_id symbol openedAt takeProfits initialTPs stopPrice closedBy side entryPrice size meta',
+    )
+    .lean<(IPosition & { _id: Types.ObjectId })[]>()
+    .exec();
+
+  if (!openPositions.length) {
+    logger.info('🔄 Reconcile: no OPEN positions found — nothing to do');
+    return;
+  }
+
+  // 2) Взяти всі позиції з біржі (одним запитом)
+  let risks: PositionRisk[] = [];
+  try {
+    risks = await binanceGet<PositionRisk[]>('/fapi/v2/positionRisk');
+  } catch (e) {
+    logger.error('❌ Failed to fetch /positionRisk', e);
+    return;
+  }
+  const bySymbol = new Map<string, PositionRisk[]>();
+  for (const r of risks) {
+    const arr = bySymbol.get(r.symbol) || [];
+    arr.push(r);
+    bySymbol.set(r.symbol, arr);
+  }
+
+  for (const pos of openPositions) {
+    const symbol = pos.symbol;
+    const risksForSymbol = bySymbol.get(symbol) || [];
+    const onExchange = risksForSymbol.some(
+      (r) => Math.abs(Number(r.positionAmt)) > 0,
+    );
+
+    if (onExchange) {
+      logger.info(
+        `🟡 ${symbol}: still open on exchange (has non-zero positionAmt) — skip`,
+      );
+      continue;
     }
 
-    default:
-    // 🔹 Якщо прийшов інший івент, ми його ігноруємо.
+    const openedAt = new Date(pos.openedAt).getTime();
+    const startTime = Math.max(0, openedAt - 60_000); // невеликий буфер назад
+    const endTime = Date.now();
+
+    let trades: UserTrade[] = [];
+    try {
+      trades = await binanceGet<UserTrade[]>('/fapi/v1/userTrades', {
+        symbol,
+        startTime,
+        endTime,
+      });
+    } catch (e) {
+      logger.error(`❌ ${symbol}: failed to fetch /userTrades`, e);
+      continue;
+    }
+
+    const { realized, fees, finalPnl, closedAt } =
+      computeFinalFromTrades(trades);
+
+    const { updatedTPs, closedByHint } = markTpFills(pos, trades);
+
+    try {
+      const prev = await PositionModel.findOneAndUpdate(
+        { _id: pos._id, status: 'OPEN' },
+        {
+          $set: {
+            status: 'CLOSED',
+            closedAt,
+            closedBy: (pos as any).closedBy ?? closedByHint,
+            realizedPnl: realized,
+            fees,
+            finalPnl,
+            takeProfits: updatedTPs,
+            executions: trades.map((t) => ({
+              price: Number(t.price),
+              qty: Number(t.qty),
+              side: t.buyer ? 'BUY' : 'SELL',
+              fee: Number(t.commission),
+              ts: t.time,
+              orderId: t.orderId,
+              tradeId: t.id,
+            })),
+          },
+        },
+        { new: false },
+      ).exec();
+
+      // Notify in TG only if we actually transitioned OPEN -> CLOSED
+      if (prev) {
+        try {
+          await notifyTrade(
+            {
+              _id: pos._id,
+              symbol,
+              side: (pos as any).side,
+              closedBy: (pos as any).closedBy ?? closedByHint,
+              finalPnl,
+              realizedPnl: realized,
+              fees,
+              closedAt,
+              entryPrice: (pos as any).entryPrice,
+              size: (pos as any).size,
+              stopPrice: (pos as any).stopPrice ?? null,
+              takeProfits: updatedTPs as any,
+              initialTPs: (pos as any).initialTPs as any,
+              meta: (pos as any).meta,
+            },
+            'CLOSED',
+          );
+        } catch (notifyErr) {
+          logger.warn(`⚠️ ${symbol}: telegram notify failed`, notifyErr);
+        }
+      }
+    } catch (e) {
+      logger.error(`❌ ${symbol}: failed to update position in DB`, e);
+      continue;
+    }
+
+    try {
+      await cancelAllOrders(symbol);
+    } catch (e) {
+      // Якщо ордерів нема — Binance може повернути помилку; це ок
+      logger.warn(`⚠️ ${symbol}: cancelAllOpenOrders returned`, e);
+    }
   }
+}
+
+/** Зручний раннер: перший запуск одразу, далі — кожні N мс (дефолт 2 хв) */
+export function startReconciler(intervalMs = 2 * 60 * 1000) {
+  const tick = async () => {
+    try {
+      await reconcileAllSymbols();
+    } catch (e) {
+      logger.error('Reconcile tick failed', e);
+    }
+  };
+  tick();
+  return setInterval(tick, intervalMs);
 }

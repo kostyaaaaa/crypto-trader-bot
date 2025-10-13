@@ -3,7 +3,7 @@ import { Types } from 'mongoose';
 import { LiquidationsStepWS } from './analize-modules/liquidations/liquidations-step';
 import { LiquidityStepWS } from './analize-modules/liquidity/liquidity-step';
 import connectDB from './config/database';
-import { startUserStream } from './trading/binance/binance-ws-listener';
+import { startReconciler } from './trading/binance/binance-ws-listener';
 import cooldownHub from './trading/core/cooldown-hub';
 import { tradingEngine } from './trading/core/engine';
 import markPriceHub from './trading/core/mark-price-hub';
@@ -111,6 +111,6 @@ if (isBotActive) {
   connectDB();
   markPriceHub.init();
   cooldownHub.start();
-  startUserStream();
+  startReconciler(2 * 60 * 1000);
   subscribeCoinConfigs();
 }
