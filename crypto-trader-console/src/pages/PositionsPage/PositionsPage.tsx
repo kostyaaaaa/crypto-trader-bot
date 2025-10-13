@@ -25,33 +25,8 @@ import type {
 } from '../../api/positions/getPositionsByTimeAndSymbol';
 import CoinIcon from '../../components/SymbolIcon';
 import styles from './PositionsPage.module.scss';
-import type {
-  IAnalysis,
-  IHigherMAMeta,
-  ILiquidityMeta,
-  ILongShortMeta,
-  IModuleBase,
-  IOpenInterestMeta,
-  IRsiVolTrendMeta,
-  ITrendMeta,
-  ITrendRegimeMeta,
-  IVolatilityMeta,
-} from './types';
+import type { IAnalysis } from './types';
 import usePositionsPage from './usePositionsPage';
-
-// Union type for all meta interfaces that have LONG/SHORT properties
-type ModuleMetaWithScores =
-  | ITrendMeta
-  | IVolatilityMeta
-  | ITrendRegimeMeta
-  | ILiquidityMeta
-  | IOpenInterestMeta
-  | ILongShortMeta
-  | IHigherMAMeta
-  | IRsiVolTrendMeta;
-
-// Type for modules with scores
-type ModuleWithScores = IModuleBase & { meta: ModuleMetaWithScores };
 
 // Helper function for formatting numbers
 const fmt = (n: number, d = 2) =>
@@ -196,9 +171,43 @@ const PositionsPage: FC = () => {
     return 'blue';
   }, []);
 
+  // Helper function to split modules by type
+  const getModulesByType = useCallback((analysis: unknown) => {
+    if (!analysis || typeof analysis !== 'object' || !('modules' in analysis)) {
+      return { validation: [], scoring: [] };
+    }
+
+    const modules = (analysis as IAnalysis).modules || {};
+    const validation: Array<{ key: string; signal: string }> = [];
+    const scoring: Array<{ key: string; long: number; short: number }> = [];
+
+    Object.entries(modules).forEach(([key, mod]) => {
+      const module = mod as {
+        type?: string;
+        signal?: string;
+        meta?: { LONG?: number; SHORT?: number };
+      };
+      if (module?.type === 'validation') {
+        validation.push({
+          key,
+          signal: module.signal || 'NO DATA',
+        });
+      } else {
+        scoring.push({
+          key,
+          long: Number(module?.meta?.LONG ?? 0),
+          short: Number(module?.meta?.SHORT ?? 0),
+        });
+      }
+    });
+
+    return { validation, scoring };
+  }, []);
+
   const rows = positions?.flatMap((pos: Position) => {
     const id = String(pos._id);
     const isOpen = !!expanded[id];
+    const moduleBreakdown = getModulesByType(pos.analysis);
 
     // build a simple timeline from position data
     type Ev = { t: number; label: string; desc: string };
@@ -402,58 +411,95 @@ const PositionsPage: FC = () => {
                   <Text fw={600} mb="sm">
                     Analysis Breakdown
                   </Text>
-                  {pos.analysis &&
-                  typeof pos.analysis === 'object' &&
-                  'modules' in pos.analysis ? (
-                    <Table
-                      withRowBorders={false}
-                      verticalSpacing="xs"
-                      miw={400}
-                    >
-                      <Table.Thead>
-                        <Table.Tr>
-                          <Table.Th>Module</Table.Th>
-                          <Table.Th>Signal</Table.Th>
-                          <Table.Th style={{ width: 200 }}>
-                            LONG / SHORT
-                          </Table.Th>
-                        </Table.Tr>
-                      </Table.Thead>
-                      <Table.Tbody>
-                        {Object.entries(
-                          (pos.analysis as IAnalysis).modules || {},
-                        ).map(([key, mod]) => {
-                          // All modules extend IModuleBase with signal and meta containing LONG/SHORT
-                          const module = mod as ModuleWithScores;
-                          const signal = module?.signal || 'NO DATA';
-                          const meta = module?.meta || { LONG: 0, SHORT: 0 };
-                          const long = Number(meta.LONG ?? 0);
-                          const short = Number(meta.SHORT ?? 0);
+                  {moduleBreakdown.validation.length > 0 ||
+                  moduleBreakdown.scoring.length > 0 ? (
+                    <>
+                      {/* Validation Modules Section */}
+                      {moduleBreakdown.validation.length > 0 && (
+                        <>
+                          <Text size="sm" fw={500} mb="xs" c="blue">
+                            Validation Modules
+                          </Text>
+                          <Table
+                            withRowBorders={false}
+                            verticalSpacing="xs"
+                            miw={400}
+                            mb="md"
+                            style={{ tableLayout: 'fixed' }}
+                          >
+                            <colgroup>
+                              <col style={{ width: '150px' }} />
+                              <col />
+                            </colgroup>
+                            <Table.Thead>
+                              <Table.Tr>
+                                <Table.Th>Module</Table.Th>
+                                <Table.Th>Signal</Table.Th>
+                              </Table.Tr>
+                            </Table.Thead>
+                            <Table.Tbody>
+                              {moduleBreakdown.validation.map((m) => (
+                                <Table.Tr key={m.key}>
+                                  <Table.Td>{m.key}</Table.Td>
+                                  <Table.Td>
+                                    <Badge
+                                      color={
+                                        m.signal === 'ACTIVE'
+                                          ? 'green'
+                                          : m.signal === 'INACTIVE'
+                                            ? 'red'
+                                            : 'gray'
+                                      }
+                                    >
+                                      {m.signal}
+                                    </Badge>
+                                  </Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </Table.Tbody>
+                          </Table>
+                        </>
+                      )}
 
-                          return (
-                            <Table.Tr key={key}>
-                              <Table.Td>{key}</Table.Td>
-                              <Table.Td>
-                                <Badge
-                                  color={
-                                    signal === 'LONG'
-                                      ? 'green'
-                                      : signal === 'SHORT'
-                                        ? 'red'
-                                        : 'gray'
-                                  }
-                                >
-                                  {signal}
-                                </Badge>
-                              </Table.Td>
-                              <Table.Td>
-                                <LongShortBar long={long} short={short} />
-                              </Table.Td>
-                            </Table.Tr>
-                          );
-                        })}
-                      </Table.Tbody>
-                    </Table>
+                      {/* Scoring Modules Section */}
+                      {moduleBreakdown.scoring.length > 0 && (
+                        <>
+                          <Text size="sm" fw={500} mb="xs" c="grape">
+                            Scoring Modules
+                          </Text>
+                          <Table
+                            withRowBorders={false}
+                            verticalSpacing="xs"
+                            miw={400}
+                            style={{ tableLayout: 'fixed' }}
+                          >
+                            <colgroup>
+                              <col style={{ width: '150px' }} />
+                              <col />
+                            </colgroup>
+                            <Table.Thead>
+                              <Table.Tr>
+                                <Table.Th>Module</Table.Th>
+                                <Table.Th>LONG / SHORT</Table.Th>
+                              </Table.Tr>
+                            </Table.Thead>
+                            <Table.Tbody>
+                              {moduleBreakdown.scoring.map((m) => (
+                                <Table.Tr key={m.key}>
+                                  <Table.Td>{m.key}</Table.Td>
+                                  <Table.Td>
+                                    <LongShortBar
+                                      long={m.long}
+                                      short={m.short}
+                                    />
+                                  </Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </Table.Tbody>
+                          </Table>
+                        </>
+                      )}
+                    </>
                   ) : (
                     <Text c="dimmed">No analysis data available</Text>
                   )}
