@@ -40,7 +40,7 @@ export async function analyzeLiquidations(
       type: 'validation',
       module: 'liquidations',
       symbol,
-      signal: 'INACTIVE',
+      signal: 'NEUTRAL',
       meta: {
         candlesUsed: 0,
         avgBuy: 0,
