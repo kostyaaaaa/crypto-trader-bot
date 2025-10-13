@@ -63,6 +63,8 @@ export function validateCoverage(ctx: ValidationContext): boolean {
 
 /**
  * Validates required modules are satisfied
+ * For scoring modules: check if LONG or SHORT score > 0
+ * For validation modules: check if signal is not INACTIVE
  */
 export function validateRequiredModules(ctx: ValidationContext): boolean {
   const { symbol, analysis, strategy } = ctx;
@@ -76,9 +78,28 @@ export function validateRequiredModules(ctx: ValidationContext): boolean {
     for (const req of required) {
       if (!isModuleKey(req)) continue;
       const m = modules[req];
-      if (!m || (m?.signal ?? 'NEUTRAL') === 'NEUTRAL') {
-        logger.info(`ℹ️ ${symbol}: skip, required module ${req} not satisfied`);
+      if (!m) {
+        logger.info(`ℹ️ ${symbol}: skip, required module ${req} is null`);
         return false;
+      }
+
+      // Check based on module type
+      if (m.type === 'validation') {
+        // Validation module: check signal
+        if (m.signal === 'INACTIVE') {
+          logger.info(`ℹ️ ${symbol}: skip, required module ${req} is INACTIVE`);
+          return false;
+        }
+      } else if (m.type === 'scoring') {
+        // Scoring module: check if has any score
+        const longScore = Number(m.meta?.LONG) || 0;
+        const shortScore = Number(m.meta?.SHORT) || 0;
+        if (longScore === 0 && shortScore === 0) {
+          logger.info(
+            `ℹ️ ${symbol}: skip, required module ${req} has no scores`,
+          );
+          return false;
+        }
       }
     }
   }
@@ -86,7 +107,8 @@ export function validateRequiredModules(ctx: ValidationContext): boolean {
 }
 
 /**
- * Validates higherMA module matches majority
+ * Validates higherMA module aligns with majority
+ * HigherMA is a scoring module, so we check LONG vs SHORT scores
  */
 export function validateHigherMA(ctx: ValidationContext): boolean {
   const { symbol, analysis, majority, strategy } = ctx;
@@ -96,11 +118,21 @@ export function validateHigherMA(ctx: ValidationContext): boolean {
     ? (strategy.entry.requiredModules as string[])
     : [];
 
-  if (required.includes('higherMA')) {
-    const hmSignal = modules?.higherMA?.signal || 'NEUTRAL';
-    if (hmSignal !== majority) {
+  if (required.includes('higherMA') && modules?.higherMA) {
+    const longScore = Number(modules.higherMA.meta?.LONG) || 0;
+    const shortScore = Number(modules.higherMA.meta?.SHORT) || 0;
+
+    // Determine higherMA direction based on scores
+    const hmDirection =
+      longScore > shortScore
+        ? 'LONG'
+        : shortScore > longScore
+          ? 'SHORT'
+          : 'NEUTRAL';
+
+    if (hmDirection !== majority && hmDirection !== 'NEUTRAL') {
       logger.info(
-        `⏸️ ${symbol}: skip, higherMA(${hmSignal}) ≠ majority(${majority})`,
+        `⏸️ ${symbol}: skip, higherMA(${hmDirection}) ≠ majority(${majority})`,
       );
       return false;
     }
@@ -127,6 +159,7 @@ export function validateSideBias(ctx: ValidationContext): boolean {
 
 /**
  * Validates volatility is acceptable
+ * Volatility is now a validation module returning ACTIVE/NEUTRAL/INACTIVE
  */
 export function validateVolatility(ctx: ValidationContext): boolean {
   const { symbol, analysis } = ctx;
@@ -137,11 +170,11 @@ export function validateVolatility(ctx: ValidationContext): boolean {
     const vSignal = vol.signal;
     const regime = vol.meta?.regime as string | undefined;
 
-    if (vSignal === 'NONE' && regime === 'DEAD') {
+    if (vSignal === 'INACTIVE' && regime === 'DEAD') {
       logger.info(`⏸️ ${symbol}: skip, volatility regime DEAD`);
       return false;
     }
-    if (vSignal === 'NONE' && regime === 'EXTREME') {
+    if (vSignal === 'INACTIVE' && regime === 'EXTREME') {
       logger.info(`⏸️ ${symbol}: skip, volatility EXTREME`);
       return false;
     }
@@ -167,23 +200,6 @@ export function validateSpread(ctx: ValidationContext): boolean {
 }
 
 /**
- * Validates funding rate is not extreme
- */
-export function validateFunding(ctx: ValidationContext): boolean {
-  const { symbol, analysis, strategy } = ctx;
-  const { modules } = analysis;
-
-  const fr = Number(modules?.funding?.meta?.avgFunding ?? 0);
-  const absOver = strategy.entry.avoidWhen?.fundingExtreme?.absOver;
-
-  if (absOver && Math.abs(fr) > absOver) {
-    logger.info(`⏸️ ${symbol}: skip, funding extreme abs(${fr}) > ${absOver}`);
-    return false;
-  }
-  return true;
-}
-
-/**
  * Runs all entry validators
  * @returns true if all validations pass, false otherwise
  */
@@ -196,7 +212,6 @@ export function validateEntry(ctx: ValidationContext): boolean {
     validateSideBias,
     validateVolatility,
     validateSpread,
-    validateFunding,
   ];
 
   for (const validator of validators) {
@@ -206,12 +221,14 @@ export function validateEntry(ctx: ValidationContext): boolean {
   }
 
   // Log ADX regime info (not a blocker)
+  // TrendRegime is a scoring module - check if scores are low
   const { symbol, analysis } = ctx;
-  if (
-    !analysis.modules?.trendRegime ||
-    analysis.modules.trendRegime.signal === 'NEUTRAL'
-  ) {
-    logger.info(`ℹ️ ${symbol}: ADX regime NEUTRAL (no trend)`);
+  if (analysis.modules?.trendRegime) {
+    const longScore = Number(analysis.modules.trendRegime.meta?.LONG) || 0;
+    const shortScore = Number(analysis.modules.trendRegime.meta?.SHORT) || 0;
+    if (longScore === 0 && shortScore === 0) {
+      logger.info(`ℹ️ ${symbol}: ADX regime weak (no trend detected)`);
+    }
   }
 
   return true;

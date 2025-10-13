@@ -30,27 +30,18 @@ export async function analyzeLiquidity(
     Math.min(1, Number.isFinite(avgImbalance) ? avgImbalance : 0.5),
   );
 
+  // Calculate independent scores for LONG and SHORT (0-100 each)
+  // Based on order book imbalance
   const LONG = Number((clampedImb * 100).toFixed(3));
   const SHORT = Number(((1 - clampedImb) * 100).toFixed(3));
-
-  const deadZone = 0.02;
-  const diff = Math.abs(clampedImb - 0.5);
-
-  let signal: string = 'NEUTRAL';
-  if (diff > deadZone) {
-    signal = clampedImb > 0.5 ? 'LONG' : 'SHORT';
-  }
-
-  const strength = Math.max(LONG, SHORT);
 
   const spreadPctRounded =
     spreadPct != null ? Number(spreadPct.toFixed(3)) : null;
 
   return {
+    type: 'scoring',
     module: 'liquidity',
     symbol,
-    signal,
-    strength,
     meta: {
       window,
       avgImbalance: Number(avgImbalance.toFixed(3)),

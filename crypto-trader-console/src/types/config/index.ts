@@ -15,8 +15,6 @@ export type TCoinConfig = {
     candleTimeframe: string;
     oiWindow: number;
     liqWindow: number;
-    liqSentWindow: number;
-    fundingWindow: number;
     volWindow: number;
     corrWindow: number;
     longShortWindow: number;
@@ -37,15 +35,16 @@ export type TCoinConfig = {
       lookback: number;
       avoidWhen: {
         volatility: string;
-        fundingExtreme: {
-          absOver: number;
-        };
       };
       sideBiasTolerance: number;
     };
     volatilityFilter: {
-      deadBelow: number;
-      extremeAbove: number;
+      minThreshold: number;
+      maxThreshold: number;
+    };
+    liquidationsFilter: {
+      minThreshold: number;
+      maxThreshold: number;
     };
     capital: {
       account: number;
@@ -97,8 +96,6 @@ type TAnalysisModule = {
   trend: number;
   trendRegime: number;
   liquidity: number;
-  funding: number;
-  liquidations: number;
   openInterest: number;
   longShort: number;
   higherMA: number;

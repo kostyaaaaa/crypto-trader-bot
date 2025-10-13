@@ -7,6 +7,7 @@ import {
   CreateConfig,
   Dashboard,
   FMPevents,
+  InfoPage,
   Logs,
   PositionsPage,
 } from '../pages';
@@ -26,6 +27,7 @@ export const router = createBrowserRouter([
       { path: ROUTERS_PATH.analysis, element: <Analysis /> },
       { path: ROUTERS_PATH.logs, element: <Logs /> },
       { path: ROUTERS_PATH.fmpEvents, element: <FMPevents /> },
+      { path: ROUTERS_PATH.info, element: <InfoPage /> },
     ],
   },
 ]);

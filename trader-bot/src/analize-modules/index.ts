@@ -1,5 +1,3 @@
-import { analyzeChoppiness } from './choppiness/analyze-choppiness';
-import { analyzeFunding } from './funding/analyze-funding';
 import { analyzeHigherMA } from './higherMA/analyze-higher-ma';
 import { analyzeLiquidations } from './liquidations/analyze-liquidations';
 import { analyzeLiquidity } from './liquidity/analyze-liquidity';
@@ -11,8 +9,6 @@ import { analyzeTrendRegime } from './trendRegime/analyze-trend-regime';
 import { analyzeVolatility } from './volatility/analyze-volatility';
 
 export {
-  analyzeChoppiness,
-  analyzeFunding,
   analyzeHigherMA,
   analyzeLiquidations,
   analyzeLiquidity,

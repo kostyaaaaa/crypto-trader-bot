@@ -103,27 +103,20 @@ export async function analyzeTrendRegime(
   const gate = clamp(lastAdx / Math.max(adxSignalMin, 1e-9), 0, 1);
   const eff = round3(strengthRaw * gate); // 0..100
 
-  let signal: string = 'NEUTRAL';
-  let LONGv = round3(50);
-  let SHORTv = round3(50);
+  // Calculate independent scores for LONG and SHORT (0-100 each)
+  let LONGv = 0;
+  let SHORTv = 0;
 
-  if (dir === 'LONG') {
-    LONGv = round3(clamp(50 + eff / 2, 0, 100));
-    SHORTv = round3(clamp(50 - eff / 2, 0, 100));
-    if (lastAdx >= adxSignalMin) signal = 'LONG';
-  } else if (dir === 'SHORT') {
-    SHORTv = round3(clamp(50 + eff / 2, 0, 100));
-    LONGv = round3(clamp(50 - eff / 2, 0, 100));
-    if (lastAdx >= adxSignalMin) signal = 'SHORT';
+  if (dir === 'LONG' && lastAdx >= adxSignalMin) {
+    LONGv = round3(clamp(eff, 0, 100));
+  } else if (dir === 'SHORT' && lastAdx >= adxSignalMin) {
+    SHORTv = round3(clamp(eff, 0, 100));
   }
 
-  const strengthOut = Math.max(LONGv, SHORTv);
-
   return {
+    type: 'scoring',
     module: 'trendRegime',
     symbol,
-    signal,
-    strength: strengthOut,
     meta: {
       LONG: LONGv,
       SHORT: SHORTv,

@@ -4,5 +4,6 @@ export * from './Configuration';
 export * from './CreateConfig';
 export * from './Dashboard';
 export * from './FMPevents';
+export * from './Info';
 export * from './Logs';
 export * from './PositionsPage';

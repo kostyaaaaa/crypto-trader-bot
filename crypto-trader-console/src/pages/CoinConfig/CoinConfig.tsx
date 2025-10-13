@@ -1,4 +1,4 @@
-import { ArrowLeft } from '@phosphor-icons/react';
+import { ArrowLeftIcon } from '@phosphor-icons/react';
 import { type FC } from 'react';
 import { Controller } from 'react-hook-form';
 import { ROUTERS_PATH } from '../../router/constants';
@@ -25,7 +25,8 @@ const CoinConfig: FC = () => {
     <div className={styles.wrapper}>
       <div className={styles.back_btn}>
         <Button component="a" href={ROUTERS_PATH.configuration} variant="white">
-          <ArrowLeft size={24} /> Counfiguration list
+          <ArrowLeftIcon size={24} style={{ marginRight: '8px' }} />{' '}
+          Configuration list
         </Button>
       </div>
       <form

@@ -70,33 +70,33 @@ export async function analyzeHigherMA(
   const deltaPct = (delta / priceNum) * 100;
   const priceVsLongPct = ((priceNum - lNum) / lNum) * 100;
 
-  let signal: string = 'NEUTRAL';
-  if (Math.abs(deltaPct) >= thresholdPct) {
-    signal = delta > 0 ? 'LONG' : 'SHORT';
-  }
+  // Calculate independent scores for LONG and SHORT (0-100 each)
+  let LONG = 0;
+  let SHORT = 0;
 
-  const agree =
-    (signal === 'LONG' && priceVsLongPct >= 0) ||
-    (signal === 'SHORT' && priceVsLongPct <= 0);
-
-  let strength = 0;
   const rampK = 3 * (12 / scale);
-  if (signal !== 'NEUTRAL') {
+
+  if (Math.abs(deltaPct) >= thresholdPct) {
     const over = Math.max(0, Math.abs(deltaPct) - thresholdPct);
     const denom = thresholdPct * rampK || 1;
-    strength = Math.min(100, (over / denom) * 100);
-    if (!agree) strength *= 0.8;
-  }
-  strength = Number(strength.toFixed(3));
+    let strength = Math.min(100, (over / denom) * 100);
 
-  const LONG = signal === 'LONG' ? strength : 0;
-  const SHORT = signal === 'SHORT' ? strength : 0;
+    // Check price agreement with signal
+    if (delta > 0) {
+      const agree = priceVsLongPct >= 0;
+      if (!agree) strength *= 0.8;
+      LONG = Number(strength.toFixed(3));
+    } else if (delta < 0) {
+      const agree = priceVsLongPct <= 0;
+      if (!agree) strength *= 0.8;
+      SHORT = Number(strength.toFixed(3));
+    }
+  }
 
   return {
+    type: 'scoring',
     module: 'higherMA',
     symbol,
-    signal,
-    strength, // 0..100
     meta: {
       LONG,
       SHORT,
