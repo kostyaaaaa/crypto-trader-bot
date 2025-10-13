@@ -34,8 +34,21 @@ export async function analyzeLiquidations(
 
   const liquidations = sorted.slice(0, MAX_COUNT);
 
+  // If no data or data is too old, return INACTIVE signal
   if (!liquidations || liquidations.length === 0) {
-    return null;
+    return {
+      type: 'validation',
+      module: 'liquidations',
+      symbol,
+      signal: 'INACTIVE',
+      meta: {
+        candlesUsed: 0,
+        avgBuy: 0,
+        avgSell: 0,
+        buyPct: 0,
+        sellPct: 0,
+      },
+    };
   }
 
   const newestTs = new Date(
@@ -43,7 +56,19 @@ export async function analyzeLiquidations(
   ).getTime();
   const ageMin = newestTs ? (Date.now() - newestTs) / 60000 : Infinity;
   if (ageMin > MAX_AGE_MIN) {
-    return null;
+    return {
+      type: 'validation',
+      module: 'liquidations',
+      symbol,
+      signal: 'INACTIVE',
+      meta: {
+        candlesUsed: 0,
+        avgBuy: 0,
+        avgSell: 0,
+        buyPct: 0,
+        sellPct: 0,
+      },
+    };
   }
 
   const avgBuy =
