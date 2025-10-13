@@ -7,5 +7,6 @@ export const ROUTERS_PATH = {
   positions: '/positions',
   analysis: '/analysis',
   logs: '/logs',
+  info: '/info',
   fmpEvents: '/fmp-events',
 } as const;

@@ -76,4 +76,5 @@ const links: ILink[] = [
   { link: ROUTERS_PATH.analysis, label: 'Analysis' },
   { link: ROUTERS_PATH.logs, label: 'Logs' },
   { link: ROUTERS_PATH.fmpEvents, label: 'FMP events' },
+  { link: ROUTERS_PATH.info, label: 'Info' },
 ];
