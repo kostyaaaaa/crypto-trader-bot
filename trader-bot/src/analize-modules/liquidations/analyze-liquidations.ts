@@ -34,7 +34,6 @@ export async function analyzeLiquidations(
 
   const liquidations = sorted.slice(0, MAX_COUNT);
 
-  // If no data or data is too old, return INACTIVE signal
   if (!liquidations || liquidations.length === 0) {
     return {
       type: 'validation',
@@ -60,7 +59,7 @@ export async function analyzeLiquidations(
       type: 'validation',
       module: 'liquidations',
       symbol,
-      signal: 'INACTIVE',
+      signal: 'NEUTRAL',
       meta: {
         candlesUsed: 0,
         avgBuy: 0,
