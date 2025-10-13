@@ -4,7 +4,6 @@ export interface IModules {
   trend: number;
   trendRegime: number;
   liquidity: number;
-  funding: number;
   liquidations: number;
   openInterest: number;
   longShort: number;
@@ -15,7 +14,6 @@ export interface IAnalysisConfig {
   candleTimeframe: string;
   oiWindow: number;
   liqWindow: number;
-  fundingWindow: number;
   volWindow: number;
   corrWindow: number;
   longShortWindow: number;
@@ -42,9 +40,6 @@ export interface IMinScore {
 
 export interface IAvoidWhen {
   volatility?: string;
-  fundingExtreme?: {
-    absOver: number;
-  };
 }
 
 export interface IEntryConfig {
@@ -105,8 +100,13 @@ export interface ITrailingConfig {
   trailStepPct: number;
 }
 export interface IVolatilityFilterConfig {
-  deadBelow: number;
-  extremeAbove: number;
+  minThreshold: number;
+  maxThreshold: number;
+}
+
+export interface ILiquidationsFilterConfig {
+  minThreshold: number;
+  maxThreshold: number;
 }
 
 export interface IExitsConfig {
@@ -123,6 +123,7 @@ export interface IStrategyConfig {
   sizing: ISizingConfig;
   exits: IExitsConfig;
   volatilityFilter: IVolatilityFilterConfig;
+  liquidationsFilter: ILiquidationsFilterConfig;
 }
 
 // Main coin configuration interface
@@ -141,10 +142,8 @@ const weightsSchema = new Schema(
     trend: { type: Number, required: true },
     trendRegime: { type: Number, required: true },
     liquidity: { type: Number, required: true },
-    funding: { type: Number, required: true },
     liquidations: { type: Number, required: true },
     openInterest: { type: Number, required: true },
-
     longShort: { type: Number, required: true },
     higherMA: { type: Number, required: true },
     rsiVolTrend: { type: Number, required: true },
@@ -157,10 +156,8 @@ const moduleThresholdsSchema = new Schema(
     trend: { type: Number, required: true },
     trendRegime: { type: Number, required: true },
     liquidity: { type: Number, required: true },
-    funding: { type: Number, required: true },
     liquidations: { type: Number, required: true },
     openInterest: { type: Number, required: true },
-
     longShort: { type: Number, required: true },
     higherMA: { type: Number, required: true },
     rsiVolTrend: { type: Number, required: true },
@@ -186,7 +183,6 @@ const analysisConfigSchema = new Schema(
     candleTimeframe: { type: String, required: true },
     oiWindow: { type: Number, required: true },
     liqWindow: { type: Number, required: true },
-    fundingWindow: { type: Number, required: true },
     volWindow: { type: Number, required: true },
     corrWindow: { type: Number, required: true },
     longShortWindow: { type: Number, required: true },
@@ -205,17 +201,9 @@ const minScoreSchema = new Schema(
   { _id: false },
 );
 
-const fundingExtremeSchema = new Schema(
-  {
-    absOver: { type: Number, required: true },
-  },
-  { _id: false },
-);
-
 const avoidWhenSchema = new Schema(
   {
     volatility: { type: String },
-    fundingExtreme: { type: fundingExtremeSchema },
   },
   { _id: false },
 );
@@ -328,8 +316,16 @@ const exitsConfigSchema = new Schema(
 );
 const volatilityFilterSchema = new Schema(
   {
-    deadBelow: { type: Number, required: true },
-    extremeAbove: { type: Number, required: true },
+    minThreshold: { type: Number, required: true },
+    maxThreshold: { type: Number, required: true },
+  },
+  { _id: false },
+);
+
+const liquidationsFilterSchema = new Schema(
+  {
+    minThreshold: { type: Number, required: true },
+    maxThreshold: { type: Number, required: true },
   },
   { _id: false },
 );
@@ -337,6 +333,7 @@ const strategyConfigSchema = new Schema(
   {
     entry: { type: entryConfigSchema, required: true },
     volatilityFilter: { type: volatilityFilterSchema, required: true },
+    liquidationsFilter: { type: liquidationsFilterSchema, required: true },
     capital: { type: capitalConfigSchema, required: true },
     sizing: { type: sizingConfigSchema, required: true },
     exits: { type: exitsConfigSchema, required: true },

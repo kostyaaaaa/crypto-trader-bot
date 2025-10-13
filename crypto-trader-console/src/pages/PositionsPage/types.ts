@@ -66,13 +66,6 @@ export interface ILiquidityMeta {
   SHORT: number;
 }
 
-export interface IFundingMeta {
-  LONG: number;
-  SHORT: number;
-  candlesUsed: number;
-  avgFunding: number;
-}
-
 export interface IOpenInterestMeta {
   LONG: number;
   SHORT: number;
@@ -142,10 +135,6 @@ export interface ILiquidityModule extends IModuleBase {
   spreadPct: number;
 }
 
-export interface IFundingModule extends IModuleBase {
-  meta: IFundingMeta;
-}
-
 export interface ILiquidationsModule {
   symbol: string;
   time: Date;
@@ -174,30 +163,15 @@ export interface IRsiVolTrendModule extends IModuleBase {
   meta: IRsiVolTrendMeta;
 }
 
-export interface IChoppinessMeta {
-  LONG: number;
-  SHORT: number;
-  chop: number;
-  candlesUsed: number;
-  period: number;
-  interpretation: string;
-}
-
-export interface IChoppinessModule extends IModuleBase {
-  meta: IChoppinessMeta;
-}
-
 // Analysis modules container
 export interface IAnalysisModules {
   trend: ITrendModule;
   volatility: IVolatilityModule;
   trendRegime: ITrendRegimeModule;
   liquidity: ILiquidityModule;
-  funding: IFundingModule;
   liquidations: ILiquidationsModule;
   openInterest: IOpenInterestModule;
   longShort: ILongShortModule;
   higherMA: IHigherMAModule;
   rsiVolTrend: IRsiVolTrendModule;
-  choppiness: IChoppinessModule;
 }

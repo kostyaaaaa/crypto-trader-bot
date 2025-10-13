@@ -9,8 +9,8 @@ export async function analyzeVolatility(
   candles: Candle[] = [],
   window: number = 14,
   volatilityFilter: IVolatilityThresholds = {
-    deadBelow: 0.2,
-    extremeAbove: 2.5,
+    minThreshold: 0.2,
+    maxThreshold: 2.5,
   },
 ): Promise<IVolatilityModule | null> {
   if (!Array.isArray(candles) || candles.length < window + 1) {
@@ -38,31 +38,25 @@ export async function analyzeVolatility(
   const atrPct = (atr / lastClose) * 100;
 
   let regime: IVolatilityRegime = 'NORMAL';
-  let signal: string = 'ACTIVE';
-  let strength = 0;
+  let signal: 'ACTIVE' | 'NEUTRAL' | 'INACTIVE' = 'ACTIVE';
 
-  if (atrPct < volatilityFilter.deadBelow) {
+  if (atrPct < volatilityFilter.minThreshold) {
     regime = 'DEAD';
-    signal = 'NONE';
-    strength = 0;
-  } else if (atrPct > volatilityFilter.extremeAbove) {
+    signal = 'INACTIVE';
+  } else if (atrPct > volatilityFilter.maxThreshold) {
     regime = 'EXTREME';
-    signal = 'NONE';
-    strength = 100; // дуже висока активність, але не торгуємо
+    signal = 'INACTIVE';
   } else {
     regime = 'NORMAL';
     signal = 'ACTIVE';
-    strength = Math.min(100, atrPct * 50); // масштабуємо ATR%
   }
 
   return {
+    type: 'validation',
     module: 'volatility',
     symbol,
     signal,
-    strength,
     meta: {
-      LONG: strength,
-      SHORT: strength,
       regime,
       candlesUsed: trs.length,
       atrAbs: Number(atr.toFixed(5)),

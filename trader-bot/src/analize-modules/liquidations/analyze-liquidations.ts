@@ -7,8 +7,17 @@ import { getLiquidations } from '../../api';
 const MAX_COUNT = 10 as const;
 const MAX_AGE_MIN = 30 as const;
 
+interface ILiquidationsFilter {
+  minThreshold: number;
+  maxThreshold: number;
+}
+
 export async function analyzeLiquidations(
   symbol: string = 'ETHUSDT',
+  liquidationsFilter: ILiquidationsFilter = {
+    minThreshold: 10000,
+    maxThreshold: 1000000,
+  },
 ): Promise<ILiquidationsModule | null> {
   const raw = (await getLiquidations(symbol, MAX_COUNT)) as
     | LiquidationCandle[]
@@ -45,43 +54,26 @@ export async function analyzeLiquidations(
     liquidations.length;
 
   const total = avgBuy + avgSell;
+  const buyPct = total > 0 ? (avgBuy / total) * 100 : 50;
+  const sellPct = total > 0 ? (avgSell / total) * 100 : 50;
 
-  if (total === 0) {
-    return {
-      module: 'liquidations',
-      symbol,
-      signal: 'NEUTRAL',
-      strength: 0,
-      meta: {
-        LONG: 50,
-        SHORT: 50,
-        candlesUsed: liquidations.length,
-        avgBuy: 0,
-        avgSell: 0,
-        buyPct: 0,
-        sellPct: 0,
-      },
-    };
+  // Determine signal based on total liquidation volume
+  let signal: 'ACTIVE' | 'NEUTRAL' | 'INACTIVE' = 'ACTIVE';
+
+  if (total < liquidationsFilter.minThreshold) {
+    signal = 'INACTIVE'; // Too low liquidation activity
+  } else if (total > liquidationsFilter.maxThreshold) {
+    signal = 'INACTIVE'; // Too extreme liquidation activity
+  } else {
+    signal = 'ACTIVE'; // Normal liquidation range
   }
 
-  const buyPct = (avgBuy / total) * 100;
-  const sellPct = (avgSell / total) * 100;
-
-  let signal: string = 'NEUTRAL';
-  if (buyPct > sellPct + 10) signal = 'LONG';
-  else if (sellPct > buyPct + 10) signal = 'SHORT';
-
-  const longScore = Math.round(buyPct);
-  const shortScore = Math.round(sellPct);
-
   return {
+    type: 'validation',
     module: 'liquidations',
     symbol,
     signal,
-    strength: Math.max(longScore, shortScore),
     meta: {
-      LONG: longScore,
-      SHORT: shortScore,
       candlesUsed: liquidations.length,
       avgBuy: Number(avgBuy.toFixed(2)),
       avgSell: Number(avgSell.toFixed(2)),

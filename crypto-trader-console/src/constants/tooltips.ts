@@ -13,9 +13,7 @@ export const TIPS: Record<string, string> = {
   'analysisConfig.liqWindow':
     'Кількість точок orderbook/ліквідності для усереднення. Занадто мале вікно дає шум.',
   'analysisConfig.liqSentWindow':
-    'Скільки останніх “ліквідаційних” свічок усереднюємо для sentiment по ліквідаціях.',
-  'analysisConfig.fundingWindow':
-    'Скільки періодів беремо для середнього funding (у годинах/періодах).',
+    'Скільки останніх "ліквідаційних" свічок усереднюємо для sentiment по ліквідаціях.',
   'analysisConfig.volWindow':
     'Вікно для ATR/волатильності. Впливає на позначки DEAD/EXTREME.',
   'analysisConfig.corrWindow':
@@ -29,9 +27,7 @@ export const TIPS: Record<string, string> = {
   'analysisConfig.weights.trendRegime':
     'Вага ADX/DI режиму тренду. Підсилює сигнали сили/слабкості тренду.',
   'analysisConfig.weights.liquidity':
-    'Вага ліквідності/балансу книги заявок. Підвищуйте для монет із частими “сквізами”.',
-  'analysisConfig.weights.funding':
-    'Вага середнього funding (перекоси лонгерів/шортерів).',
+    'Вага ліквідності/балансу книги заявок. Підвищуйте для монет із частими "сквізами".',
   'analysisConfig.weights.liquidations':
     'Вага ліквідацій (де ріжуть лонги/шорти). Корисно для ловлі імпульсів.',
   'analysisConfig.weights.openInterest':
@@ -48,8 +44,6 @@ export const TIPS: Record<string, string> = {
     'Мінімальна сила ADX/DI, щоб рахувати режим тренду.',
   'analysisConfig.moduleThresholds.liquidity':
     'Поріг для модуля ліквідності. Низькі значення зазвичай = шум.',
-  'analysisConfig.moduleThresholds.funding':
-    'Поріг для funding. Допомагає ігнорувати малі перекоси.',
   'analysisConfig.moduleThresholds.liquidations':
     'Поріг для ліквідацій, щоби уникати слабких дисбалансів.',
   'analysisConfig.moduleThresholds.openInterest':
@@ -89,16 +83,20 @@ export const TIPS: Record<string, string> = {
     'Мінімальна пауза (хв) між новими входами по цьому символу.',
   'strategy.entry.avoidWhen.volatility':
     'Пропускати угоди при певному режимі волатильності (напр., DEAD).',
-  'strategy.entry.avoidWhen.fundingExtreme.absOver':
-    'Пропускати торговлю, якщо |funding| > порога (надмірний перекіс учасників).',
   'strategy.entry.sideBiasTolerance':
     'Дозволена різниця між LONG і SHORT скором, щоб прийняти сторону. Менше — суворіше.',
 
   // ====== STRATEGY — VOLATILITY FILTER ======
-  'strategy.volatilityFilter.deadBelow':
-    'ATR% нижче якого ринок вважаємо DEAD (млявий).',
-  'strategy.volatilityFilter.extremeAbove':
-    'ATR% вище якого ринок EXTREME (ризик ривків/слипейджу).',
+  'strategy.volatilityFilter.minThreshold':
+    'Min ATR% threshold - below this level, volatility is too low (INACTIVE).',
+  'strategy.volatilityFilter.maxThreshold':
+    'Max ATR% threshold - above this level, volatility is too high (INACTIVE).',
+
+  // ====== STRATEGY — LIQUIDATIONS FILTER ======
+  'strategy.liquidationsFilter.minThreshold':
+    'Min liquidations threshold - below this level, liquidation activity is too low (INACTIVE).',
+  'strategy.liquidationsFilter.maxThreshold':
+    'Max liquidations threshold - above this level, liquidation activity is too extreme (INACTIVE).',
 
   // ====== STRATEGY — CAPITAL ======
   'strategy.capital.account':
