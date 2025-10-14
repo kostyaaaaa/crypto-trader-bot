@@ -144,19 +144,34 @@ export async function analyzeRsiVolumeTrend(
   // ---------- RSI усиление ----------
   let rsiBoostLong = 0;
   let rsiBoostShort = 0;
+  let rsiPenaltyLong = 0;
+  let rsiPenaltyShort = 0;
 
-  if (rsi > 72)
+  if (rsi > 70) {
     rsiBoostShort = Math.min(20, (rsi - 72) * 1.2); // усиливает SHORT
-  else if (rsi < 28) rsiBoostLong = Math.min(20, (28 - rsi) * 1.2); // усиливает LONG
+    rsiPenaltyLong = Math.min(15, (rsi - 72) * 0.8); // ослабляет лонг
+  } else if (rsi < 30) {
+    rsiBoostLong = Math.min(20, (28 - rsi) * 1.2); // усиливает LONG
+    rsiPenaltyShort = Math.min(15, (28 - rsi) * 0.8); // ослабляет шорт
+  }
 
   const rsiLongScore = rsi >= 50 ? ((rsi - 50) / 22) * 100 : 0;
   const rsiShortScore = rsi <= 50 ? ((50 - rsi) / 22) * 100 : 0;
 
   // ---------- итоговые веса ----------
   let LONG =
-    volScore * 0.5 + trendLong * 0.3 + rsiLongScore * 0.15 + rsiBoostLong;
+    volScore * 0.5 +
+    trendLong * 0.3 +
+    rsiLongScore * 0.15 +
+    rsiBoostLong -
+    rsiPenaltyLong;
+
   let SHORT =
-    volScore * 0.5 + trendShort * 0.3 + rsiShortScore * 0.15 + rsiBoostShort;
+    volScore * 0.5 +
+    trendShort * 0.3 +
+    rsiShortScore * 0.15 +
+    rsiBoostShort -
+    rsiPenaltyShort;
 
   // ---------- демпфирование по объёму ----------
   LONG = applyVolumeDamping(LONG, volRatio);
