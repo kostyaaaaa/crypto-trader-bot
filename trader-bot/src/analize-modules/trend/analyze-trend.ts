@@ -23,9 +23,7 @@ export async function analyzeTrend(
   const volumes = candles.map((c) => Number(c.volume ?? 0));
   const rsiSeries = computeRSISeries(closes, rsiPeriod);
 
-  // raw RSI may be null while seed isn't complete; fall back to single-value util
   const rsiRaw = rsiSeries.at(-1) ?? RSI(closes, rsiPeriod);
-  // neutral fallback (keeps scores stable) if RSI still unavailable
   const rsiUsed: number =
     typeof rsiRaw === 'number' && Number.isFinite(rsiRaw) ? rsiRaw : 50;
 
@@ -41,25 +39,29 @@ export async function analyzeTrend(
     ? ((((emaFast as number) - emaSlow) as number) / (emaSlow as number)) * 100
     : 0;
 
-  // Calculate independent scores for LONG and SHORT (0-100 each)
   let longScore = 0;
   let shortScore = 0;
 
-  const gapAbs = Math.abs(emaGapPct);
-  const gapEff = gapAbs < 0.1 ? 0 : gapAbs;
+  // ==== Tunables (make zeros happen рідше без шуму) ====
+  const EMA_GAP_DEAD = 0.03; // percent dead-zone for EMA gap (було 0.1)
+  const EMA_GAP_SCALE = 20; // points per 1% effective gap, cap 60
+  const RSI_DEAD = 3; // dead-zone навколо 50 (було 30..70)
+  const RSI_SCALE = 2; // points per RSI point beyond dead-zone, cap 40
 
-  // EMA contribution (0-60 points)
+  const gapAbs = Math.abs(emaGapPct);
+  const gapEff = gapAbs <= EMA_GAP_DEAD ? 0 : gapAbs;
   if (emaGapPct > 0) {
-    longScore += Math.min(60, gapEff * 10);
+    longScore += Math.min(60, gapEff * EMA_GAP_SCALE);
   } else if (emaGapPct < 0) {
-    shortScore += Math.min(60, gapEff * 10);
+    shortScore += Math.min(60, gapEff * EMA_GAP_SCALE);
   }
 
-  // RSI contribution (0-40 points)
-  if (rsiUsed < 30) {
-    longScore += Math.min(40, (30 - rsiUsed) * 1.33);
-  } else if (rsiUsed > 70) {
-    shortScore += Math.min(40, (rsiUsed - 70) * 1.33);
+  const rsiDist = Math.max(0, Math.abs(rsiUsed - 50) - RSI_DEAD);
+  const rsiPoints = Math.min(40, rsiDist * RSI_SCALE);
+  if (rsiUsed >= 50) {
+    longScore += rsiPoints;
+  } else {
+    shortScore += rsiPoints;
   }
 
   longScore = Math.max(0, Math.min(100, longScore));
@@ -77,9 +79,7 @@ export async function analyzeTrend(
       emaGapPct: Number(emaGapPct.toFixed(2)),
       rsi: Number(rsiUsed.toFixed(2)),
       rsiRaw: toFixedOrNull(typeof rsiRaw === 'number' ? rsiRaw : null, 2),
-      rsiSeries,
       lastRSI: toFixedOrNull(typeof rsiRaw === 'number' ? rsiRaw : null, 2),
-      volumes,
       lastVolume: volumes[volumes.length - 1] ?? null,
     },
   };

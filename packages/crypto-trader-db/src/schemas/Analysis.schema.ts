@@ -12,9 +12,7 @@ export interface ITrendMeta {
   emaGapPct: number;
   rsi: number;
   rsiRaw: number | null;
-  rsiSeries: (number | null)[];
   lastRSI: number | null;
-  volumes: number[];
   lastVolume: number | null;
 }
 export interface IVolatilityThresholds {
@@ -232,9 +230,7 @@ const trendMetaSchema = new Schema(
     emaGapPct: { type: Number, required: true },
     rsi: { type: Number, required: true },
     rsiRaw: { type: Number, required: false, default: null },
-    rsiSeries: { type: [Schema.Types.Mixed], required: false, default: [] }, // allow nulls in series
     lastRSI: { type: Number, required: false, default: null },
-    volumes: { type: [Number], required: false, default: [] },
     lastVolume: { type: Number, required: false, default: null },
   },
   { _id: false },
