@@ -56,6 +56,11 @@ const CoinConfig: FC = () => {
             label="Is active"
             {...register('isActive')}
           />
+          <Checkbox
+            className={styles.wrapper__checkbox}
+            label="Is trader"
+            {...register('isTrader')}
+          />
         </div>
         <CoinConfigTemplate
           register={register}

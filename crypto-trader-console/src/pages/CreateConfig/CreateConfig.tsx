@@ -54,6 +54,11 @@ const CreateConfig: FC = () => {
             label="Is active"
             {...register('isActive')}
           />
+          <Checkbox
+            className={styles.wrapper__checkbox}
+            label="Is trader"
+            {...register('isTrader')}
+          />
           <div className={styles.presetSelector}>
             <Select
               label="Load from Preset"
