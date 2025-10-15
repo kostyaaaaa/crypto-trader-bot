@@ -23,6 +23,7 @@ export interface TradingEngineArgs {
   symbol: string;
   analysisConfig: IAnalysisConfig;
   strategy: IStrategyConfig;
+  isTrader: boolean;
 }
 
 // ---------- main ----------
@@ -30,7 +31,9 @@ export async function tradingEngine({
   symbol = 'ETHUSDT',
   analysisConfig,
   strategy,
+  isTrader,
 }: TradingEngineArgs): Promise<void> {
+  if (!isTrader) return;
   if (!cooldownHub.isStarted()) cooldownHub.start();
 
   const lookback = strategy?.entry?.lookback || 3;

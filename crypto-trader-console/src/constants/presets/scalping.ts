@@ -3,6 +3,8 @@ import type { TCoinConfig } from '../../types';
 export const scalpingPreset: TCoinConfig = {
   symbol: 'SCALPING',
   isActive: true,
+  isTrader: true,
+
   analysisConfig: {
     candleTimeframe: '1m',
     oiWindow: 10,

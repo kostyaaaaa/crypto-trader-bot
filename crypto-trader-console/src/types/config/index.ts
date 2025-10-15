@@ -11,6 +11,7 @@ export type THigherMAConfig = {
 export type TCoinConfig = {
   symbol: string;
   isActive: boolean;
+  isTrader: boolean;
   analysisConfig: {
     candleTimeframe: string;
     oiWindow: number;

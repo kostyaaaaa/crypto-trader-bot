@@ -129,6 +129,7 @@ export interface IStrategyConfig {
 export interface ICoinConfig {
   symbol: string;
   isActive: boolean;
+  isTrader: boolean;
   analysisConfig: IAnalysisConfig;
   strategy: IStrategyConfig;
   createdAt?: Date;
@@ -346,6 +347,7 @@ export const CoinConfigSchema = new Schema<ICoinConfig>(
       required: true,
     },
     isActive: { type: Boolean, required: true },
+    isTrader: { type: Boolean, required: true },
     analysisConfig: { type: analysisConfigSchema, required: true },
     strategy: { type: strategyConfigSchema, required: true },
   },
