@@ -89,28 +89,55 @@ export async function analyzeTrendRegime(
   if (lastPlus > lastMinus) dir = 'LONG';
   else if (lastMinus > lastPlus) dir = 'SHORT';
 
+  // Scale ADX to 0..100 and apply a dead-zone to the directional gap before mixing
   const adxScaled = clamp((lastAdx / adxMaxForScale) * 100, 0, 100);
-  const dirGapPct = clamp(
+  const dirGapPctRaw = clamp(
     (Math.abs(lastPlus - lastMinus) / Math.max(lastPlus + lastMinus, 1e-9)) *
       100,
     0,
     100,
   );
+  // small dead-zone helps ignore micro-imbalance in +DI/-DI when market is choppy
+  const DIRGAP_DEAD = 5;
+  const dirGapEff =
+    dirGapPctRaw <= DIRGAP_DEAD
+      ? 0
+      : ((dirGapPctRaw - DIRGAP_DEAD) / (100 - DIRGAP_DEAD)) * 100;
 
-  const strengthRawUnclamped = mixAdx * adxScaled + mixGap * dirGapPct; // 0..100
-  const strengthRaw = clamp(strengthRawUnclamped, 0, 100);
+  // Normalize mix weights so they always sum to 1
+  const mixSum = Math.max(mixAdx + mixGap, 1e-9);
+  const wAdx = mixAdx / mixSum;
+  const wGap = mixGap / mixSum;
 
-  const gate = clamp(lastAdx / Math.max(adxSignalMin, 1e-9), 0, 1);
+  // Raw strength 0..100
+  const strengthRaw = clamp(wAdx * adxScaled + wGap * dirGapEff, 0, 100);
+
+  // Soft gate by ADX vs threshold:
+  // x in [0..1]; add floor so low-ADX не зводить сигнал в нуль
+  const x = clamp(lastAdx / Math.max(adxSignalMin, 1e-9), 0, 1);
+  const GATE_FLOOR = 0.25; // мінімум 25% сили навіть нижче порогу
+  const GATE_POW = 0.7; // м'якість кривої (0.5..1.0)
+  const gate = GATE_FLOOR + (1 - GATE_FLOOR) * Math.pow(x, GATE_POW);
+
   const eff = round3(strengthRaw * gate); // 0..100
 
-  // Calculate independent scores for LONG and SHORT (0-100 each)
-  let LONGv = 0;
-  let SHORTv = 0;
+  // Розподіляємо ефективну силу між LONG/SHORT пропорційно +DI/-DI
+  const sumDI = Math.max(lastPlus + lastMinus, 1e-9);
+  const shareLong = clamp(lastPlus / sumDI, 0, 1);
+  const shareShort = clamp(lastMinus / sumDI, 0, 1);
 
-  if (dir === 'LONG' && lastAdx >= adxSignalMin) {
-    LONGv = round3(clamp(eff, 0, 100));
-  } else if (dir === 'SHORT' && lastAdx >= adxSignalMin) {
-    SHORTv = round3(clamp(eff, 0, 100));
+  const LONGv = round3(clamp(eff * shareLong, 0, 100));
+  const SHORTv = round3(clamp(eff * shareShort, 0, 100));
+
+  const NEUTRAL_BAND = 5; // points of effective strength to call it neutral
+  let signal: 'LONG' | 'SHORT' | 'NEUTRAL' = 'NEUTRAL';
+  if (eff >= NEUTRAL_BAND) {
+    signal =
+      lastPlus > lastMinus
+        ? 'LONG'
+        : lastMinus > lastPlus
+          ? 'SHORT'
+          : 'NEUTRAL';
   }
 
   return {
@@ -122,7 +149,7 @@ export async function analyzeTrendRegime(
       SHORT: SHORTv,
       ADX: Number(lastAdx.toFixed(2)),
       ADX_scaled: round3(adxScaled),
-      dirGapPct: round3(dirGapPct),
+      dirGapPct: round3(dirGapPctRaw), // keep raw for transparency in meta
       plusDI: Number(lastPlus.toFixed(2)),
       minusDI: Number(lastMinus.toFixed(2)),
       period,

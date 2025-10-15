@@ -35,6 +35,7 @@ export async function analyzeTrend(
     Number.isFinite(emaFast) &&
     Number.isFinite(emaSlow);
 
+  // use slow EMA as reference to normalize the gap (%): (fast - slow) / slow * 100
   const emaGapPct = hasEMAs
     ? ((((emaFast as number) - emaSlow) as number) / (emaSlow as number)) * 100
     : 0;
@@ -44,16 +45,25 @@ export async function analyzeTrend(
 
   // ==== Tunables (make zeros happen рідше без шуму) ====
   const EMA_GAP_DEAD = 0.03; // percent dead-zone for EMA gap (було 0.1)
+  // Optional asymmetric caps for EMA gap in percent (to tame extreme one-candle spikes)
+  const EMA_GAP_PCT_CAP_POS = 50; // cap positive (fast>slow) effective gap to 50%
+  const EMA_GAP_PCT_CAP_NEG = 15; // cap negative (fast<slow) effective gap to 15%
   const EMA_GAP_SCALE = 20; // points per 1% effective gap, cap 60
   const RSI_DEAD = 3; // dead-zone навколо 50 (було 30..70)
   const RSI_SCALE = 2; // points per RSI point beyond dead-zone, cap 40
 
   const gapAbs = Math.abs(emaGapPct);
-  const gapEff = gapAbs <= EMA_GAP_DEAD ? 0 : gapAbs;
+  const gapEffRaw = gapAbs <= EMA_GAP_DEAD ? 0 : gapAbs;
+  // apply asymmetric clamp by sign to avoid rare huge positive spikes dominating score
+  const gapEff =
+    emaGapPct >= 0
+      ? Math.min(gapEffRaw, EMA_GAP_PCT_CAP_POS)
+      : Math.min(gapEffRaw, EMA_GAP_PCT_CAP_NEG);
+  const gapPoints = Math.min(60, gapEff * EMA_GAP_SCALE);
   if (emaGapPct > 0) {
-    longScore += Math.min(60, gapEff * EMA_GAP_SCALE);
+    longScore += gapPoints;
   } else if (emaGapPct < 0) {
-    shortScore += Math.min(60, gapEff * EMA_GAP_SCALE);
+    shortScore += gapPoints;
   }
 
   const rsiDist = Math.max(0, Math.abs(rsiUsed - 50) - RSI_DEAD);

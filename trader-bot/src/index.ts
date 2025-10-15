@@ -111,6 +111,6 @@ if (isBotActive) {
   connectDB();
   markPriceHub.init();
   cooldownHub.start();
-  startReconciler(2 * 60 * 1000);
+  startReconciler(5 * 60 * 1000);
   subscribeCoinConfigs();
 }

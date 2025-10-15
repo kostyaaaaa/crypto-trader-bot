@@ -1,4 +1,3 @@
-// trader-bot/src/trading/binance/reconciler.ts
 import axios from 'axios';
 import crypto from 'crypto';
 import { PositionModel, type IPosition } from 'crypto-trader-db';
@@ -10,7 +9,40 @@ import { cancelAllOrders } from './binance-functions/index';
 
 const BINANCE_BASE = 'https://fapi.binance.com';
 
-function sign(query: string, secret: string) {
+// --- rate-limit & time helpers ---
+let _timeOffsetMs = 0; // Binance serverTime - local Date.now()
+let _lastTimeSync = 0;
+const TIME_SYNC_TTL = 5 * 60 * 1000; // 5m
+
+async function syncServerTime() {
+  try {
+    const { data } = await axios.get<{ serverTime: number }>(
+      `${BINANCE_BASE}/fapi/v1/time`,
+      { timeout: 5000 },
+    );
+    _timeOffsetMs = Number(data?.serverTime || 0) - Date.now();
+    _lastTimeSync = Date.now();
+  } catch (e) {
+    // do not throw, just log; we'll try again next call
+    logger.warn('⚠️ Failed to sync Binance server time');
+  }
+}
+
+function withRecvWindow(params: Record<string, any> = {}) {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(params || {})) {
+    if (v !== undefined && v !== null) out[k] = String(v);
+  }
+  // default recvWindow if not provided
+  if (!('recvWindow' in out)) out.recvWindow = String(10_000);
+  return out;
+}
+
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function sign(query: string, secret: string): string {
   return crypto.createHmac('sha256', secret).update(query).digest('hex');
 }
 
@@ -21,21 +53,40 @@ async function binanceGet<T>(
   const apiKey = process.env.BINANCE_API_KEY || '';
   const apiSecret = process.env.BINANCE_ACCOUNT_SECRET_KEY || '';
   if (!apiKey || !apiSecret)
-    throw new Error('BINANCE_API_KEY / BINANCE_API_SECRET are required');
+    throw new Error(
+      'BINANCE_API_KEY / BINANCE_ACCOUNT_SECRET_KEY are required',
+    );
 
-  const timestamp = Date.now();
-  const query = new URLSearchParams({
-    ...params,
+  // keep server time in sync to avoid timestamp / recvWindow issues
+  if (Date.now() - _lastTimeSync > TIME_SYNC_TTL) {
+    await syncServerTime();
+  }
+
+  const timestamp = Date.now() + _timeOffsetMs;
+  const qp = new URLSearchParams({
+    ...withRecvWindow(params),
     timestamp: String(timestamp),
-  }).toString();
-  const signature = sign(query, apiSecret);
-  const url = `${BINANCE_BASE}${path}?${query}&signature=${signature}`;
+  } as Record<string, string>).toString();
+  const url = `${BINANCE_BASE}${path}?${qp}&signature=${sign(qp, apiSecret)}`;
 
-  const { data } = await axios.get<T>(url, {
-    headers: { 'X-MBX-APIKEY': apiKey },
-    timeout: 15_000,
-  });
-  return data;
+  try {
+    const { data } = await axios.get<T>(url, {
+      headers: { 'X-MBX-APIKEY': apiKey },
+      timeout: 15_000,
+    });
+    return data;
+  } catch (err: any) {
+    const status = err?.response?.status;
+    if (status === 429 || status === 418) {
+      const retryAfter = Number(err?.response?.headers?.['retry-after'] || 60);
+      logger.warn(
+        `⏳ Binance rate limited (${status}). Backing off ${retryAfter}s for ${path}`,
+      );
+      await sleep(Math.max(1, retryAfter) * 1000);
+    }
+    // rethrow for the caller to decide how to proceed
+    throw err;
+  }
 }
 
 /* ========= Types (мінімальний зріз) ========= */
@@ -232,6 +283,7 @@ export async function reconcileAllSymbols(): Promise<void> {
   }
 
   // 2) Взяти всі позиції з біржі (одним запитом)
+  // Note: withRecvWindow is already handled inside binanceGet
   let risks: PositionRisk[] = [];
   try {
     risks = await binanceGet<PositionRisk[]>('/fapi/v2/positionRisk');
