@@ -3,6 +3,8 @@ import type { TCoinConfig } from '../../types';
 export const dayTradingPreset: TCoinConfig = {
   symbol: 'DAY TRADING',
   isActive: true,
+  isTrader: true,
+
   analysisConfig: {
     candleTimeframe: '15m',
     oiWindow: 3,

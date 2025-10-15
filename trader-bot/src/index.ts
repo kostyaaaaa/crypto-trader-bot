@@ -24,7 +24,7 @@ const idToSymbol: Record<string, string> = {};
 const isBotActive = process.env.IS_BOT_ACTIVE === 'true';
 
 async function startConfig(config: CoinConfigWithId): Promise<void> {
-  const { symbol, isActive, analysisConfig, strategy } = config;
+  const { symbol, isActive, analysisConfig, strategy, isTrader } = config;
   if (!isActive) return;
 
   const stopLiquidityWS = LiquidityStepWS(symbol);
@@ -33,7 +33,7 @@ async function startConfig(config: CoinConfigWithId): Promise<void> {
   // 🔹 Аналіз + запуск двигуна раз на хвилину
   const analysisInterval = setInterval(async () => {
     await finalAnalyzer({ symbol, analysisConfig, strategy });
-    await tradingEngine({ symbol, analysisConfig, strategy });
+    await tradingEngine({ symbol, analysisConfig, strategy, isTrader });
   }, 60_000);
 
   // 🔹 Моніторинг позицій раз на 10 секунд

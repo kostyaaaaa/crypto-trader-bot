@@ -3,6 +3,8 @@ import type { TCoinConfig } from '../../types';
 export const defaultPreset: TCoinConfig = {
   symbol: 'DEFAULT',
   isActive: true,
+  isTrader: true,
+
   analysisConfig: {
     candleTimeframe: '15m',
     oiWindow: 20,

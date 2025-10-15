@@ -104,6 +104,9 @@ const Configuration: FC = () => {
       <Table.Td style={row.isActive ? { color: '#228be6' } : { color: 'red' }}>
         {row.isActive ? 'Active' : 'Disabled'}
       </Table.Td>
+      <Table.Td style={row.isTrader ? { color: '#228be6' } : { color: 'red' }}>
+        {row.isTrader ? 'Is traded' : 'Not traded'}
+      </Table.Td>
       <Table.Td>
         <Button
           variant="light"
@@ -112,6 +115,16 @@ const Configuration: FC = () => {
           }
         >
           {row.isActive ? 'Deactivate' : 'Activate'}
+        </Button>
+      </Table.Td>
+      <Table.Td>
+        <Button
+          variant="light"
+          onClick={() =>
+            updateCoinConfigMutate({ ...row, isTrader: !row.isTrader })
+          }
+        >
+          {row.isTrader ? 'Disable trade' : 'Start trade'}
         </Button>
       </Table.Td>
       <Table.Td>
@@ -153,6 +166,7 @@ const Configuration: FC = () => {
                 <Table.Th>Min entry</Table.Th>
                 <Table.Th>Last updated</Table.Th>
                 <Table.Th>Status</Table.Th>
+                <Table.Th>Trade status</Table.Th>
                 <Table.Th></Table.Th>
                 <Table.Th></Table.Th>
               </Table.Tr>

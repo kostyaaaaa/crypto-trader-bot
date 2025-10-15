@@ -3,6 +3,7 @@ import type { TCoinConfig } from '../../types';
 export const swingTradingPreset: TCoinConfig = {
   symbol: 'SWING TRADING',
   isActive: true,
+  isTrader: true,
   analysisConfig: {
     candleTimeframe: '4h',
     oiWindow: 40,
