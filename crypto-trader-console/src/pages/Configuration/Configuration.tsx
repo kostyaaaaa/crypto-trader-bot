@@ -169,6 +169,7 @@ const Configuration: FC = () => {
                 <Table.Th>Trade status</Table.Th>
                 <Table.Th></Table.Th>
                 <Table.Th></Table.Th>
+                <Table.Th></Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>{rows}</Table.Tbody>
