@@ -23,7 +23,9 @@ export async function analyzeTrend(
   const volumes = candles.map((c) => Number(c.volume ?? 0));
   const rsiSeries = computeRSISeries(closes, rsiPeriod);
 
+  // raw RSI may be null while seed isn't complete; fall back to single-value util
   const rsiRaw = rsiSeries.at(-1) ?? RSI(closes, rsiPeriod);
+  // neutral fallback (keeps scores stable) if RSI still unavailable
   const rsiUsed: number =
     typeof rsiRaw === 'number' && Number.isFinite(rsiRaw) ? rsiRaw : 50;
 
@@ -35,47 +37,69 @@ export async function analyzeTrend(
     Number.isFinite(emaFast) &&
     Number.isFinite(emaSlow);
 
-  // use slow EMA as reference to normalize the gap (%): (fast - slow) / slow * 100
   const emaGapPct = hasEMAs
     ? ((((emaFast as number) - emaSlow) as number) / (emaSlow as number)) * 100
     : 0;
 
-  let longScore = 0;
-  let shortScore = 0;
-
-  // ==== Tunables (make zeros happen рідше без шуму) ====
-  const EMA_GAP_DEAD = 0.03; // percent dead-zone for EMA gap (було 0.1)
-  // Optional asymmetric caps for EMA gap in percent (to tame extreme one-candle spikes)
-  const EMA_GAP_PCT_CAP_POS = 50; // cap positive (fast>slow) effective gap to 50%
-  const EMA_GAP_PCT_CAP_NEG = 15; // cap negative (fast<slow) effective gap to 15%
-  const EMA_GAP_SCALE = 20; // points per 1% effective gap, cap 60
-  const RSI_DEAD = 3; // dead-zone навколо 50 (було 30..70)
-  const RSI_SCALE = 2; // points per RSI point beyond dead-zone, cap 40
+  let longScore = 50;
+  let shortScore = 50;
 
   const gapAbs = Math.abs(emaGapPct);
-  const gapEffRaw = gapAbs <= EMA_GAP_DEAD ? 0 : gapAbs;
-  // apply asymmetric clamp by sign to avoid rare huge positive spikes dominating score
-  const gapEff =
-    emaGapPct >= 0
-      ? Math.min(gapEffRaw, EMA_GAP_PCT_CAP_POS)
-      : Math.min(gapEffRaw, EMA_GAP_PCT_CAP_NEG);
-  const gapPoints = Math.min(60, gapEff * EMA_GAP_SCALE);
+  const gapEff = gapAbs < 0.1 ? 0 : gapAbs;
   if (emaGapPct > 0) {
-    longScore += gapPoints;
+    longScore += Math.min(30, gapEff * 5);
+    shortScore -= Math.min(30, gapEff * 5);
   } else if (emaGapPct < 0) {
-    shortScore += gapPoints;
+    shortScore += Math.min(30, gapEff * 5);
+    longScore -= Math.min(30, gapEff * 5);
   }
 
-  const rsiDist = Math.max(0, Math.abs(rsiUsed - 50) - RSI_DEAD);
-  const rsiPoints = Math.min(40, rsiDist * RSI_SCALE);
-  if (rsiUsed >= 50) {
-    longScore += rsiPoints;
-  } else {
-    shortScore += rsiPoints;
+  // === Smooth RSI adjustment (no inversion, trend-aware) ===
+  {
+    const r = rsiUsed;
+    let adjLong = 0;
+    let adjShort = 0;
+
+    // Upper side (RSI > 50)
+    if (r >= 55 && r <= 65) {
+      const k = (r - 55) / 10; // 0..1
+      if (emaGapPct > 0) adjLong += 10 * k; // gentle boost with trend
+      if (emaGapPct < 0) adjShort += 10 * k;
+    } else if (r > 65 && r <= 75) {
+      const k = (r - 65) / 10; // 0..1
+      if (emaGapPct > 0) adjLong += 10 * (1 - k); // fade boost
+      if (emaGapPct < 0) adjShort += 10 * (1 - k);
+    } else if (r > 75) {
+      const k = Math.min(1, (r - 75) / 10); // 0..1
+      if (emaGapPct > 0) adjLong -= 10 * k; // overbought: penalize trend side
+      if (emaGapPct < 0) adjShort -= 10 * k;
+    }
+
+    // Lower side (RSI < 50)
+    if (r <= 45 && r >= 35) {
+      const k = (45 - r) / 10; // 0..1
+      if (emaGapPct < 0) adjShort += 10 * k; // gentle boost with trend
+      if (emaGapPct > 0) adjLong += 10 * k;
+    } else if (r < 35 && r >= 25) {
+      const k = (35 - r) / 10; // 0..1
+      if (emaGapPct < 0) adjShort += 10 * (1 - k); // fade boost
+      if (emaGapPct > 0) adjLong += 10 * (1 - k);
+    } else if (r < 25) {
+      const k = Math.min(1, (25 - r) / 10); // 0..1
+      if (emaGapPct < 0) adjShort -= 10 * k; // oversold: penalize trend side
+      if (emaGapPct > 0) adjLong -= 10 * k;
+    }
+
+    longScore += adjLong;
+    shortScore += adjShort;
   }
 
   longScore = Math.max(0, Math.min(100, longScore));
   shortScore = Math.max(0, Math.min(100, shortScore));
+
+  let signal: string = 'NEUTRAL';
+  if (longScore > shortScore) signal = 'LONG';
+  else if (shortScore > longScore) signal = 'SHORT';
 
   return {
     type: 'scoring',

@@ -49,28 +49,37 @@ export async function analyzeOpenInterest(
     const sign = sameDirection ? +1 : -1;
 
     const mag = 0.6 * Math.abs(oiChangePct) + 0.4 * Math.abs(priceChangePct);
-
-    // Calculate independent scores for LONG and SHORT (0-100 each)
-    let longScore = 0;
-    let shortScore = 0;
-
-    if (mag >= 0.05) {
-      const k = 0.35;
-      const pLong = 1 / (1 + Math.exp(-k * sign * mag));
-
-      if (sign > 0) {
-        // Bullish: OI and price moving together
-        longScore = Math.round(pLong * 100);
-      } else {
-        // Bearish: OI and price diverging
-        shortScore = Math.round((1 - pLong) * 100);
-      }
+    if (mag < 0.05) {
+      return {
+        type: 'scoring',
+        module: 'openInterest',
+        symbol,
+        meta: {
+          LONG: 50,
+          SHORT: 50,
+          candlesUsed: recent.length,
+          periodCovered: `${window * 5}m (~${((window * 5) / 60).toFixed(1)}h)`,
+          oiChangePct: to2(oiChangePct),
+          oiValueChangePct: to2(oiValueChangePct),
+          priceChangePct: to2(priceChangePct),
+        },
+      };
     }
+
+    const k = 0.35;
+    const pLong = 1 / (1 + Math.exp(-k * sign * mag));
+    const longScore = Math.round(pLong * 100);
+    const shortScore = 100 - longScore;
+
+    let signal: string = 'LONG';
+    if (shortScore > longScore) signal = 'SHORT';
+    if (Math.abs(longScore - shortScore) < 5) signal = 'NEUTRAL';
 
     return {
       type: 'scoring',
       module: 'openInterest',
       symbol,
+
       meta: {
         LONG: longScore,
         SHORT: shortScore,

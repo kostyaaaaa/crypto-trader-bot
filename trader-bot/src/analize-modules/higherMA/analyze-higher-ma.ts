@@ -67,32 +67,30 @@ export async function analyzeHigherMA(
   const priceNum = Number(price);
 
   const delta = sNum - lNum;
-  // normalize by long MA for symmetric percentage (matches how we interpret MA gap elsewhere)
-  const deltaPct = (delta / lNum) * 100;
+  const deltaPct = (delta / priceNum) * 100;
   const priceVsLongPct = ((priceNum - lNum) / lNum) * 100;
 
-  // Calculate independent scores for LONG and SHORT (0-100 each)
-  let LONG = 0;
-  let SHORT = 0;
-
-  const rampK = 3 * (12 / scale);
-
-  // Smooth 0..100 mapping: dead‑zone at threshold, then tanh roll‑off so it doesn't jump straight to 100
-  const absGap = Math.abs(deltaPct);
-  if (absGap > thresholdPct) {
-    const over = absGap - thresholdPct; // how far beyond dead‑zone
-    const roll = Math.max(1e-9, thresholdPct * rampK); // sensitivity
-    let strength = Math.tanh(over / roll) * 100; // 0..100, smooth
-
-    // Penalize if price disagrees with direction of MA spread
-    if (delta > 0) {
-      if (priceVsLongPct < 0) strength *= 0.8;
-      LONG = Number(strength.toFixed(3));
-    } else if (delta < 0) {
-      if (priceVsLongPct > 0) strength *= 0.8;
-      SHORT = Number(strength.toFixed(3));
-    }
+  let signal: string = 'NEUTRAL';
+  if (Math.abs(deltaPct) >= thresholdPct) {
+    signal = delta > 0 ? 'LONG' : 'SHORT';
   }
+
+  const agree =
+    (signal === 'LONG' && priceVsLongPct >= 0) ||
+    (signal === 'SHORT' && priceVsLongPct <= 0);
+
+  let strength = 0;
+  const rampK = 3 * (12 / scale);
+  if (signal !== 'NEUTRAL') {
+    const over = Math.max(0, Math.abs(deltaPct) - thresholdPct);
+    const denom = thresholdPct * rampK || 1;
+    strength = Math.min(100, (over / denom) * 100);
+    if (!agree) strength *= 0.8;
+  }
+  strength = Number(strength.toFixed(3));
+
+  const LONG = signal === 'LONG' ? strength : 0;
+  const SHORT = signal === 'SHORT' ? strength : 0;
 
   return {
     type: 'scoring',

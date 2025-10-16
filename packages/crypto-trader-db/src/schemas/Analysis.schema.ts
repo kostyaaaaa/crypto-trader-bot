@@ -38,7 +38,6 @@ export interface ITrendRegimeMeta {
   SHORT: number;
   ADX: number;
   ADX_scaled: number;
-  dirGapPct: number;
   plusDI: number;
   minusDI: number;
   period: number;
@@ -270,7 +269,6 @@ const trendRegimeMetaSchema = new Schema(
     SHORT: { type: Number, required: true },
     ADX: { type: Number, required: true },
     ADX_scaled: { type: Number, required: true },
-    dirGapPct: { type: Number, required: true },
     plusDI: { type: Number, required: true },
     minusDI: { type: Number, required: true },
     period: { type: Number, required: true },
