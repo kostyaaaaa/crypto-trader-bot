@@ -15,7 +15,7 @@ export interface LiquidationItem {
 
 export function LiquidationsStepWS(
   symbol: string = 'ETHUSDT',
-  minValue: number = 50_000,
+  minValue: number = 0,
   windowMs: number = 60_000,
 ): () => void {
   const ws = new WebSocket('wss://fstream.binance.com/ws/!forceOrder@arr');

@@ -52,7 +52,6 @@ export const scalpingPreset: TCoinConfig = {
       sideBiasTolerance: 2,
     },
     volatilityFilter: { minThreshold: 0.08, maxThreshold: 3.5 },
-    liquidationsFilter: { minThreshold: 5000, maxThreshold: 500000 },
     capital: {
       account: 100,
       riskPerTradePct: 5,

@@ -86,12 +86,6 @@ export const TIPS: Record<string, string> = {
   'strategy.volatilityFilter.maxThreshold':
     'Max ATR% threshold - above this level, volatility is too high (INACTIVE).',
 
-  // ====== STRATEGY — LIQUIDATIONS FILTER ======
-  'strategy.liquidationsFilter.minThreshold':
-    'Min liquidations threshold - below this level, liquidation activity is too low (INACTIVE).',
-  'strategy.liquidationsFilter.maxThreshold':
-    'Max liquidations threshold - above this level, liquidation activity is too extreme (INACTIVE).',
-
   // ====== STRATEGY — CAPITAL ======
   'strategy.capital.account':
     'Розмір рахунку (USD) для розрахунку ризику. У paper-тесті — умовний.',

@@ -434,26 +434,6 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
           </div>
         </Tabs.Panel>
 
-        {/* Strategy Liquidations Filter */}
-        <Tabs.Panel value="strategy_liquidations_filter">
-          <div className={styles['wrapper__form-list']}>
-            <FormField
-              name="strategy.liquidationsFilter.minThreshold"
-              label="Min Threshold"
-              type="number"
-              register={register}
-              control={control}
-            />
-            <FormField
-              name="strategy.liquidationsFilter.maxThreshold"
-              label="Max Threshold"
-              type="number"
-              register={register}
-              control={control}
-            />
-          </div>
-        </Tabs.Panel>
-
         {/* Strategy Capital */}
         <Tabs.Panel value="strategy_capital">
           <div className={styles['wrapper__form-list']}>

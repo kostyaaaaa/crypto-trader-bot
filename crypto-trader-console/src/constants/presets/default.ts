@@ -60,10 +60,6 @@ export const defaultPreset: TCoinConfig = {
       minThreshold: 0.25,
       maxThreshold: 2.5,
     },
-    liquidationsFilter: {
-      minThreshold: 10000,
-      maxThreshold: 1000000,
-    },
     capital: {
       account: 100,
       riskPerTradePct: 10,

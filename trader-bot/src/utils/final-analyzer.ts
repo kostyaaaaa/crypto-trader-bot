@@ -116,10 +116,6 @@ export async function finalAnalyzer({
 
   modules.liquidations = (await analyzeLiquidations(
     symbol,
-    (strategy as IStrategyConfig).liquidationsFilter || {
-      minThreshold: 10000,
-      maxThreshold: 1000000,
-    },
   )) as ILiquidationsModule | null;
 
   modules.trendRegime = (await analyzeTrendRegime(symbol, candles, {

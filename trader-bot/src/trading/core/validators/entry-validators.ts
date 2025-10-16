@@ -4,6 +4,7 @@ import type {
   IStrategyConfig,
 } from 'crypto-trader-db';
 import logger from '../../../utils/db-logger';
+import cooldownHub from '../cooldown-hub';
 
 type Side = 'LONG' | 'SHORT';
 type Bias = Side | 'NEUTRAL';
@@ -191,8 +192,11 @@ export function validateLiquidations(ctx: ValidationContext): boolean {
 
   const liq = modules?.liquidations;
   if (liq && liq.signal === 'INACTIVE') {
+    // Trigger 30-minute cooldown for liquidations exceeded threshold
+    cooldownHub.addLiquidationsCooldown(symbol);
+
     logger.info(
-      `⏸️ ${symbol}: skip, liquidations INACTIVE (no data or out of range)`,
+      `⏸️ ${symbol}: skip, liquidations INACTIVE (exceeded dynamic threshold)`,
     );
     return false;
   }
