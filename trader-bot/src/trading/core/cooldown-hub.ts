@@ -107,6 +107,17 @@ export class CooldownHub {
     return new Map(this.lastClosedAtBySymbol);
   }
 
+  /**
+   * Add 30-minute cooldown for liquidations exceeded threshold
+   */
+  addLiquidationsCooldown(symbol: string): void {
+    const cooldownEnd = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes from now
+    this.lastClosedAtBySymbol.set(symbol, cooldownEnd);
+    logger.info(
+      `⏸️ ${symbol}: Added 30min liquidations cooldown until ${cooldownEnd.toISOString()}`,
+    );
+  }
+
   private upsert(row: IncomeRow): void {
     if (row.incomeType !== 'REALIZED_PNL') return;
     const t = new Date(row.time);

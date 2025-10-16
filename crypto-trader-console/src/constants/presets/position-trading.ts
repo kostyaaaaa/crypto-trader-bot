@@ -52,7 +52,6 @@ export const positionTradingPreset: TCoinConfig = {
       sideBiasTolerance: 10,
     },
     volatilityFilter: { minThreshold: 0.8, maxThreshold: 6.0 },
-    liquidationsFilter: { minThreshold: 50000, maxThreshold: 2000000 },
     capital: {
       account: 100,
       riskPerTradePct: 5,

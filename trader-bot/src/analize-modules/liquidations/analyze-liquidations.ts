@@ -4,22 +4,15 @@ import {
 } from 'crypto-trader-db';
 import { getLiquidations } from '../../api';
 
-const MAX_COUNT = 10 as const;
+const CURRENT_RECORDS = 24 as const;
+const HISTORICAL_RECORDS = 100 as const;
 const MAX_AGE_MIN = 30 as const;
-
-interface ILiquidationsFilter {
-  minThreshold: number;
-  maxThreshold: number;
-}
 
 export async function analyzeLiquidations(
   symbol: string = 'ETHUSDT',
-  liquidationsFilter: ILiquidationsFilter = {
-    minThreshold: 10000,
-    maxThreshold: 1000000,
-  },
 ): Promise<ILiquidationsModule | null> {
-  const raw = (await getLiquidations(symbol, MAX_COUNT)) as
+  // Get all liquidations data in one call
+  const raw = (await getLiquidations(symbol, HISTORICAL_RECORDS)) as
     | LiquidationCandle[]
     | null
     | undefined;
@@ -32,9 +25,7 @@ export async function analyzeLiquidations(
       )
     : [];
 
-  const liquidations = sorted.slice(0, MAX_COUNT);
-
-  if (!liquidations || liquidations.length === 0) {
+  if (!sorted || sorted.length === 0) {
     return {
       type: 'validation',
       module: 'liquidations',
@@ -50,8 +41,11 @@ export async function analyzeLiquidations(
     };
   }
 
+  // Use most recent records for current analysis
+  const currentLiquidations = sorted.slice(0, CURRENT_RECORDS);
+
   const newestTs = new Date(
-    liquidations[0]?.time ?? liquidations[0]?.createdAt ?? 0,
+    currentLiquidations[0]?.time ?? currentLiquidations[0]?.createdAt ?? 0,
   ).getTime();
   const ageMin = newestTs ? (Date.now() - newestTs) / 60000 : Infinity;
   if (ageMin > MAX_AGE_MIN) {
@@ -71,25 +65,31 @@ export async function analyzeLiquidations(
   }
 
   const avgBuy =
-    liquidations.reduce((s, c) => s + Number(c.buysValue || 0), 0) /
-    liquidations.length;
+    currentLiquidations.reduce((s, c) => s + Number(c.buysValue || 0), 0) /
+    currentLiquidations.length;
   const avgSell =
-    liquidations.reduce((s, c) => s + Number(c.sellsValue || 0), 0) /
-    liquidations.length;
+    currentLiquidations.reduce((s, c) => s + Number(c.sellsValue || 0), 0) /
+    currentLiquidations.length;
 
-  const total = avgBuy + avgSell;
-  const buyPct = total > 0 ? (avgBuy / total) * 100 : 50;
-  const sellPct = total > 0 ? (avgSell / total) * 100 : 50;
+  const currentTotal = avgBuy + avgSell;
+  const buyPct = currentTotal > 0 ? (avgBuy / currentTotal) * 100 : 50;
+  const sellPct = currentTotal > 0 ? (avgSell / currentTotal) * 100 : 50;
 
-  // Determine signal based on total liquidation volume
+  // Calculate dynamic threshold using the same data
+  const dynamicThreshold = calculateDynamicThreshold(sorted);
+
+  // Determine signal based on dynamic threshold
   let signal: 'ACTIVE' | 'NEUTRAL' | 'INACTIVE' = 'ACTIVE';
 
-  if (total < liquidationsFilter.minThreshold) {
-    signal = 'INACTIVE'; // Too low liquidation activity
-  } else if (total > liquidationsFilter.maxThreshold) {
-    signal = 'INACTIVE'; // Too extreme liquidation activity
+  if (dynamicThreshold === null) {
+    // No historical data or API failure - neutral signal
+    signal = 'NEUTRAL';
+  } else if (currentTotal > dynamicThreshold) {
+    signal = 'INACTIVE'; // Too extreme - liquidation cascade
+  } else if (currentTotal > dynamicThreshold * 0.7) {
+    signal = 'NEUTRAL'; // Warning zone
   } else {
-    signal = 'ACTIVE'; // Normal liquidation range
+    signal = 'ACTIVE'; // Safe to trade
   }
 
   return {
@@ -98,11 +98,81 @@ export async function analyzeLiquidations(
     symbol,
     signal,
     meta: {
-      candlesUsed: liquidations.length,
+      candlesUsed: currentLiquidations.length,
       avgBuy: Number(avgBuy.toFixed(2)),
       avgSell: Number(avgSell.toFixed(2)),
       buyPct: Number(buyPct.toFixed(1)),
       sellPct: Number(sellPct.toFixed(1)),
     },
   };
+}
+
+/**
+ * Calculate dynamic threshold using consistent record counts
+ */
+function calculateDynamicThreshold(
+  historicalData: LiquidationCandle[],
+): number | null {
+  try {
+    if (!Array.isArray(historicalData) || historicalData.length === 0) {
+      return null; // No data available
+    }
+
+    // Use all available historical data (up to HISTORICAL_RECORDS)
+    const recentData = historicalData;
+
+    if (recentData.length === 0) {
+      return null; // No data available
+    }
+
+    // Calculate total liquidation values
+    const totalValues = recentData
+      .map((item) => Number(item.buysValue || 0) + Number(item.sellsValue || 0))
+      .sort((a, b) => a - b);
+
+    // Calculate 90th percentile (conservative threshold)
+    const hist90 = calculatePercentile(totalValues, 90);
+
+    // Calculate rolling mean and std dev from recent data (same count as current analysis)
+    const recentValues = totalValues.slice(-CURRENT_RECORDS); // Last 24 records
+    const rollingMean =
+      recentValues.reduce((sum, val) => sum + val, 0) / recentValues.length;
+    const rollingStd = calculateStandardDeviation(recentValues, rollingMean);
+
+    // Use the maximum of both approaches (more conservative)
+    const dynamicThreshold = Math.max(hist90, rollingMean + 2 * rollingStd);
+
+    return dynamicThreshold;
+  } catch (error) {
+    console.warn(`Failed to calculate dynamic threshold:`, error);
+    return null;
+  }
+}
+
+/**
+ * Calculate percentile of an array
+ */
+function calculatePercentile(values: number[], percentile: number): number {
+  if (values.length === 0) return 0;
+
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = (percentile / 100) * (sorted.length - 1);
+  const lower = Math.floor(index);
+  const upper = Math.ceil(index);
+  const weight = index % 1;
+
+  if (upper >= sorted.length) return sorted[sorted.length - 1];
+  return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+}
+
+/**
+ * Calculate standard deviation
+ */
+function calculateStandardDeviation(values: number[], mean: number): number {
+  if (values.length === 0) return 0;
+
+  const squaredDiffs = values.map((value) => Math.pow(value - mean, 2));
+  const avgSquaredDiff =
+    squaredDiffs.reduce((sum, val) => sum + val, 0) / values.length;
+  return Math.sqrt(avgSquaredDiff);
 }

@@ -43,10 +43,6 @@ export type TCoinConfig = {
       minThreshold: number;
       maxThreshold: number;
     };
-    liquidationsFilter: {
-      minThreshold: number;
-      maxThreshold: number;
-    };
     capital: {
       account: number;
       riskPerTradePct: number;

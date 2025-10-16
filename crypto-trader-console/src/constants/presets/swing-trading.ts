@@ -51,7 +51,6 @@ export const swingTradingPreset: TCoinConfig = {
       sideBiasTolerance: 8,
     },
     volatilityFilter: { minThreshold: 0.6, maxThreshold: 5.0 },
-    liquidationsFilter: { minThreshold: 20000, maxThreshold: 1500000 },
     capital: {
       account: 100,
       riskPerTradePct: 7,
