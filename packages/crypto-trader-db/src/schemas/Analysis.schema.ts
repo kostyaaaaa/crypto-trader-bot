@@ -153,23 +153,6 @@ export interface IMarketHoursMeta {
   candlesUsed: number;
 }
 
-export interface INewsEventsMeta {
-  hasMajorNews: boolean;
-  hasMinorNews: boolean;
-  newsCount: number;
-  lastNewsTime: string | null;
-  riskLevel: string;
-  candlesUsed: number;
-}
-
-export interface IExchangeHealthMeta {
-  exchangeStatus: string;
-  apiLatency: number;
-  hasIssues: boolean;
-  lastCheck: string;
-  candlesUsed: number;
-}
-
 // Module type
 export type ModuleType = 'validation' | 'scoring';
 
@@ -247,14 +230,6 @@ export interface IMarketHoursModule extends IValidationModuleBase {
   meta: IMarketHoursMeta;
 }
 
-export interface INewsEventsModule extends IValidationModuleBase {
-  meta: INewsEventsMeta;
-}
-
-export interface IExchangeHealthModule extends IValidationModuleBase {
-  meta: IExchangeHealthMeta;
-}
-
 export interface IAnalysisModules {
   trend: ITrendModule | null;
   volatility: IVolatilityModule | null;
@@ -269,8 +244,6 @@ export interface IAnalysisModules {
   volume: IVolumeModule | null;
   momentum: IMomentumModule | null;
   marketHours: IMarketHoursModule | null;
-  newsEvents: INewsEventsModule | null;
-  exchangeHealth: IExchangeHealthModule | null;
 }
 
 // Scores interface
@@ -603,6 +576,94 @@ const rsiVolTrendModuleSchema = new Schema(
   { _id: false },
 );
 
+// New module schemas
+const volumeMetaSchema = new Schema(
+  {
+    LONG: { type: Number, required: true },
+    SHORT: { type: Number, required: true },
+    volumeAvg: { type: Number, required: true },
+    volumeRatio: { type: Number, required: true },
+    volumeTrend: { type: Number, required: true },
+    volumeSpike: { type: Number, required: true },
+    candlesUsed: { type: Number, required: true },
+  },
+  { _id: false },
+);
+
+const volumeModuleSchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: ['scoring'],
+      required: true,
+      default: 'scoring',
+    },
+    module: { type: String, required: true },
+    symbol: { type: String, required: true },
+    meta: { type: volumeMetaSchema, required: true },
+  },
+  { _id: false },
+);
+
+const momentumMetaSchema = new Schema(
+  {
+    LONG: { type: Number, required: true },
+    SHORT: { type: Number, required: true },
+    momentum: { type: Number, required: true },
+    acceleration: { type: Number, required: true },
+    velocity: { type: Number, required: true },
+    momentumStrength: { type: Number, required: true },
+    candlesUsed: { type: Number, required: true },
+  },
+  { _id: false },
+);
+
+const momentumModuleSchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: ['scoring'],
+      required: true,
+      default: 'scoring',
+    },
+    module: { type: String, required: true },
+    symbol: { type: String, required: true },
+    meta: { type: momentumMetaSchema, required: true },
+  },
+  { _id: false },
+);
+
+const marketHoursMetaSchema = new Schema(
+  {
+    currentHour: { type: Number, required: true },
+    timezone: { type: String, required: true },
+    tradingSession: { type: String, required: true },
+    liquidityLevel: { type: String, required: true },
+    candlesUsed: { type: Number, required: true },
+  },
+  { _id: false },
+);
+
+const marketHoursModuleSchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: ['validation'],
+      required: true,
+      default: 'validation',
+    },
+    module: { type: String, required: true },
+    symbol: { type: String, required: true },
+    signal: {
+      type: String,
+      enum: ['ACTIVE', 'NEUTRAL', 'INACTIVE'],
+      required: true,
+    },
+    meta: { type: marketHoursMetaSchema, required: true },
+  },
+  { _id: false },
+);
+
 const analysisModulesSchema = new Schema(
   {
     trend: { type: trendModuleSchema, required: false, default: null },
@@ -631,6 +692,14 @@ const analysisModulesSchema = new Schema(
     higherMA: { type: higherMAModuleSchema, required: false, default: null },
     rsiVolTrend: {
       type: rsiVolTrendModuleSchema,
+      required: false,
+      default: null,
+    },
+    // New modules (for data collection only)
+    volume: { type: volumeModuleSchema, required: false, default: null },
+    momentum: { type: momentumModuleSchema, required: false, default: null },
+    marketHours: {
+      type: marketHoursModuleSchema,
       required: false,
       default: null,
     },
