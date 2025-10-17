@@ -46,6 +46,7 @@ export async function analyzeTrend(
 
   const gapAbs = Math.abs(emaGapPct);
   const gapEff = gapAbs < 0.1 ? 0 : gapAbs;
+
   if (emaGapPct > 0) {
     longScore += Math.min(30, gapEff * 5);
     shortScore -= Math.min(30, gapEff * 5);

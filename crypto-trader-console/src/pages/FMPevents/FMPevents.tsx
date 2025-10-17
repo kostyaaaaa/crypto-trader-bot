@@ -1,339 +1,473 @@
-import React from 'react';
+'use client';
+import { useEffect, useRef, useState } from 'react';
 
-// ================= Helpers & Types =================
+type ImpactKey = 'high' | 'mediumHigh' | 'all';
+type DateRangeKey = 'today' | 'this_week' | 'next_week' | 'this_month';
+type TabKey = 'calendar' | 'guide';
 
-// type EventType = 'earnings' | 'dividends' | 'splits' | 'ipo' | 'econ' | 'news';
-
-// type CalendarEvent = {
-//   id: string;
-//   type: EventType;
-//   date: string; // YYYY-MM-DD
-//   symbol?: string;
-//   title: string;
-//   subtitle?: string;
-//   url?: string;
-//   meta?: Record<string, unknown>;
-// };
-
-// const API_BASE = 'https://financialmodelingprep.com/stable';
-// const API_KEY = (import.meta as any).env?.VITE_FMP_API_KEY as
-//   | string
-//   | undefined; // <-- додай у .env: VITE_FMP_API_KEY=...
-
-// const ymd = (d: Date) => d.toISOString().slice(0, 10);
-// const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
-// const endOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0);
-// const addDays = (d: Date, n: number) => {
-//   const x = new Date(d);
-//   x.setDate(x.getDate() + n);
-//   return x;
-// };
-// const startOfWeekMon = (d: Date) => {
-//   const x = new Date(d);
-//   const wd = x.getDay(); // 0..6 (Sun..Sat)
-//   const shift = wd === 0 ? -6 : 1 - wd; // make Monday first
-//   return addDays(x, shift);
-// };
-
-// const TYPE_LABEL: Record<EventType, string> = {
-//   earnings: 'Earnings',
-//   dividends: 'Dividends',
-//   splits: 'Splits',
-//   ipo: 'IPOs',
-//   econ: 'Economics',
-//   news: 'News',
-// };
-
-// const TYPE_COLOR: Record<EventType, string> = {
-//   earnings: '#2563eb', // blue-600
-//   dividends: '#059669', // emerald-600
-//   splits: '#7c3aed', // violet-600
-//   ipo: '#b45309', // amber-700
-//   econ: '#334155', // slate-700
-//   news: '#be123c', // rose-700
-// };
-
-// // ================= FMP client (client-side) =================
-
-// async function getJSON<T>(url: string, signal?: AbortSignal): Promise<T> {
-//   const res = await fetch(url, {
-//     headers: { accept: 'application/json' },
-//     signal,
-//   });
-//   if (!res.ok) throw new Error(`${url} -> ${res.status}`);
-//   return res.json();
-// }
-
-// function q(params: Record<string, string | number | undefined>) {
-//   const u = new URLSearchParams();
-//   for (const [k, v] of Object.entries(params))
-//     if (v != null && v !== '') u.set(k, String(v));
-//   return u.toString();
-// }
-
-// // Try multiple endpoint variants (stable / v3). If none work, return [] so that
-// // the whole calendar still renders with partial data.
-// async function getCalendarAny(
-//   paths: string[],
-//   mk: (
-//     p: string,
-//     extra?: Record<string, string | number | undefined>,
-//   ) => string,
-//   extra: Record<string, string | number | undefined> = {},
-//   signal?: AbortSignal,
-// ): Promise<any[]> {
-//   for (const p of paths) {
-//     try {
-//       return await getJSON<any[]>(mk(p, extra), signal);
-//     } catch (_) {
-//       // try next variant (some endpoints are Premium in /stable but free in /v3, or vice versa)
-//     }
-//   }
-//   return [];
-// }
-
-// async function fetchEvents(
-//   from: string,
-//   to: string,
-//   types: EventType[],
-//   tickersCSV: string,
-//   signal?: AbortSignal,
-// ): Promise<CalendarEvent[]> {
-//   if (!API_KEY) throw new Error('VITE_FMP_API_KEY is not set');
-
-//   const urls: Promise<CalendarEvent[]>[] = [];
-
-//   const mk = (
-//     path: string,
-//     extra: Record<string, string | number | undefined> = {},
-//   ) => `${API_BASE}${path}?${q({ from, to, apikey: API_KEY, ...extra })}`;
-
-//   if (types.includes('earnings')) {
-//     urls.push(
-//       getCalendarAny(
-//         ['/earnings-calendar', '/v3/earning_calendar'],
-//         mk,
-//         {},
-//         signal,
-//       )
-//         .then((a) =>
-//           a.map((x) => ({
-//             id: `earn-${x.symbol}-${x.date}`,
-//             type: 'earnings' as const,
-//             date: x.date,
-//             symbol: x.symbol,
-//             title: `${x.symbol} Earnings`,
-//             subtitle:
-//               x.epsEstimated || x.epsActual
-//                 ? `EPS est ${x.epsEstimated ?? '-'} / act ${x.epsActual ?? '-'}`
-//                 : undefined,
-//             meta: x,
-//           })),
-//         )
-//         .catch(() => []),
-//     );
-//   }
-//   if (types.includes('dividends')) {
-//     urls.push(
-//       getCalendarAny(
-//         ['/dividends-calendar', '/v3/stock_dividend_calendar'],
-//         mk,
-//         {},
-//         signal,
-//       )
-//         .then((a) =>
-//           a.map((x) => ({
-//             id: `div-${x.symbol}-${x.date}`,
-//             type: 'dividends' as const,
-//             date: x.date,
-//             symbol: x.symbol,
-//             title: `${x.symbol} Dividend`,
-//             subtitle: x.dividend ? `Dividend: ${x.dividend}` : undefined,
-//             meta: x,
-//           })),
-//         )
-//         .catch(() => []),
-//     );
-//   }
-//   if (types.includes('splits')) {
-//     urls.push(
-//       getCalendarAny(
-//         ['/splits-calendar', '/v3/stock_split_calendar'],
-//         mk,
-//         {},
-//         signal,
-//       )
-//         .then((a) =>
-//           a.map((x) => ({
-//             id: `split-${x.symbol}-${x.date}`,
-//             type: 'splits' as const,
-//             date: x.date,
-//             symbol: x.symbol,
-//             title: `${x.symbol} Split`,
-//             subtitle:
-//               x.numerator && x.denominator
-//                 ? `${x.numerator}:${x.denominator}`
-//                 : undefined,
-//             meta: x,
-//           })),
-//         )
-//         .catch(() => []),
-//     );
-//   }
-//   if (types.includes('ipo')) {
-//     urls.push(
-//       getCalendarAny(['/ipos-calendar', '/v3/ipo_calendar'], mk, {}, signal)
-//         .then((a) =>
-//           a.map((x) => ({
-//             id: `ipo-${x.symbol || x.company || x.date}`,
-//             type: 'ipo' as const,
-//             date: x.date,
-//             symbol: x.symbol,
-//             title: `${x.company || x.symbol || 'IPO'}`,
-//             subtitle:
-//               [x.exchange, x.priceRange].filter(Boolean).join(' • ') ||
-//               undefined,
-//             meta: x,
-//           })),
-//         )
-//         .catch(() => []),
-//     );
-//   }
-//   if (types.includes('econ')) {
-//     urls.push(
-//       getCalendarAny(
-//         ['/economics-calendar', '/v3/economic_calendar'],
-//         mk,
-//         {},
-//         signal,
-//       )
-//         .then((a) =>
-//           a.map((x) => ({
-//             id: `eco-${x.event || x.country}-${x.date}`,
-//             type: 'econ' as const,
-//             date: x.date,
-//             title: `${x.event} (${x.country})`,
-//             subtitle:
-//               [x.actual, x.previous, x.consensus]
-//                 .map((v, i) =>
-//                   v != null && v !== ''
-//                     ? ['act', 'prev', 'cons'][i] + ': ' + v
-//                     : '',
-//                 )
-//                 .filter(Boolean)
-//                 .join(' • ') || undefined,
-//             meta: x,
-//           })),
-//         )
-//         .catch(() => []),
-//     );
-//   }
-//   if (types.includes('news') && tickersCSV.trim()) {
-//     const urlStable = `${API_BASE}/stock-news?${q({ tickers: tickersCSV.replace(/\s+/g, ''), limit: 100, apikey: API_KEY })}`;
-//     const urlV3 = `${API_BASE}/v3/stock_news?${q({ tickers: tickersCSV.replace(/\s+/g, ''), limit: 100, apikey: API_KEY })}`;
-//     urls.push(
-//       (async () => {
-//         let a: any[] = [];
-//         try {
-//           a = await getJSON<any[]>(urlStable, signal);
-//         } catch {
-//           try {
-//             a = await getJSON<any[]>(urlV3, signal);
-//           } catch {
-//             a = [];
-//           }
-//         }
-//         return a
-//           .map((x) => ({
-//             id: `news-${x.symbol}-${x.publishedDate}-${x.title}`,
-//             type: 'news' as const,
-//             date: String(x.publishedDate || '').slice(0, 10),
-//             symbol: x.symbol,
-//             title: x.title,
-//             subtitle: x.site,
-//             url: x.url,
-//             meta: x,
-//           }))
-//           .filter((e) => e.date >= from && e.date <= to);
-//       })().catch(() => []),
-//     );
-//   }
-
-//   const chunks = await Promise.all(urls);
-//   return chunks.flat().sort((a, b) => a.date.localeCompare(b.date));
-// }
-
-// // ================= UI =================
-
-// const cellStyle: React.CSSProperties = {
-//   border: '1px solid #e5e7eb',
-//   minHeight: 120,
-//   padding: 8,
-// };
-
-// const badgeStyle = (t: EventType): React.CSSProperties => ({
-//   display: 'inline-block',
-//   padding: '2px 6px',
-//   margin: '2px 0',
-//   borderRadius: 8,
-//   fontSize: 11,
-//   color: 'white',
-//   backgroundColor: TYPE_COLOR[t],
-//   textDecoration: 'none',
-// });
-
-const FMPevents: React.FC = () => {
-  //   const [month, setMonth] = useState<Date>(startOfMonth(new Date()));
-  //   const [types, setTypes] = useState<Set<EventType>>(
-  //     new Set(['earnings', 'dividends', 'splits', 'ipo', 'econ']),
-  //   );
-  //   const [tickers, setTickers] = useState<string>(''); // для новин
-  //   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  //   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  //   const [loading, setLoading] = useState(false);
-  //   const [error, setError] = useState<string | null>(null);
-
-  //   const from = ymd(startOfMonth(month));
-  //   const to = ymd(endOfMonth(month));
-
-  //   const days = useMemo(() => {
-  //     const start = startOfWeekMon(startOfMonth(month));
-  //     const end = addDays(startOfWeekMon(addDays(endOfMonth(month), 7)), -1);
-  //     const arr: Date[] = [];
-  //     for (let d = new Date(start); d <= end; d = addDays(d, 1))
-  //       arr.push(new Date(d));
-  //     return arr;
-  //   }, [month]);
-
-  //   useEffect(() => {
-  //     const controller = new AbortController();
-  //     setLoading(true);
-  //     setError(null);
-  //     fetchEvents(from, to, Array.from(types), tickers, controller.signal)
-  //       .then(setEvents)
-  //       .catch((e) => setError(String(e?.message || e)))
-  //       .finally(() => setLoading(false));
-  //     return () => controller.abort();
-  //   }, [from, to, types, tickers]);
-
-  //   const byDay = useMemo(() => {
-  //     const m = new Map<string, CalendarEvent[]>();
-  //     for (const e of events) {
-  //       const list = m.get(e.date) || [];
-  //       list.push(e);
-  //       m.set(e.date, list);
-  //     }
-  //     for (const v of m.values()) v.sort((a, b) => a.type.localeCompare(b.type));
-  //     return m;
-  //   }, [events]);
-
-  //   const dayList = selectedDate ? byDay.get(selectedDate) || [] : [];
-  //   const monthLabel = month.toLocaleString(undefined, {
-  //     month: 'long',
-  //     year: 'numeric',
-  //   });
-
-  return <div style={{ maxWidth: 1200, margin: '0 auto', padding: 16 }}></div>;
+const IMPACT_TO_FILTER: Record<ImpactKey, string> = {
+  // TradingView: 0=low, 1=medium, 2=high
+  high: '2',
+  mediumHigh: '1,2',
+  all: '0,1,2',
 };
 
-export default FMPevents;
+const RANGE_OPTIONS: { key: DateRangeKey; label: string }[] = [
+  { key: 'today', label: 'Today' },
+  { key: 'this_week', label: 'This week' },
+  { key: 'next_week', label: 'Next week' },
+  { key: 'this_month', label: 'This month' },
+];
+
+const EconomicCalendar: React.FC = () => {
+  const ref = useRef<HTMLDivElement>(null);
+
+  // tabs: Calendar (widget) | Guide (instructions)
+  const [tab, setTab] = useState<TabKey>('calendar');
+
+  const [impact, setImpact] = useState<ImpactKey>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = window.localStorage.getItem(
+        'tv_impact',
+      ) as ImpactKey | null;
+      if (saved && IMPACT_TO_FILTER[saved]) return saved;
+    }
+    return 'high';
+  });
+
+  const [range, setRange] = useState<DateRangeKey>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = window.localStorage.getItem(
+        'tv_range',
+      ) as DateRangeKey | null;
+      if (saved && RANGE_OPTIONS.find((r) => r.key === saved)) return saved;
+    }
+    return 'this_week';
+  });
+
+  // render / re-render widget when filters change (only on Calendar tab)
+  useEffect(() => {
+    if (tab !== 'calendar') return; // don't touch DOM if on Guide
+    if (!ref.current) return;
+
+    // clean re-mount container
+    ref.current.innerHTML = `
+      <div class="tradingview-widget-container__widget"></div>
+      <div class="tradingview-widget-copyright">
+        <a href="https://www.tradingview.com/" target="_blank" rel="noopener nofollow">
+          Track all markets on TradingView
+        </a>
+      </div>
+    `;
+
+    const script = document.createElement('script');
+    script.src =
+      'https://s3.tradingview.com/external-embedding/embed-widget-events.js';
+    script.async = true;
+    script.setAttribute('data-tv', '1');
+
+    // TradingView widget config
+    script.innerHTML = JSON.stringify({
+      width: '100%',
+      height: 760,
+      colorTheme: 'dark',
+      isTransparent: false,
+      locale: 'uk',
+      dateRange: range, // today | this_week | next_week | this_month
+      importanceFilter: IMPACT_TO_FILTER[impact],
+      timeZone: 'Etc/UTC',
+    });
+
+    ref.current.appendChild(script);
+
+    // persist selection
+    try {
+      window.localStorage.setItem('tv_impact', impact);
+      window.localStorage.setItem('tv_range', range);
+    } catch {
+      console.log('persist selection error');
+    }
+  }, [impact, range, tab]);
+
+  return (
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 16 }}>
+      {/* Header with tabs */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          marginBottom: 12,
+          flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>
+            Economic Calendar
+          </h1>
+          <div style={{ display: 'flex', gap: 8, marginLeft: 12 }}>
+            <button
+              type="button"
+              onClick={() => setTab('calendar')}
+              style={{
+                background: tab === 'calendar' ? '#222' : '#111',
+                color: '#fff',
+                border: '1px solid #333',
+                borderRadius: 6,
+                padding: '6px 10px',
+                cursor: 'pointer',
+              }}
+            >
+              Calendar
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab('guide')}
+              style={{
+                background: tab === 'guide' ? '#222' : '#111',
+                color: '#fff',
+                border: '1px solid #333',
+                borderRadius: 6,
+                padding: '6px 10px',
+                cursor: 'pointer',
+              }}
+            >
+              Guide
+            </button>
+          </div>
+        </div>
+
+        {tab === 'calendar' && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              flexWrap: 'wrap',
+            }}
+          >
+            {/* Date range dropdown */}
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ opacity: 0.8, fontSize: 14 }}>Range:</span>
+              <select
+                value={range}
+                onChange={(e) => setRange(e.target.value as DateRangeKey)}
+                style={{
+                  background: '#111',
+                  color: '#fff',
+                  border: '1px solid #333',
+                  borderRadius: 6,
+                  padding: '6px 10px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                {RANGE_OPTIONS.map((r) => (
+                  <option key={r.key} value={r.key}>
+                    {r.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {/* Impact dropdown */}
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ opacity: 0.8, fontSize: 14 }}>Impact:</span>
+              <select
+                value={impact}
+                onChange={(e) => setImpact(e.target.value as ImpactKey)}
+                style={{
+                  background: '#111',
+                  color: '#fff',
+                  border: '1px solid #333',
+                  borderRadius: 6,
+                  padding: '6px 10px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <option value="high">High only</option>
+                <option value="mediumHigh">Medium + High</option>
+                <option value="all">All (Low + Medium + High)</option>
+              </select>
+            </label>
+          </div>
+        )}
+      </div>
+
+      {tab === 'calendar' ? (
+        <div
+          className="tradingview-widget-container"
+          ref={ref}
+          style={{ height: 560 }}
+        />
+      ) : (
+        <div style={{ lineHeight: 1.6, fontSize: 14 }}>
+          <h2 style={{ marginTop: 8 }}>Як користуватись календарем</h2>
+          <ul>
+            <li>
+              <b>Range</b> — вибір періоду:{' '}
+              <i>Today / This week / Next week / This month</i>.
+            </li>
+            <li>
+              <b>Impact</b> — рівень важливості подій. Почни з <i>High only</i>,
+              якщо потрібно — додай <i>Medium</i>.
+            </li>
+            <li>
+              Кнопка <b>FOMC preset</b> швидко відкриває ширший період для ловлі
+              засідань і заяв ФРС.
+            </li>
+          </ul>
+
+          <h3>Рівні Impact</h3>
+          <ul>
+            <li>
+              <b>High</b> — здатні різко рухати ринки (ставки, CPI, NFP, FOMC
+              тощо).
+            </li>
+            <li>
+              <b>Medium</b> — важливі, але зазвичай слабші рухи (PMI,
+              промвиробництво, виступи).
+            </li>
+            <li>
+              <b>Low</b> — локальні/другорядні індикатори.
+            </li>
+          </ul>
+
+          <h3>Ключові типи подій та вплив</h3>
+          <ul>
+            <li>
+              <b>FOMC / Центральні банки</b>: рішення по ставці, заява,
+              пресконференція, протоколи. Яструбиний тон =&gt; сильніший USD,
+              тиск на ризикові активи (крипто/акції). Голубиний — навпаки.
+            </li>
+            <li>
+              <b>CPI / PCE (інфляція)</b>: вища за прогноз =&gt; очікування
+              жорсткішої політики, ризики вниз; нижча — полегшення, ризики
+              вгору.
+            </li>
+            <li>
+              <b>NFP / безробіття</b>: сильний ринок праці =&gt; інфляційний
+              тиск, ймовірність жорсткості ФРС; слабкий — підтримка ризикових.
+            </li>
+            <li>
+              <b>GDP, Retail Sales, ISM/PMI</b>: макроактивність; сильні дані
+              часто підсилюють USD і прибутковості, приглушують ризики.
+            </li>
+            <li>
+              <b>Виступи членів ФРС/ЄЦБ/BoE</b>: можуть різко змінювати
+              очікування, особливо за відсутності інших подій.
+            </li>
+            <li>
+              <b>Запаси нафти</b>: більш релевантно для енергетики/інфляційного
+              наративу; вторинний вплив на крипто.
+            </li>
+          </ul>
+
+          <h3>Практичний підхід</h3>
+          <ol>
+            <li>
+              Перед торговим днем переглянь <i>High</i> події на тиждень уперед.
+            </li>
+            <li>
+              У день публікації — познач ключовий час (UTC) і зменшуй ризик біля
+              релізу.
+            </li>
+            <li>
+              Реакція ринку важливіша за саме число: перевір перші 5–15 хв
+              свічки.
+            </li>
+            <li>
+              Синхронізуйся з <i>сесіями</i>: Європа (08–16 UTC), США (13–21
+              UTC), їх перетин (13–16 UTC) — найліквідніший.
+            </li>
+          </ol>
+
+          <h3>Поради для крипто</h3>
+          <ul>
+            <li>
+              Стеж за <b>DXY</b>, прибутковостями UST та S&amp;P 500: вони
+              задають фон ризиковим активам.
+            </li>
+            <li>
+              На <b>FOMC</b>/CPI ринок часто робить перший імпульс і швидкий
+              відкат. Чекай підтвердження тренду.
+            </li>
+            <li>Працюй із зменшеним плечем/обсягом навколо релізів.</li>
+          </ul>
+
+          <h3>Шпаргалка подій та скорочень</h3>
+          <p style={{ opacity: 0.9 }}>
+            Найчастіші абревіатури у календарі та як вони зазвичай впливають на
+            ринок.
+          </p>
+          <dl
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'max-content 1fr',
+              gap: '8px 16px',
+            }}
+          >
+            <dt>
+              <b>CPI</b> / <b>Core CPI</b>
+            </dt>
+            <dd>
+              Індекс споживчих цін / базовий (без енергії та їжі). Вище прогнозу
+              =&gt; ризики вниз, сильніший USD; нижче =&gt; підтримка ризикових
+              активів.
+            </dd>
+
+            <dt>
+              <b>PCE</b> / <b>Core PCE</b>
+            </dt>
+            <dd>«Улюблена» інфляція ФРС. Логіка впливу аналогічна CPI.</dd>
+
+            <dt>
+              <b>NFP</b>
+            </dt>
+            <dd>
+              Нефермерська зайнятість. Сильні дані можуть підвищувати очікування
+              жорсткішої політики ФРС.
+            </dd>
+
+            <dt>
+              <b>Unemployment Rate</b>
+            </dt>
+            <dd>
+              Рівень безробіття. Нижче =&gt; сильніший ринок праці (частіше
+              «яструбиний» сигнал).
+            </dd>
+
+            <dt>
+              <b>Average Hourly Earnings</b>
+            </dt>
+            <dd>Зарплатна інфляція. Вища =&gt; інфляційний тиск.</dd>
+
+            <dt>
+              <b>FOMC</b> / <b>Fed Funds Rate</b>
+            </dt>
+            <dd>
+              Рішення ФРС по ставці, заява, пресконференція, протоколи
+              (minutes). Яструбиний тон тисне на ризикові активи; голубиний
+              підтримує.
+            </dd>
+
+            <dt>
+              <b>GDP</b> (QoQ / YoY / SAAR)
+            </dt>
+            <dd>
+              Валовий продукт (квартал/рік/річний темп). Сильніші дані можуть
+              зміцнювати USD і знижувати апетит до ризику.
+            </dd>
+
+            <dt>
+              <b>Retail Sales</b> (MM / Ex-Auto)
+            </dt>
+            <dd>
+              Роздрібні продажі (м/м; без авто). Відображають споживчу
+              активність.
+            </dd>
+
+            <dt>
+              <b>ISM Manufacturing / Services PMI</b> /{' '}
+              <b>S&amp;P Global PMI</b>
+            </dt>
+            <dd>
+              Індикатори ділової активності (50 — нейтрально). Вище 50 =&gt;
+              розширення економіки.
+            </dd>
+
+            <dt>
+              <b>Durable Goods</b> / <b>Core Capital Goods</b>
+            </dt>
+            <dd>
+              Замовлення на товари тривалого користування / інвесттовари.
+              Впливають на настрої щодо зростання.
+            </dd>
+
+            <dt>
+              <b>JOLTS</b>
+            </dt>
+            <dd>Вакансії у США. Високі значення =&gt; тугий ринок праці.</dd>
+
+            <dt>
+              <b>Initial / Continuing Claims</b>
+            </dt>
+            <dd>
+              Первинні/повторні заявки на допомогу з безробіття. Зростання =&gt;
+              охолодження ринку праці.
+            </dd>
+
+            <dt>
+              <b>Consumer Confidence</b> / <b>Michigan Sentiment</b>
+            </dt>
+            <dd>Споживчі настрої — впливають на очікуваний попит.</dd>
+
+            <dt>
+              <b>Housing Starts</b> / <b>Building Permits</b>
+            </dt>
+            <dd>
+              Будівництво/дозволи — чутливі до ставок; індикатор раннього циклу.
+            </dd>
+
+            <dt>
+              <b>Existing / New Home Sales</b>
+            </dt>
+            <dd>
+              Продажі житла — відображають здоров’я споживача та кредитного
+              ринку.
+            </dd>
+
+            <dt>
+              <b>Industrial Production</b>
+            </dt>
+            <dd>
+              Випуск у промисловості; слабкість часто б’є по ризикових активах.
+            </dd>
+
+            <dt>
+              <b>Trade Balance</b>
+            </dt>
+            <dd>Торговий баланс; великі дефіцити інколи тиснуть на валюту.</dd>
+
+            <dt>
+              <b>Crude Oil Inventories</b>
+            </dt>
+            <dd>
+              Запаси нафти — вплив через енергоінфляцію та risk sentiment.
+            </dd>
+
+            <dt>
+              <b>ECB / BoE / BoJ</b>
+            </dt>
+            <dd>
+              Рішення інших ЦБ — важливо для долара через крос-курси й загальний
+              risk-on/off.
+            </dd>
+
+            <dt>
+              <b>China LPR</b>
+            </dt>
+            <dd>
+              Китайська базова ставка за кредитами (Loan Prime Rate). Зміни
+              впливають на апетит до ризику в Азії.
+            </dd>
+
+            <dt>
+              <b>UK Rightmove House Price</b>
+            </dt>
+            <dd>Провідний індикатор ринку житла Великої Британії.</dd>
+          </dl>
+
+          <p style={{ opacity: 0.8, marginTop: 8 }}>
+            У віджеті висота «стовпчиків» ліворуч від назви події — умовна
+            важливість (чим більше, тим сильніший потенційний вплив).
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default EconomicCalendar;
