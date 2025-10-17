@@ -25,7 +25,14 @@ function oppositeSide(side: Side): Side {
   return side === 'LONG' ? 'SHORT' : 'LONG';
 }
 
-/* ===== API ===== */
+export async function hasActivePosition(symbol: string): Promise<boolean> {
+  const res = await getOpenPosition(symbol);
+
+  if (Array.isArray(res)) {
+    return res.length > 0;
+  }
+  return !!res;
+}
 
 export async function getActivePositions(
   symbol: string,
