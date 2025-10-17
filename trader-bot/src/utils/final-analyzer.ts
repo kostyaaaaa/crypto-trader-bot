@@ -1,14 +1,19 @@
 import axios from 'axios';
 import {
+  analyzeExchangeHealth,
   analyzeHigherMA,
   analyzeLiquidations,
   analyzeLiquidity,
   analyzeLongShort,
+  analyzeMarketHours,
+  analyzeMomentum,
+  analyzeNewsEvents,
   analyzeOpenInterest,
   analyzeRsiVolumeTrend,
   analyzeTrend,
   analyzeTrendRegime,
   analyzeVolatility,
+  analyzeVolume,
 } from '../analize-modules/index';
 import { submitAnalysis } from '../api';
 import type { BinanceKline, Candle } from '../types/index';
@@ -100,6 +105,12 @@ export async function finalAnalyzer({
     longShort: null,
     higherMA: null,
     rsiVolTrend: null,
+    // New modules (not used in scoring/validation yet)
+    volume: null,
+    momentum: null,
+    marketHours: null,
+    newsEvents: null,
+    exchangeHealth: null,
   };
 
   modules.trend = (await analyzeTrend(symbol, candles)) as ITrendModule | null;
@@ -156,6 +167,13 @@ export async function finalAnalyzer({
       emaSeed: 'sma',
     },
   )) as IHigherMAModule | null;
+
+  // New modules (for data collection only, not used in scoring/validation)
+  modules.volume = (await analyzeVolume(symbol, candles)) as any;
+  modules.momentum = (await analyzeMomentum(symbol, candles)) as any;
+  modules.marketHours = (await analyzeMarketHours(symbol)) as any;
+  modules.newsEvents = (await analyzeNewsEvents(symbol)) as any;
+  modules.exchangeHealth = (await analyzeExchangeHealth(symbol)) as any;
 
   // --- скоринг (only scoring modules, not validation) ---
   const scoringModuleNames = [
