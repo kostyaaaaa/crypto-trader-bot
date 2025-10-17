@@ -46,39 +46,26 @@ export async function analyzeVolume(
   // Volume spike detection
   const volumeSpike = detectVolumeSpike(volumes, volumeAvg);
 
-  // Price-volume relationship analysis
-  const priceVolumeAnalysis = analyzePriceVolumeRelationship(
-    volumes.slice(-window),
-    closes.slice(-window),
-    highs.slice(-window),
-    lows.slice(-window),
-  );
-
   // Start with 50/50 split
   let longScore = 50;
   let shortScore = 50;
 
-  // Adjust based on volume supporting price direction
-  if (priceVolumeAnalysis.volumeSupportsUpward) {
-    const strength = Math.min(30, priceVolumeAnalysis.strength);
-    longScore += strength;
-    shortScore -= strength;
-  } else if (priceVolumeAnalysis.volumeSupportsDownward) {
-    const strength = Math.min(30, priceVolumeAnalysis.strength);
-    shortScore += strength;
-    longScore -= strength;
+  // Volume ratio adjustment (current vs historical average)
+  if (volumeRatio > 1.2) {
+    longScore += 10;
+    shortScore += 5; // High volume = more activity overall
+  } else if (volumeRatio < 0.8) {
+    longScore -= 5;
+    shortScore -= 5; // Low volume = less activity overall
   }
 
-  // Adjust for volume spikes (more volume = stronger signal)
-  if (volumeSpike > 1.5) {
-    const spikeBonus = Math.min(10, (volumeSpike - 1) * 5);
-    if (longScore > shortScore) {
-      longScore += spikeBonus;
-      shortScore -= spikeBonus;
-    } else if (shortScore > longScore) {
-      shortScore += spikeBonus;
-      longScore -= spikeBonus;
-    }
+  // Volume trend adjustment (growing vs declining volume)
+  if (volumeTrend > 0.05) {
+    longScore += 5;
+    shortScore -= 5; // Growing volume = positive momentum
+  } else if (volumeTrend < -0.05) {
+    longScore -= 5;
+    shortScore += 5; // Declining volume = negative momentum
   }
 
   // Clamp scores to 0-100
@@ -119,67 +106,4 @@ function detectVolumeSpike(volumes: number[], avgVolume: number): number {
 
   const currentVolume = volumes[volumes.length - 1];
   return currentVolume / avgVolume;
-}
-
-function analyzePriceVolumeRelationship(
-  volumes: number[],
-  closes: number[],
-  highs: number[],
-  lows: number[],
-): {
-  volumeSupportsUpward: boolean;
-  volumeSupportsDownward: boolean;
-  strength: number;
-} {
-  if (volumes.length < 2) {
-    return {
-      volumeSupportsUpward: false,
-      volumeSupportsDownward: false,
-      strength: 0,
-    };
-  }
-
-  // Calculate price changes
-  const priceChanges = [];
-  for (let i = 1; i < closes.length; i++) {
-    const change = (closes[i] - closes[i - 1]) / closes[i - 1];
-    priceChanges.push(change);
-  }
-
-  // Analyze volume on up vs down moves
-  let upVolume = 0;
-  let downVolume = 0;
-  let upCount = 0;
-  let downCount = 0;
-
-  for (let i = 0; i < priceChanges.length; i++) {
-    const volume = volumes[i + 1]; // Volume for the candle with the price change
-    if (priceChanges[i] > 0) {
-      upVolume += volume;
-      upCount++;
-    } else if (priceChanges[i] < 0) {
-      downVolume += volume;
-      downCount++;
-    }
-  }
-
-  const avgUpVolume = upCount > 0 ? upVolume / upCount : 0;
-  const avgDownVolume = downCount > 0 ? downVolume / downCount : 0;
-  const totalAvgVolume = (upVolume + downVolume) / (upCount + downCount);
-
-  // Determine if volume supports price direction
-  const volumeSupportsUpward = avgUpVolume > totalAvgVolume * 1.1;
-  const volumeSupportsDownward = avgDownVolume > totalAvgVolume * 1.1;
-
-  // Calculate strength based on volume difference
-  const strength = Math.min(
-    30,
-    (Math.abs(avgUpVolume - avgDownVolume) / totalAvgVolume) * 10,
-  );
-
-  return {
-    volumeSupportsUpward,
-    volumeSupportsDownward,
-    strength,
-  };
 }
