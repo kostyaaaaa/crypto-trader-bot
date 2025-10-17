@@ -10,7 +10,7 @@ import { getAnalysis } from '../../api';
 import logger from '../../utils/db-logger';
 import { notifyTrade } from '../../utils/notify';
 import { executeTrade } from '../binance/utils/index';
-import { getActivePositions } from './binance-positions-manager';
+import { hasActivePosition } from './binance-positions-manager';
 import cooldownHub from './cooldown-hub';
 import { getRealtimeMark } from './helpers/mark-price-helper';
 import { majorityVoteStrict } from './helpers/voting';
@@ -35,18 +35,16 @@ export async function tradingEngine({
 }: TradingEngineArgs): Promise<void> {
   if (!isTrader) return;
   if (!cooldownHub.isStarted()) cooldownHub.start();
-
+  const hasOpen = await hasActivePosition(symbol);
+  if (hasOpen) {
+    logger.info(`⏸️ ${symbol}: skip, active positions exist`);
+    return;
+  }
   const lookback = strategy?.entry?.lookback || 3;
   const analysisHistory = (await getAnalysis(symbol, lookback)) as
     | IAnalysis[]
     | null;
   const entryPrice = await getRealtimeMark(symbol);
-
-  const activePositions = await getActivePositions(symbol);
-  if (activePositions.length > 0) {
-    logger.info(`⏸️ ${symbol}: skip, active positions exist`);
-    return;
-  }
 
   // 1) cooldown через CooldownHub (income REALIZED_PNL)
   const cooldownMin = Number(strategy?.entry?.cooldownMin ?? 0);
