@@ -232,20 +232,6 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
               control={control}
             />
             <FormField
-              name="analysisConfig.liqSentWindow"
-              label="Liq Sent Window"
-              type="number"
-              register={register}
-              control={control}
-            />
-            <FormField
-              name="analysisConfig.fundingWindow"
-              label="Funding Window"
-              type="number"
-              register={register}
-              control={control}
-            />
-            <FormField
               name="analysisConfig.volWindow"
               label="Vol Window"
               type="number"
@@ -425,13 +411,6 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
               register={register}
               control={control}
             />
-            <FormField
-              name="strategy.entry.avoidWhen.fundingExtreme.absOver"
-              label="Avoid FundingExtreme AbsOver"
-              type="number"
-              register={register}
-              control={control}
-            />
           </div>
         </Tabs.Panel>
 
@@ -439,15 +418,15 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
         <Tabs.Panel value="strategy_volatility_filter">
           <div className={styles['wrapper__form-list']}>
             <FormField
-              name="strategy.volatilityFilter.deadBelow"
-              label="Dead Below"
+              name="strategy.volatilityFilter.minThreshold"
+              label="Min Threshold"
               type="number"
               register={register}
               control={control}
             />
             <FormField
-              name="strategy.volatilityFilter.extremeAbove"
-              label="Extreme Above"
+              name="strategy.volatilityFilter.maxThreshold"
+              label="Max Threshold"
               type="number"
               register={register}
               control={control}
@@ -670,8 +649,6 @@ const moduleKeys = [
   'trend',
   'trendRegime',
   'liquidity',
-  'funding',
-  'liquidations',
   'openInterest',
   'longShort',
   'higherMA',

@@ -64,52 +64,54 @@ const usePositionsPage = () => {
 
   const positions = useMemo(() => {
     if (!positionsData?.data) return [];
-    return [...positionsData.data].sort((a, b) => {
-      let aValue: string | number;
-      let bValue: string | number;
+    return [...positionsData.data]
+      .filter((item) => item.status === 'CLOSED')
+      .sort((a, b) => {
+        let aValue: string | number;
+        let bValue: string | number;
 
-      switch (sortField) {
-        case 'openedAt':
-          aValue = new Date(a.openedAt).getTime();
-          bValue = new Date(b.openedAt).getTime();
-          break;
-        case 'closedAt':
-          aValue = a.closedAt ? new Date(a.closedAt).getTime() : 0;
-          bValue = b.closedAt ? new Date(b.closedAt).getTime() : 0;
-          break;
-        case 'leverage':
-          aValue = a.meta.leverage;
-          bValue = b.meta.leverage;
-          break;
-        case 'finalPnl':
-          aValue = a.finalPnl ?? 0;
-          bValue = b.finalPnl ?? 0;
-          break;
-        case 'size':
-          aValue = a.size ?? 0;
-          bValue = b.size ?? 0;
-          break;
-        case 'side':
-          aValue = a.side;
-          bValue = b.side;
-          break;
-        case 'closedBy':
-          aValue = a.closedBy ?? '';
-          bValue = b.closedBy ?? '';
-          break;
-        case 'symbol':
-          aValue = a.symbol;
-          bValue = b.symbol;
-          break;
-        default:
-          aValue = 0;
-          bValue = 0;
-      }
+        switch (sortField) {
+          case 'openedAt':
+            aValue = new Date(a.openedAt).getTime();
+            bValue = new Date(b.openedAt).getTime();
+            break;
+          case 'closedAt':
+            aValue = a.closedAt ? new Date(a.closedAt).getTime() : 0;
+            bValue = b.closedAt ? new Date(b.closedAt).getTime() : 0;
+            break;
+          case 'leverage':
+            aValue = a.meta.leverage;
+            bValue = b.meta.leverage;
+            break;
+          case 'finalPnl':
+            aValue = a.finalPnl ?? 0;
+            bValue = b.finalPnl ?? 0;
+            break;
+          case 'size':
+            aValue = a.size ?? 0;
+            bValue = b.size ?? 0;
+            break;
+          case 'side':
+            aValue = a.side;
+            bValue = b.side;
+            break;
+          case 'closedBy':
+            aValue = a.closedBy ?? '';
+            bValue = b.closedBy ?? '';
+            break;
+          case 'symbol':
+            aValue = a.symbol;
+            bValue = b.symbol;
+            break;
+          default:
+            aValue = 0;
+            bValue = 0;
+        }
 
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
   }, [positionsData, sortField, sortDirection]);
 
   const handleSort = (field: SortField) => {

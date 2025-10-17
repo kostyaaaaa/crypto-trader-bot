@@ -1,11 +1,22 @@
 import express from 'express';
-import { getAnalysisByDateRangeAndSymbol } from '../controllers/analyticsController.js';
+import {
+  getAnalysis,
+  saveAnalysis,
+} from '../controllers/analyticsController.js';
 
 const router = express.Router();
 
-// GET /analytics - Get analysis data by date range and symbol
-// Query params: symbol (required), dateFrom (required, ISO timestamp string), dateTo (required, ISO timestamp string)
-// Returns all analysis within the date range
-router.get('/', getAnalysisByDateRangeAndSymbol);
+// POST /analytics - Save an analysis document
+router.post('/', saveAnalysis);
+
+// GET /analytics - Get analysis documents
+// Query params:
+//   - symbol (optional): Filter by symbol
+//   - limit (optional, default 100): Limit number of results (ignored if dateFrom/dateTo provided)
+//   - dateFrom (optional): ISO timestamp string - start of date range
+//   - dateTo (optional): ISO timestamp string - end of date range
+// If dateFrom and dateTo are provided, returns all analysis within the date range
+// Otherwise, returns the most recent N documents based on limit
+router.get('/', getAnalysis);
 
 export default router;

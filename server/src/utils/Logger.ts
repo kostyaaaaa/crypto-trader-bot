@@ -107,7 +107,7 @@ class Logger {
 
   // Success level logging (using info level with success metadata)
   success(message: string, data: LogData = null): void {
-    this.winstonLogger.debug(
+    this.winstonLogger.log(
       message,
       data ? { data, logType: 'success' } : { logType: 'success' },
     );

@@ -161,7 +161,7 @@ const Analysis: FC = () => {
 
   // take the last N items (most recent)
   const rows = useMemo(
-    () => (data?.data ?? []).slice(-historyN),
+    () => (data?.data ?? [])?.reverse().slice(-historyN),
     [data, historyN],
   );
 
@@ -191,17 +191,35 @@ const Analysis: FC = () => {
   const selected: IAnalysis | undefined = rows[selectedIdx];
 
   const moduleRows = useMemo(() => {
-    if (!selected) return [];
-    return Object.entries(selected.modules || {}).map(([key, mod]) => {
-      const m = mod || {};
-      return {
-        key,
-        signal: m.signal ?? 'NO DATA',
-        strength: Number(m.strength ?? 0),
-        long: Number(m.meta?.LONG ?? 0),
-        short: Number(m.meta?.SHORT ?? 0),
-      };
+    if (!selected) return { validation: [], scoring: [] };
+    const validation: Array<{ key: string; signal: string }> = [];
+    const scoring: Array<{ key: string; long: number; short: number }> = [];
+
+    Object.entries(selected.modules || {}).forEach(([key, mod]) => {
+      const m =
+        (mod as {
+          type?: string;
+          signal?: string;
+          meta?: { LONG?: number; SHORT?: number };
+        }) || {};
+      const moduleType = m.type;
+
+      if (moduleType === 'validation') {
+        validation.push({
+          key,
+          signal: m.signal ?? 'NO DATA',
+        });
+      } else {
+        // scoring or unknown (backward compatibility)
+        scoring.push({
+          key,
+          long: Number(m.meta?.LONG ?? 0),
+          short: Number(m.meta?.SHORT ?? 0),
+        });
+      }
     });
+
+    return { validation, scoring };
   }, [selected]);
 
   const apexSeries = useMemo<AxisSeries>(
@@ -379,6 +397,21 @@ const Analysis: FC = () => {
     return (
       <Center className={styles.wrapper}>
         <Text>No analysis found for selected period.</Text>
+        <Select
+          size="xs"
+          label="Pick coin"
+          placeholder="Select"
+          data={symbols}
+          value={selectedCoin}
+          onChange={(v) => {
+            const newCoin = v || (symbols[0] ?? 'SOLUSDT');
+            localStorage.setItem(coinLocalStorageKey, newCoin);
+            setSelectedCoin(newCoin);
+          }}
+          searchable
+          nothingFoundMessage="No coins"
+          maw={200}
+        />
       </Center>
     );
   }
@@ -654,43 +687,89 @@ const Analysis: FC = () => {
               {tzBadgeLabel}
             </Text>
           </Group>
-          <Table
-            highlightOnHover
-            withRowBorders={false}
-            verticalSpacing="xs"
-            style={{ width: '100%' }}
-          >
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Module</Table.Th>
-                <Table.Th>Signal</Table.Th>
-                <Table.Th style={{ width: 200 }}>LONG / SHORT</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {moduleRows.map((r) => (
-                <Table.Tr key={r.key}>
-                  <Table.Td>{r.key}</Table.Td>
-                  <Table.Td>
-                    <Badge
-                      color={
-                        r.signal === 'LONG'
-                          ? 'green'
-                          : r.signal === 'SHORT'
-                            ? 'red'
-                            : 'gray'
-                      }
-                    >
-                      {r.signal}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    <LongShortBar long={r.long} short={r.short} />
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+
+          {/* Validation Modules Section */}
+          {moduleRows.validation.length > 0 && (
+            <>
+              <Text size="sm" fw={500} mb="xs" c="blue">
+                Validation Modules
+              </Text>
+              <Table
+                highlightOnHover
+                withRowBorders={false}
+                verticalSpacing="xs"
+                style={{ width: '100%', tableLayout: 'fixed' }}
+                mb="md"
+              >
+                <colgroup>
+                  <col style={{ width: '150px' }} />
+                  <col />
+                </colgroup>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Module</Table.Th>
+                    <Table.Th>Signal</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {moduleRows.validation.map((m) => (
+                    <Table.Tr key={m.key}>
+                      <Table.Td>{m.key}</Table.Td>
+                      <Table.Td>
+                        <Badge
+                          color={
+                            m.signal === 'ACTIVE'
+                              ? 'green'
+                              : m.signal === 'INACTIVE'
+                                ? 'red'
+                                : 'gray'
+                          }
+                        >
+                          {m.signal}
+                        </Badge>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </>
+          )}
+
+          {/* Scoring Modules Section */}
+          {moduleRows.scoring.length > 0 && (
+            <>
+              <Text size="sm" fw={500} mb="xs" c="grape">
+                Scoring Modules
+              </Text>
+              <Table
+                highlightOnHover
+                withRowBorders={false}
+                verticalSpacing="xs"
+                style={{ width: '100%', tableLayout: 'fixed' }}
+              >
+                <colgroup>
+                  <col style={{ width: '150px' }} />
+                  <col />
+                </colgroup>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Module</Table.Th>
+                    <Table.Th>LONG / SHORT</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {moduleRows.scoring.map((m) => (
+                    <Table.Tr key={m.key}>
+                      <Table.Td>{m.key}</Table.Td>
+                      <Table.Td>
+                        <LongShortBar long={m.long} short={m.short} />
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </>
+          )}
         </Paper>
       </Group>
     </Container>

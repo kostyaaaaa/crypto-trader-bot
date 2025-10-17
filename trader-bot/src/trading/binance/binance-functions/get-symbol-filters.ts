@@ -1,7 +1,7 @@
 // ============ Exchange info / filters ============
+import type { SymbolFilter, SymbolInfo } from '../../../types';
 import logger from '../../../utils/db-logger';
 import { getExchangeInfoCached } from './state';
-import type { SymbolFilter, SymbolInfo } from './types';
 
 export async function getSymbolFilters(
   symbol: string,

@@ -16,11 +16,28 @@ export interface IAnalysis {
   updatedAt?: Date;
 }
 
-export interface IModuleBase {
+// Base for validation modules
+export interface IValidationModuleBase {
+  type: 'validation';
   module: string;
   symbol: string;
-  signal: string;
-  strength: number;
+  signal: 'ACTIVE' | 'NEUTRAL' | 'INACTIVE';
+}
+
+// Base for scoring modules
+export interface IScoringModuleBase {
+  type: 'scoring';
+  module: string;
+  symbol: string;
+}
+
+// Legacy base (for backward compatibility)
+export interface IModuleBase {
+  type?: 'validation' | 'scoring';
+  module: string;
+  symbol: string;
+  signal?: string;
+  strength?: number;
 }
 
 // Meta interfaces with LONG/SHORT scores
@@ -34,16 +51,14 @@ export interface ITrendMeta {
 }
 
 export interface IVolatilityMeta {
-  LONG: number;
-  SHORT: number;
   regime: string;
   candlesUsed: number;
   atrAbs: number;
   atrPct: number;
   window: number;
   thresholds: {
-    deadBelow: number;
-    extremeAbove: number;
+    minThreshold: number;
+    maxThreshold: number;
   };
 }
 
@@ -64,13 +79,6 @@ export interface ILiquidityMeta {
   spreadPct: number;
   LONG: number;
   SHORT: number;
-}
-
-export interface IFundingMeta {
-  LONG: number;
-  SHORT: number;
-  candlesUsed: number;
-  avgFunding: number;
 }
 
 export interface IOpenInterestMeta {
@@ -124,67 +132,94 @@ export interface IRsiVolTrendMeta {
   maLong: number;
 }
 
-// Module interfaces
-export interface ITrendModule extends IModuleBase {
+// New meta interfaces
+export interface IVolumeMeta {
+  LONG: number;
+  SHORT: number;
+  volumeAvg: number;
+  volumeRatio: number;
+  volumeTrend: number;
+  volumeSpike: number;
+  candlesUsed: number;
+}
+
+export interface IMomentumMeta {
+  LONG: number;
+  SHORT: number;
+  momentum: number;
+  acceleration: number;
+  velocity: number;
+  momentumStrength: number;
+  candlesUsed: number;
+}
+
+export interface IMarketHoursMeta {
+  currentHour: number;
+  timezone: string;
+  tradingSession: string;
+  liquidityLevel: string;
+  candlesUsed: number;
+}
+
+// Module interfaces - Scoring modules
+export interface ITrendModule extends IScoringModuleBase {
   meta: ITrendMeta;
 }
 
-export interface IVolatilityModule extends IModuleBase {
+// Module interfaces - Validation modules
+export interface IVolatilityModule extends IValidationModuleBase {
   meta: IVolatilityMeta;
 }
 
-export interface ITrendRegimeModule extends IModuleBase {
+export interface ITrendRegimeModule extends IScoringModuleBase {
   meta: ITrendRegimeMeta;
 }
 
-export interface ILiquidityModule extends IModuleBase {
+export interface ILiquidityModule extends IScoringModuleBase {
   meta: ILiquidityMeta;
   spreadPct: number;
 }
 
-export interface IFundingModule extends IModuleBase {
-  meta: IFundingMeta;
+export interface ILiquidationsMeta {
+  candlesUsed: number;
+  avgBuy: number;
+  avgSell: number;
+  buyPct: number;
+  sellPct: number;
 }
 
-export interface ILiquidationsModule {
-  symbol: string;
-  time: Date;
-  count: number;
-  buysCount: number;
-  sellsCount: number;
-  buysValue: number;
-  sellsValue: number;
-  totalValue: number;
-  minValue: number;
+export interface ILiquidationsModule extends IValidationModuleBase {
+  meta: ILiquidationsMeta;
 }
 
-export interface IOpenInterestModule extends IModuleBase {
+export interface IOpenInterestModule extends IScoringModuleBase {
   meta: IOpenInterestMeta;
 }
 
-export interface ILongShortModule extends IModuleBase {
+export interface ILongShortModule extends IScoringModuleBase {
   meta: ILongShortMeta;
 }
 
-export interface IHigherMAModule extends IModuleBase {
+export interface IHigherMAModule extends IScoringModuleBase {
   meta: IHigherMAMeta;
 }
 
-export interface IRsiVolTrendModule extends IModuleBase {
+export interface IRsiVolTrendModule extends IScoringModuleBase {
   meta: IRsiVolTrendMeta;
 }
 
-export interface IChoppinessMeta {
-  LONG: number;
-  SHORT: number;
-  chop: number;
-  candlesUsed: number;
-  period: number;
-  interpretation: string;
+// New scoring modules
+export interface IVolumeModule extends IScoringModuleBase {
+  meta: IVolumeMeta;
 }
 
-export interface IChoppinessModule extends IModuleBase {
-  meta: IChoppinessMeta;
+export interface IMomentumModule extends IScoringModuleBase {
+  meta: IMomentumMeta;
+}
+
+// New validation modules
+export interface IMarketHoursModule extends IValidationModuleBase {
+  meta: IMarketHoursMeta;
 }
 
 // Analysis modules container
@@ -193,11 +228,13 @@ export interface IAnalysisModules {
   volatility: IVolatilityModule;
   trendRegime: ITrendRegimeModule;
   liquidity: ILiquidityModule;
-  funding: IFundingModule;
   liquidations: ILiquidationsModule;
   openInterest: IOpenInterestModule;
   longShort: ILongShortModule;
   higherMA: IHigherMAModule;
   rsiVolTrend: IRsiVolTrendModule;
-  choppiness: IChoppinessModule;
+  // New modules (for data collection only)
+  volume: IVolumeModule;
+  momentum: IMomentumModule;
+  marketHours: IMarketHoursModule;
 }

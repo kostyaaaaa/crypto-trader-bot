@@ -1,80 +1,13 @@
 // src/trading/core/prepare.ts
-import type { ICapitalConfig, IExitsConfig } from 'crypto-trader-db';
+import type {
+  AnalysisLite,
+  BotConfig,
+  PreparedPosition,
+  RawSide,
+  Side,
+  TakeProfitLevel,
+} from '../../types';
 import { autoTakeProfits } from './calculate-auto-take-profits';
-// ---- Local types (мінімально необхідні для цього модуля) ----
-export type RawSide = 'LONG' | 'SHORT' | 'BUY' | 'SELL' | null;
-export type Side = 'LONG' | 'SHORT';
-
-export interface StrategyConfig {
-  capital: ICapitalConfig;
-  exits: IExitsConfig;
-}
-
-export interface BotConfig {
-  strategy: StrategyConfig;
-}
-
-export interface VolatilityMeta {
-  atrAbs?: number; // абсолютний ATR у цінах
-  atrPct?: number; // ATR у %
-  window?: number;
-  thresholds?: unknown;
-  regime?: 'DEAD' | 'NORMAL' | 'EXTREME';
-}
-
-export interface AnalysisLite {
-  _id?: string;
-  modules?: {
-    volatility?: { meta?: VolatilityMeta };
-    trendRegime?: { signal?: Side | 'NEUTRAL' };
-  };
-}
-
-export interface TakeProfitLevel {
-  price: number;
-  sizePct: number; // % від поточної кількості
-  pct?: number; // відстань до entry у %, інформативно
-}
-
-export interface PreparedPosition {
-  id: string;
-  symbol: string;
-  side: Side;
-  size: number; // notional USD
-  initialSizeUsd: number; // дубль для історії
-  leverage: number;
-  qty: number; // кількість базового активу
-  marginUsd: number; // маржа (USD)
-  openedAt: string; // ISO
-  status: 'OPEN';
-  entryPrice: number;
-  initialEntry: number;
-  stopPrice: number | null;
-  stopModel: string; // опис моделі стопа
-  initialStopPrice: number | null;
-  takeProfits: TakeProfitLevel[];
-  initialTPs: TakeProfitLevel[];
-  rrrToFirstTp: number | null; // risk:reward до першого TP
-  updates: Array<{ time: string; action: 'OPEN'; price: number }>;
-  analysis: string | null;
-  context: {
-    volatilityStatus: VolatilityMeta['regime'] | null;
-    trendRegimeSignal: Side | 'NEUTRAL' | null;
-    atr: number | null;
-    atrAbs: number | null;
-    atrPct: number | null;
-    atrWindow: number | null;
-    volatilityThresholds: unknown;
-  };
-  trailing: {
-    active: boolean;
-    startAfterPct: number;
-    trailStepPct: number;
-    anchor: number | null;
-  } | null;
-  trailActive: boolean | null;
-  trailAnchor: number | null;
-}
 
 // ---- helpers ----
 function normalizeSide(side: RawSide): Side {
@@ -254,7 +187,11 @@ export async function preparePosition(
     analysis: (analysis as any)?._id ?? null,
     context: {
       volatilityStatus: volMeta.regime ?? null,
-      trendRegimeSignal: analysis?.modules?.trendRegime?.signal ?? null,
+      trendRegimeScores: {
+        LONG: Number((analysis as any)?.modules?.trendRegime?.meta?.LONG) || 0,
+        SHORT:
+          Number((analysis as any)?.modules?.trendRegime?.meta?.SHORT) || 0,
+      },
       atr: Number.isFinite(atr) ? atr : null,
       atrAbs: Number.isFinite(atr) ? atr : null,
       atrPct: Number.isFinite(atrPct) ? atrPct : null,

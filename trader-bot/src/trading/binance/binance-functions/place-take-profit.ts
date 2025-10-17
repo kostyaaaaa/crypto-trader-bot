@@ -1,10 +1,10 @@
+import type { OrderSide, Side } from '../../../types';
 import logger from '../../../utils/db-logger';
 import { adjustPrice } from './adjust-price';
 import { adjustQuantity } from './adjust-quantity';
 import { client } from './client';
 import { getSymbolFilters } from './get-symbol-filters';
 import { oppositeOrderSide } from './opposite-order-side';
-import type { OrderSide, Side } from './types';
 
 export async function placeTakeProfit(
   symbol: string,

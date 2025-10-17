@@ -93,10 +93,9 @@ export async function analyzeHigherMA(
   const SHORT = signal === 'SHORT' ? strength : 0;
 
   return {
+    type: 'scoring',
     module: 'higherMA',
     symbol,
-    signal,
-    strength, // 0..100
     meta: {
       LONG,
       SHORT,

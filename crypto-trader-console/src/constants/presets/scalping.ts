@@ -3,12 +3,12 @@ import type { TCoinConfig } from '../../types';
 export const scalpingPreset: TCoinConfig = {
   symbol: 'SCALPING',
   isActive: true,
+  isTrader: true,
+
   analysisConfig: {
     candleTimeframe: '1m',
     oiWindow: 10,
     liqWindow: 10,
-    liqSentWindow: 5,
-    fundingWindow: 1,
     volWindow: 14,
     corrWindow: 5,
     longShortWindow: 5,
@@ -25,22 +25,16 @@ export const scalpingPreset: TCoinConfig = {
       trend: 0.157,
       trendRegime: 0.05,
       liquidity: 0.176,
-      funding: 0.0,
-      liquidations: 0.157,
-      openInterest: 0.44,
-
+      openInterest: 0.597,
       longShort: 0.006,
       higherMA: 0.0,
-      rsiVolTrend: 0,
+      rsiVolTrend: 0.014,
     },
     moduleThresholds: {
       trend: 25,
       trendRegime: 12,
       liquidity: 5,
-      funding: 10,
-      liquidations: 5,
       openInterest: 10,
-
       longShort: 15,
       higherMA: 5,
       rsiVolTrend: 0,
@@ -54,10 +48,10 @@ export const scalpingPreset: TCoinConfig = {
       maxSpreadPct: 0.02,
       cooldownMin: 2,
       lookback: 3,
-      avoidWhen: { volatility: 'DEAD', fundingExtreme: { absOver: 0.08 } },
+      avoidWhen: { volatility: 'DEAD' },
       sideBiasTolerance: 2,
     },
-    volatilityFilter: { deadBelow: 0.08, extremeAbove: 3.5 },
+    volatilityFilter: { minThreshold: 0.08, maxThreshold: 3.5 },
     capital: {
       account: 100,
       riskPerTradePct: 5,

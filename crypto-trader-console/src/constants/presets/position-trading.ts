@@ -3,12 +3,12 @@ import type { TCoinConfig } from '../../types';
 export const positionTradingPreset: TCoinConfig = {
   symbol: 'POSITION TRADING',
   isActive: true,
+  isTrader: true,
+
   analysisConfig: {
     candleTimeframe: '1d',
     oiWindow: 90,
     liqWindow: 90,
-    liqSentWindow: 30,
-    fundingWindow: 168,
     volWindow: 60,
     corrWindow: 30,
     longShortWindow: 30,
@@ -25,22 +25,16 @@ export const positionTradingPreset: TCoinConfig = {
       trend: 0.4,
       trendRegime: 0.25,
       liquidity: 0.1,
-      funding: 0.05,
-      liquidations: 0.02,
-      openInterest: 0.02,
-
+      openInterest: 0.04,
       longShort: 0.0,
       higherMA: 0.15,
-      rsiVolTrend: 0,
+      rsiVolTrend: 0.06,
     },
     moduleThresholds: {
       trend: 30,
       trendRegime: 20,
       liquidity: 15,
-      funding: 10,
-      liquidations: 10,
       openInterest: 10,
-
       longShort: 8,
       higherMA: 15,
       rsiVolTrend: 0,
@@ -54,10 +48,10 @@ export const positionTradingPreset: TCoinConfig = {
       maxSpreadPct: 0.05,
       cooldownMin: 1440,
       lookback: 3,
-      avoidWhen: { volatility: 'DEAD', fundingExtreme: { absOver: 0.0008 } },
+      avoidWhen: { volatility: 'DEAD' },
       sideBiasTolerance: 10,
     },
-    volatilityFilter: { deadBelow: 0.8, extremeAbove: 6.0 },
+    volatilityFilter: { minThreshold: 0.8, maxThreshold: 6.0 },
     capital: {
       account: 100,
       riskPerTradePct: 5,

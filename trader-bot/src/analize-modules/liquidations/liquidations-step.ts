@@ -1,6 +1,6 @@
 import { type ILiquidations, type ISide } from 'crypto-trader-db';
 import WebSocket from 'ws';
-import { saveDoc } from '../../storage/storage';
+import { submitLiquidations } from '../../api';
 import type { ForceOrderEvent } from '../../types/index';
 import logger from '../../utils/db-logger';
 
@@ -15,7 +15,7 @@ export interface LiquidationItem {
 
 export function LiquidationsStepWS(
   symbol: string = 'ETHUSDT',
-  minValue: number = 50_000,
+  minValue: number = 0,
   windowMs: number = 60_000,
 ): () => void {
   const ws = new WebSocket('wss://fstream.binance.com/ws/!forceOrder@arr');
@@ -80,9 +80,9 @@ export function LiquidationsStepWS(
     };
 
     try {
-      await saveDoc('liquidations', candle);
+      await submitLiquidations(candle);
     } catch (e: any) {
-      logger.error('❌ Liquidations save error:', e?.message || e);
+      logger.error('❌ Failed to submit liquidations:', e?.message || e);
     } finally {
       bucket = [];
     }

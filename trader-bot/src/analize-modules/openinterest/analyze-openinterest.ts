@@ -51,10 +51,9 @@ export async function analyzeOpenInterest(
     const mag = 0.6 * Math.abs(oiChangePct) + 0.4 * Math.abs(priceChangePct);
     if (mag < 0.05) {
       return {
+        type: 'scoring',
         module: 'openInterest',
         symbol,
-        signal: 'NEUTRAL',
-        strength: 0,
         meta: {
           LONG: 50,
           SHORT: 50,
@@ -77,10 +76,10 @@ export async function analyzeOpenInterest(
     if (Math.abs(longScore - shortScore) < 5) signal = 'NEUTRAL';
 
     return {
+      type: 'scoring',
       module: 'openInterest',
       symbol,
-      signal,
-      strength: Math.max(longScore, shortScore),
+
       meta: {
         LONG: longScore,
         SHORT: shortScore,

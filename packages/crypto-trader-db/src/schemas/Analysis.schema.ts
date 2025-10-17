@@ -12,20 +12,16 @@ export interface ITrendMeta {
   emaGapPct: number;
   rsi: number;
   rsiRaw: number | null;
-  rsiSeries: (number | null)[];
   lastRSI: number | null;
-  volumes: number[];
   lastVolume: number | null;
 }
 export interface IVolatilityThresholds {
-  deadBelow: number;
-  extremeAbove: number;
+  minThreshold: number;
+  maxThreshold: number;
 }
 export type IVolatilityRegime = 'DEAD' | 'NORMAL' | 'EXTREME';
 
 export interface IVolatilityMeta {
-  LONG: number;
-  SHORT: number;
   regime: IVolatilityRegime;
   candlesUsed: number;
   atrAbs: number;
@@ -42,7 +38,6 @@ export interface ITrendRegimeMeta {
   SHORT: number;
   ADX: number;
   ADX_scaled: number;
-  dirGapPct: number;
   plusDI: number;
   minusDI: number;
   period: number;
@@ -59,14 +54,6 @@ export interface ILiquidityMeta {
   spreadPct: number | null;
   LONG: number;
   SHORT: number;
-}
-
-export interface IFundingMeta {
-  LONG: number;
-  SHORT: number;
-  candlesUsed: number;
-  avgFunding: number;
-  periodCovered: string;
 }
 
 export interface IOpenInterestMeta {
@@ -133,50 +120,66 @@ export interface IRsiVolTrendMeta {
   deadZone?: number;
   candleOpen?: string;
   candleDurationMs?: number;
+  rsiBoostLong?: number;
+  rsiBoostShort?: number;
 }
 
-export interface IChoppinessMeta {
+// New meta interfaces
+export interface IVolumeMeta {
   LONG: number;
   SHORT: number;
-  chop: number | null;
+  volumeAvg: number;
+  volumeRatio: number;
+  volumeTrend: number;
+  volumeSpike: number;
   candlesUsed: number;
-  period: number;
-  interpretation: string;
 }
 
-// Module interfaces
-export interface IModuleBase {
+export interface IMomentumMeta {
+  LONG: number;
+  SHORT: number;
+  momentum: number;
+  acceleration: number;
+  velocity: number;
+  momentumStrength: number;
+  candlesUsed: number;
+}
+
+export interface IMarketHoursMeta {
+  currentHour: number;
+  timezone: string;
+  tradingSession: string;
+  liquidityLevel: string;
+  candlesUsed: number;
+}
+
+// Module type
+export type ModuleType = 'validation' | 'scoring';
+
+// Base interfaces for different module types
+export interface IValidationModuleBase {
+  type: 'validation';
   module: string;
   symbol: string;
-  signal: string;
-  strength: number;
+  signal: 'ACTIVE' | 'NEUTRAL' | 'INACTIVE';
 }
 
-export interface ITrendModule extends IModuleBase {
-  meta: ITrendMeta;
+export interface IScoringModuleBase {
+  type: 'scoring';
+  module: string;
+  symbol: string;
 }
 
-export interface IVolatilityModule extends IModuleBase {
+// Validation modules (volatility, liquidations)
+export interface IVolatilityModule extends IValidationModuleBase {
   meta: IVolatilityMeta;
 }
 
-export interface ITrendRegimeModule extends IModuleBase {
-  meta: ITrendRegimeMeta;
-}
-
-export interface ILiquidityModule extends IModuleBase {
-  meta: ILiquidityMeta;
-}
-
-export interface IFundingModule extends IModuleBase {
-  meta: IFundingMeta;
-}
-export interface ILiquidationsModule extends IModuleBase {
+export interface ILiquidationsModule extends IValidationModuleBase {
   meta: ILiquidationsMeta;
 }
+
 export interface ILiquidationsMeta {
-  LONG: number;
-  SHORT: number;
   candlesUsed: number;
   avgBuy: number;
   avgSell: number;
@@ -184,20 +187,47 @@ export interface ILiquidationsMeta {
   sellPct: number;
 }
 
-export interface IOpenInterestModule extends IModuleBase {
+// Scoring modules (all others)
+export interface ITrendModule extends IScoringModuleBase {
+  meta: ITrendMeta;
+}
+
+export interface ITrendRegimeModule extends IScoringModuleBase {
+  meta: ITrendRegimeMeta;
+}
+
+export interface ILiquidityModule extends IScoringModuleBase {
+  meta: ILiquidityMeta;
+}
+
+export interface IOpenInterestModule extends IScoringModuleBase {
   meta: IOpenInterestMeta;
 }
 
-export interface ILongShortModule extends IModuleBase {
+export interface ILongShortModule extends IScoringModuleBase {
   meta: ILongShortMeta;
 }
 
-export interface IHigherMAModule extends IModuleBase {
+export interface IHigherMAModule extends IScoringModuleBase {
   meta: IHigherMAMeta;
 }
 
-export interface IRsiVolTrendModule extends IModuleBase {
+export interface IRsiVolTrendModule extends IScoringModuleBase {
   meta: IRsiVolTrendMeta;
+}
+
+// New scoring modules
+export interface IVolumeModule extends IScoringModuleBase {
+  meta: IVolumeMeta;
+}
+
+export interface IMomentumModule extends IScoringModuleBase {
+  meta: IMomentumMeta;
+}
+
+// New validation modules
+export interface IMarketHoursModule extends IValidationModuleBase {
+  meta: IMarketHoursMeta;
 }
 
 export interface IAnalysisModules {
@@ -205,16 +235,15 @@ export interface IAnalysisModules {
   volatility: IVolatilityModule | null;
   trendRegime: ITrendRegimeModule | null;
   liquidity: ILiquidityModule | null;
-  funding: IFundingModule | null;
   liquidations: ILiquidationsModule | null;
   openInterest: IOpenInterestModule | null;
   longShort: ILongShortModule | null;
   higherMA: IHigherMAModule | null;
   rsiVolTrend: IRsiVolTrendModule | null;
-  choppiness: IChoppinessModule | null;
-}
-export interface IChoppinessModule extends IModuleBase {
-  meta: IChoppinessMeta;
+  // New modules (for data collection only)
+  volume: IVolumeModule | null;
+  momentum: IMomentumModule | null;
+  marketHours: IMarketHoursModule | null;
 }
 
 // Scores interface
@@ -247,9 +276,7 @@ const trendMetaSchema = new Schema(
     emaGapPct: { type: Number, required: true },
     rsi: { type: Number, required: true },
     rsiRaw: { type: Number, required: false, default: null },
-    rsiSeries: { type: [Schema.Types.Mixed], required: false, default: [] }, // allow nulls in series
     lastRSI: { type: Number, required: false, default: null },
-    volumes: { type: [Number], required: false, default: [] },
     lastVolume: { type: Number, required: false, default: null },
   },
   { _id: false },
@@ -257,16 +284,14 @@ const trendMetaSchema = new Schema(
 
 const volatilityThresholdsSchema = new Schema(
   {
-    deadBelow: { type: Number, required: true },
-    extremeAbove: { type: Number, required: true },
+    minThreshold: { type: Number, required: true },
+    maxThreshold: { type: Number, required: true },
   },
   { _id: false },
 );
 
 const volatilityMetaSchema = new Schema(
   {
-    LONG: { type: Number, required: true },
-    SHORT: { type: Number, required: true },
     regime: { type: String, required: true },
     candlesUsed: { type: Number, required: true },
     atrAbs: { type: Number, required: true },
@@ -291,7 +316,6 @@ const trendRegimeMetaSchema = new Schema(
     SHORT: { type: Number, required: true },
     ADX: { type: Number, required: true },
     ADX_scaled: { type: Number, required: true },
-    dirGapPct: { type: Number, required: true },
     plusDI: { type: Number, required: true },
     minusDI: { type: Number, required: true },
     period: { type: Number, required: true },
@@ -316,22 +340,15 @@ const liquidityMetaSchema = new Schema(
 );
 const liquidityModuleSchema = new Schema(
   {
+    type: {
+      type: String,
+      enum: ['scoring'],
+      required: true,
+      default: 'scoring',
+    },
     module: { type: String, required: true },
     symbol: { type: String, required: true },
-    signal: { type: String, required: true },
-    strength: { type: Number, required: true },
     meta: { type: liquidityMetaSchema, required: true },
-  },
-  { _id: false },
-);
-
-const fundingMetaSchema = new Schema(
-  {
-    LONG: { type: Number, required: true },
-    SHORT: { type: Number, required: true },
-    candlesUsed: { type: Number, required: true },
-    avgFunding: { type: Number, required: true },
-    periodCovered: { type: String, required: true },
   },
   { _id: false },
 );
@@ -418,24 +435,16 @@ const rsiVolTrendMetaSchema = new Schema(
   { _id: false },
 );
 
-const choppinessMetaSchema = new Schema(
-  {
-    LONG: { type: Number, required: true },
-    SHORT: { type: Number, required: true },
-    chop: { type: Number, required: true },
-    candlesUsed: { type: Number, required: true },
-    period: { type: Number, required: true },
-    interpretation: { type: String, required: true },
-  },
-  { _id: false },
-);
-
 const trendModuleSchema = new Schema(
   {
+    type: {
+      type: String,
+      enum: ['scoring'],
+      required: true,
+      default: 'scoring',
+    },
     module: { type: String, required: true },
     symbol: { type: String, required: true },
-    signal: { type: String, required: true },
-    strength: { type: Number, required: true },
     meta: { type: trendMetaSchema, required: true },
   },
   { _id: false },
@@ -443,10 +452,19 @@ const trendModuleSchema = new Schema(
 
 const volatilityModuleSchema = new Schema(
   {
+    type: {
+      type: String,
+      enum: ['validation'],
+      required: true,
+      default: 'validation',
+    },
     module: { type: String, required: true },
     symbol: { type: String, required: true },
-    signal: { type: String, required: true },
-    strength: { type: Number, required: true },
+    signal: {
+      type: String,
+      enum: ['ACTIVE', 'NEUTRAL', 'INACTIVE'],
+      required: true,
+    },
     meta: { type: volatilityMetaSchema, required: true },
   },
   { _id: false },
@@ -454,30 +472,21 @@ const volatilityModuleSchema = new Schema(
 
 const trendRegimeModuleSchema = new Schema(
   {
+    type: {
+      type: String,
+      enum: ['scoring'],
+      required: true,
+      default: 'scoring',
+    },
     module: { type: String, required: true },
     symbol: { type: String, required: true },
-    signal: { type: String, required: true },
-    strength: { type: Number, required: true },
     meta: { type: trendRegimeMetaSchema, required: true },
-  },
-  { _id: false },
-);
-
-const fundingModuleSchema = new Schema(
-  {
-    module: { type: String, required: true },
-    symbol: { type: String, required: true },
-    signal: { type: String, required: true },
-    strength: { type: Number, required: true },
-    meta: { type: fundingMetaSchema, required: true },
   },
   { _id: false },
 );
 
 const liquidationsMetaSchema = new Schema(
   {
-    LONG: { type: Number, required: true },
-    SHORT: { type: Number, required: true },
     candlesUsed: { type: Number, required: true },
     avgBuy: { type: Number, required: true },
     avgSell: { type: Number, required: true },
@@ -489,10 +498,19 @@ const liquidationsMetaSchema = new Schema(
 
 const liquidationsModuleSchema = new Schema(
   {
+    type: {
+      type: String,
+      enum: ['validation'],
+      required: true,
+      default: 'validation',
+    },
     module: { type: String, required: true },
     symbol: { type: String, required: true },
-    signal: { type: String, required: true },
-    strength: { type: Number, required: true },
+    signal: {
+      type: String,
+      enum: ['ACTIVE', 'NEUTRAL', 'INACTIVE'],
+      required: true,
+    },
     meta: { type: liquidationsMetaSchema, required: true },
   },
   { _id: false },
@@ -500,10 +518,14 @@ const liquidationsModuleSchema = new Schema(
 
 const openInterestModuleSchema = new Schema(
   {
+    type: {
+      type: String,
+      enum: ['scoring'],
+      required: true,
+      default: 'scoring',
+    },
     module: { type: String, required: true },
     symbol: { type: String, required: true },
-    signal: { type: String, required: true },
-    strength: { type: Number, required: true },
     meta: { type: openInterestMetaSchema, required: true },
   },
   { _id: false },
@@ -511,10 +533,14 @@ const openInterestModuleSchema = new Schema(
 
 const longShortModuleSchema = new Schema(
   {
+    type: {
+      type: String,
+      enum: ['scoring'],
+      required: true,
+      default: 'scoring',
+    },
     module: { type: String, required: true },
     symbol: { type: String, required: true },
-    signal: { type: String, required: true },
-    strength: { type: Number, required: true },
     meta: { type: longShortMetaSchema, required: true },
   },
   { _id: false },
@@ -522,10 +548,14 @@ const longShortModuleSchema = new Schema(
 
 const higherMAModuleSchema = new Schema(
   {
+    type: {
+      type: String,
+      enum: ['scoring'],
+      required: true,
+      default: 'scoring',
+    },
     module: { type: String, required: true },
     symbol: { type: String, required: true },
-    signal: { type: String, required: true },
-    strength: { type: Number, required: true },
     meta: { type: higherMAMetaSchema, required: true },
   },
   { _id: false },
@@ -533,22 +563,103 @@ const higherMAModuleSchema = new Schema(
 
 const rsiVolTrendModuleSchema = new Schema(
   {
+    type: {
+      type: String,
+      enum: ['scoring'],
+      required: true,
+      default: 'scoring',
+    },
     module: { type: String, required: true },
     symbol: { type: String, required: true },
-    signal: { type: String, required: true },
-    strength: { type: Number, required: true },
     meta: { type: rsiVolTrendMetaSchema, required: true },
   },
   { _id: false },
 );
 
-const choppinessModuleSchema = new Schema(
+// New module schemas
+const volumeMetaSchema = new Schema(
   {
+    LONG: { type: Number, required: true },
+    SHORT: { type: Number, required: true },
+    volumeAvg: { type: Number, required: true },
+    volumeRatio: { type: Number, required: true },
+    volumeTrend: { type: Number, required: true },
+    volumeSpike: { type: Number, required: true },
+    candlesUsed: { type: Number, required: true },
+  },
+  { _id: false },
+);
+
+const volumeModuleSchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: ['scoring'],
+      required: true,
+      default: 'scoring',
+    },
     module: { type: String, required: true },
     symbol: { type: String, required: true },
-    signal: { type: String, required: true },
-    strength: { type: Number, required: true },
-    meta: { type: choppinessMetaSchema, required: true },
+    meta: { type: volumeMetaSchema, required: true },
+  },
+  { _id: false },
+);
+
+const momentumMetaSchema = new Schema(
+  {
+    LONG: { type: Number, required: true },
+    SHORT: { type: Number, required: true },
+    momentum: { type: Number, required: true },
+    acceleration: { type: Number, required: true },
+    velocity: { type: Number, required: true },
+    momentumStrength: { type: Number, required: true },
+    candlesUsed: { type: Number, required: true },
+  },
+  { _id: false },
+);
+
+const momentumModuleSchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: ['scoring'],
+      required: true,
+      default: 'scoring',
+    },
+    module: { type: String, required: true },
+    symbol: { type: String, required: true },
+    meta: { type: momentumMetaSchema, required: true },
+  },
+  { _id: false },
+);
+
+const marketHoursMetaSchema = new Schema(
+  {
+    currentHour: { type: Number, required: true },
+    timezone: { type: String, required: true },
+    tradingSession: { type: String, required: true },
+    liquidityLevel: { type: String, required: true },
+    candlesUsed: { type: Number, required: true },
+  },
+  { _id: false },
+);
+
+const marketHoursModuleSchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: ['validation'],
+      required: true,
+      default: 'validation',
+    },
+    module: { type: String, required: true },
+    symbol: { type: String, required: true },
+    signal: {
+      type: String,
+      enum: ['ACTIVE', 'NEUTRAL', 'INACTIVE'],
+      required: true,
+    },
+    meta: { type: marketHoursMetaSchema, required: true },
   },
   { _id: false },
 );
@@ -567,7 +678,6 @@ const analysisModulesSchema = new Schema(
       default: null,
     },
     liquidity: { type: liquidityModuleSchema, required: false, default: null },
-    funding: { type: fundingModuleSchema, required: false, default: null },
     liquidations: {
       type: liquidationsModuleSchema,
       required: false,
@@ -580,9 +690,16 @@ const analysisModulesSchema = new Schema(
     },
     longShort: { type: longShortModuleSchema, required: false, default: null },
     higherMA: { type: higherMAModuleSchema, required: false, default: null },
-    choppiness: { type: choppinessModuleSchema, required: true, default: null },
     rsiVolTrend: {
       type: rsiVolTrendModuleSchema,
+      required: false,
+      default: null,
+    },
+    // New modules (for data collection only)
+    volume: { type: volumeModuleSchema, required: false, default: null },
+    momentum: { type: momentumModuleSchema, required: false, default: null },
+    marketHours: {
+      type: marketHoursModuleSchema,
       required: false,
       default: null,
     },

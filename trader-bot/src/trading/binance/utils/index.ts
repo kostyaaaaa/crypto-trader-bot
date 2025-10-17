@@ -1,4 +1,5 @@
 export * from './execute-trade';
 export * from './normalize-tp-plan';
-export * from './types';
+// Types are now exported from the central types folder
+export type * from '../../../types';
 export * from './validate-stop';

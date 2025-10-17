@@ -4,96 +4,105 @@ import type {
   LivePosition,
   LiveState,
   OpenOrder,
-} from '../../../types/binance-res';
+} from '../../../types';
 import logger from '../../../utils/db-logger';
 import { getOpenOrdersCached, getPositionRiskCached } from './state';
 
 export async function getLiveState(symbol: string): Promise<LiveState> {
   try {
+    // 1) Pull cached position snapshot once
     const positions = ((await getPositionRiskCached()) ||
       []) as FuturesPositionRisk[];
     const pos = positions.find((p) => p.symbol === symbol);
 
-    let side: LivePosition['side'] = null;
-    let size = 0;
-    let entryPrice: number | null = null;
-    let leverage: number | null = null;
-    let unRealizedProfit: number | null = null;
-    let isolatedMargin: number | null = null;
-    let initialMargin: number | null = null;
-    let markPrice: number | null = null;
-
-    if (pos) {
-      const sizeNum = parseFloat(pos.positionAmt);
-      side = sizeNum > 0 ? 'LONG' : sizeNum < 0 ? 'SHORT' : null;
-      size = Math.abs(sizeNum) || 0;
-      entryPrice = sizeNum !== 0 ? parseFloat(pos.entryPrice) : null;
-
-      const lev = Number(pos.leverage);
-      leverage = Number.isFinite(lev) ? lev : null;
-
-      const ur = Number(pos.unRealizedProfit ?? pos.unrealizedProfit);
-      unRealizedProfit = Number.isFinite(ur) ? ur : null;
-
-      const iso = Number(pos.isolatedMargin);
-      isolatedMargin = Number.isFinite(iso) ? iso : null;
-
-      const initM = Number(pos.initialMargin);
-      initialMargin = Number.isFinite(initM) ? initM : null;
-
-      const mp = Number(pos.markPrice);
-      markPrice = Number.isFinite(mp) ? mp : null;
+    // If there is no position object at all — no need to load open orders
+    if (!pos) {
+      return { position: null, orders: [] };
     }
 
+    // Parse size; if zero or NaN — treat as no active position (skip openOrders)
+    const rawAmt = parseFloat(pos.positionAmt);
+    if (!Number.isFinite(rawAmt) || rawAmt === 0) {
+      return { position: null, orders: [] };
+    }
+
+    // 2) Build normalized position (we already know size != 0 here)
+    const side: LivePosition['side'] = rawAmt > 0 ? 'LONG' : 'SHORT';
+    const size = Math.abs(rawAmt);
+
+    const entryParsed = parseFloat(pos.entryPrice);
+    const entryPrice: number | null = Number.isFinite(entryParsed)
+      ? entryParsed
+      : null;
+
+    const lev = Number(pos.leverage);
+    const leverage: number | null = Number.isFinite(lev) ? lev : null;
+
+    // Support both unrealizedProfit/unRealizedProfit shapes
+    const ur = Number(
+      (pos as any).unRealizedProfit ?? (pos as any).unrealizedProfit,
+    );
+    const unRealizedProfit: number | null = Number.isFinite(ur) ? ur : null;
+
+    const iso = Number(pos.isolatedMargin);
+    const isolatedMargin: number | null = Number.isFinite(iso) ? iso : null;
+
+    const initM = Number(pos.initialMargin);
+    const initialMargin: number | null = Number.isFinite(initM) ? initM : null;
+
+    const mp = Number((pos as any).markPrice);
+    const markPrice: number | null = Number.isFinite(mp) ? mp : null;
+
+    const position: LivePosition = {
+      side,
+      size,
+      entryPrice,
+      leverage,
+      unRealizedProfit,
+      isolatedMargin,
+      initialMargin,
+      markPrice,
+    };
+
+    // 3) Only now, when we know there IS a live position, ask for open orders (cached)
     const openOrders = ((await getOpenOrdersCached(symbol)) ||
       []) as OpenOrder[];
+
     const orders: LiveOrder[] = openOrders
       .map((o) => {
         const qtyNum = parseFloat(o.origQty);
         const qty = Number.isFinite(qtyNum) ? qtyNum : 0;
 
+        // Prefer stopPrice if valid; fall back to limit price
         const stopPx = parseFloat(o.stopPrice);
-        const priceFromStop =
-          Number.isFinite(stopPx) && stopPx > 0 ? stopPx : NaN;
         const limitPx = parseFloat(o.price);
-        const px = Number.isFinite(priceFromStop)
-          ? priceFromStop
-          : Number.isFinite(limitPx)
-            ? limitPx
-            : NaN;
+        const px =
+          Number.isFinite(stopPx) && stopPx > 0
+            ? stopPx
+            : Number.isFinite(limitPx)
+              ? limitPx
+              : NaN;
 
-        const t = String(o.type || '').toUpperCase();
-        const ot = String(o.origType || '').toUpperCase();
-        const isStop = t.includes('STOP') || ot.includes('STOP');
-        const isTp = t.includes('TAKE_PROFIT') || ot.includes('TAKE_PROFIT');
+        const type = String(o.type || '').toUpperCase();
+        const origType = String(o.origType || '').toUpperCase();
+        const isStop = type.includes('STOP') || origType.includes('STOP');
+        const isTp =
+          type.includes('TAKE_PROFIT') || origType.includes('TAKE_PROFIT');
         if (!isStop && !isTp) return null;
 
         const sideStr = String(o.side || '').toUpperCase();
-        const side = sideStr === 'SELL' ? 'SELL' : 'BUY';
+        const orderSide: 'BUY' | 'SELL' = sideStr === 'SELL' ? 'SELL' : 'BUY';
 
         const ord: LiveOrder = {
           type: isStop ? 'SL' : 'TP',
           price: Number.isFinite(px) ? px : null,
           qty,
-          side,
-          reduceOnly: Boolean(o.reduceOnly),
+          side: orderSide,
+          reduceOnly: Boolean((o as any).reduceOnly),
         };
         return ord;
       })
       .filter((x): x is LiveOrder => x !== null);
-
-    const position: LivePosition | null = side
-      ? {
-          side,
-          size,
-          entryPrice,
-          leverage,
-          unRealizedProfit,
-          isolatedMargin,
-          initialMargin,
-          markPrice,
-        }
-      : null;
 
     return { position, orders };
   } catch (err: unknown) {

@@ -120,16 +120,14 @@ export async function analyzeTrendRegime(
   const strengthOut = Math.max(LONGv, SHORTv);
 
   return {
+    type: 'scoring',
     module: 'trendRegime',
     symbol,
-    signal,
-    strength: strengthOut,
     meta: {
       LONG: LONGv,
       SHORT: SHORTv,
       ADX: Number(lastAdx.toFixed(2)),
       ADX_scaled: round3(adxScaled),
-      dirGapPct: round3(dirGapPct),
       plusDI: Number(lastPlus.toFixed(2)),
       minusDI: Number(lastMinus.toFixed(2)),
       period,

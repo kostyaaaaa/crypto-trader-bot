@@ -3,12 +3,12 @@ import type { TCoinConfig } from '../../types';
 export const defaultPreset: TCoinConfig = {
   symbol: 'DEFAULT',
   isActive: true,
+  isTrader: true,
+
   analysisConfig: {
     candleTimeframe: '15m',
     oiWindow: 20,
     liqWindow: 30,
-    liqSentWindow: 5,
-    fundingWindow: 96,
     volWindow: 14,
     corrWindow: 10,
     longShortWindow: 10,
@@ -25,22 +25,16 @@ export const defaultPreset: TCoinConfig = {
       trend: 0.3,
       trendRegime: 0.15,
       liquidity: 0.2,
-      funding: 0.1,
-      liquidations: 0.05,
       openInterest: 0.15,
-
       longShort: 0.02,
       higherMA: 0.08,
-      rsiVolTrend: 0,
+      rsiVolTrend: 0.1,
     },
     moduleThresholds: {
       trend: 50,
       trendRegime: 7,
       liquidity: 40,
-      funding: 20,
-      liquidations: 30,
       openInterest: 25,
-
       longShort: 12,
       higherMA: 7,
       rsiVolTrend: 0,
@@ -59,15 +53,12 @@ export const defaultPreset: TCoinConfig = {
       lookback: 3,
       avoidWhen: {
         volatility: 'DEAD',
-        fundingExtreme: {
-          absOver: 0.1,
-        },
       },
       sideBiasTolerance: 5,
     },
     volatilityFilter: {
-      deadBelow: 0.25,
-      extremeAbove: 2.5,
+      minThreshold: 0.25,
+      maxThreshold: 2.5,
     },
     capital: {
       account: 100,

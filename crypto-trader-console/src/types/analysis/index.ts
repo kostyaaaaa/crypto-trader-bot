@@ -40,13 +40,6 @@ export interface ILiquidityMeta {
   SHORT: number;
 }
 
-export interface IFundingMeta {
-  LONG: number;
-  SHORT: number;
-  candlesUsed: number;
-  avgFunding: number;
-}
-
 export interface IOpenInterestMeta {
   LONG: number;
   SHORT: number;
@@ -98,6 +91,35 @@ export interface IRsiVolTrendMeta {
   maLong: number;
 }
 
+// New meta interfaces
+export interface IVolumeMeta {
+  LONG: number;
+  SHORT: number;
+  volumeAvg: number;
+  volumeRatio: number;
+  volumeTrend: number;
+  volumeSpike: number;
+  candlesUsed: number;
+}
+
+export interface IMomentumMeta {
+  LONG: number;
+  SHORT: number;
+  momentum: number;
+  acceleration: number;
+  velocity: number;
+  momentumStrength: number;
+  candlesUsed: number;
+}
+
+export interface IMarketHoursMeta {
+  currentHour: number;
+  timezone: string;
+  tradingSession: string;
+  liquidityLevel: string;
+  candlesUsed: number;
+}
+
 // Module interfaces
 export interface IModuleBase {
   module: string;
@@ -121,10 +143,6 @@ export interface ITrendRegimeModule extends IModuleBase {
 export interface ILiquidityModule extends IModuleBase {
   meta: ILiquidityMeta;
   spreadPct: number;
-}
-
-export interface IFundingModule extends IModuleBase {
-  meta: IFundingMeta;
 }
 
 export interface ILiquidationsModule {
@@ -155,17 +173,18 @@ export interface IRsiVolTrendModule extends IModuleBase {
   meta: IRsiVolTrendMeta;
 }
 
-export interface IChoppinessMeta {
-  LONG: number;
-  SHORT: number;
-  chop: number;
-  candlesUsed: number;
-  period: number;
-  interpretation: string;
+// New scoring modules
+export interface IVolumeModule extends IModuleBase {
+  meta: IVolumeMeta;
 }
 
-export interface IChoppinessModule extends IModuleBase {
-  meta: IChoppinessMeta;
+export interface IMomentumModule extends IModuleBase {
+  meta: IMomentumMeta;
+}
+
+// New validation modules
+export interface IMarketHoursModule extends IModuleBase {
+  meta: IMarketHoursMeta;
 }
 
 // Analysis modules container
@@ -174,13 +193,15 @@ export interface IAnalysisModules {
   volatility: IVolatilityModule;
   trendRegime: ITrendRegimeModule;
   liquidity: ILiquidityModule;
-  funding: IFundingModule;
   liquidations: ILiquidationsModule;
   openInterest: IOpenInterestModule;
   longShort: ILongShortModule;
   higherMA: IHigherMAModule;
   rsiVolTrend: IRsiVolTrendModule;
-  choppiness: IChoppinessModule;
+  // New modules (for data collection only)
+  volume: IVolumeModule;
+  momentum: IMomentumModule;
+  marketHours: IMarketHoursModule;
 }
 
 // Scores interface

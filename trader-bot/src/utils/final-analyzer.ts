@@ -1,18 +1,19 @@
 import axios from 'axios';
 import {
-  analyzeCandles,
-  analyzeChoppiness,
-  analyzeFunding,
   analyzeHigherMA,
   analyzeLiquidations,
   analyzeLiquidity,
   analyzeLongShort,
+  analyzeMarketHours,
+  analyzeMomentum,
   analyzeOpenInterest,
   analyzeRsiVolumeTrend,
+  analyzeTrend,
   analyzeTrendRegime,
   analyzeVolatility,
+  analyzeVolume,
 } from '../analize-modules/index';
-import { saveDoc } from '../storage/storage';
+import { submitAnalysis } from '../api';
 import type { BinanceKline, Candle } from '../types/index';
 
 import logger from './db-logger';
@@ -21,8 +22,6 @@ import type {
   IAnalysis,
   IAnalysisConfig,
   IAnalysisModules,
-  IChoppinessModule,
-  IFundingModule,
   IHigherMAModule,
   ILiquidationsModule,
   ILiquidityModule,
@@ -49,7 +48,6 @@ export async function finalAnalyzer({
     candleTimeframe = '1m',
     oiWindow = 10,
     liqWindow = 20,
-    fundingWindow = 60,
     volWindow = 14,
     corrWindow = 5,
     longShortWindow = 5,
@@ -65,7 +63,6 @@ export async function finalAnalyzer({
       volWindow,
       corrWindow,
       oiWindow,
-      fundingWindow,
       longShortWindow,
       neededRsiVol,
     ) + 5;
@@ -101,33 +98,32 @@ export async function finalAnalyzer({
     volatility: null,
     trendRegime: null,
     liquidity: null,
-    funding: null,
     liquidations: null,
     openInterest: null,
     longShort: null,
     higherMA: null,
     rsiVolTrend: null,
-    choppiness: null,
+    // New modules (not used in scoring/validation yet)
+    volume: null,
+    momentum: null,
+    marketHours: null,
   };
 
-  modules.trend = (await analyzeCandles(
-    symbol,
-    candles,
-  )) as ITrendModule | null;
+  modules.trend = (await analyzeTrend(symbol, candles)) as ITrendModule | null;
 
-  modules.choppiness = (await analyzeChoppiness(
-    symbol,
-    21,
-  )) as IChoppinessModule | null;
   modules.volatility = (await analyzeVolatility(
     symbol,
     candles,
     volWindow,
     (strategy as IStrategyConfig).volatilityFilter || {
-      deadBelow: 0.2,
-      extremeAbove: 2.5,
+      minThreshold: 0.2,
+      maxThreshold: 2.5,
     },
   )) as IVolatilityModule | null;
+
+  modules.liquidations = (await analyzeLiquidations(
+    symbol,
+  )) as ILiquidationsModule | null;
 
   modules.trendRegime = (await analyzeTrendRegime(symbol, candles, {
     period: 14,
@@ -144,15 +140,6 @@ export async function finalAnalyzer({
     liqWindow,
     lastPrice,
   )) as ILiquidityModule | null;
-
-  modules.funding = (await analyzeFunding(
-    symbol,
-    fundingWindow,
-  )) as IFundingModule | null;
-
-  modules.liquidations = (await analyzeLiquidations(
-    symbol,
-  )) as ILiquidationsModule | null;
 
   modules.openInterest = (await analyzeOpenInterest(
     symbol,
@@ -177,15 +164,30 @@ export async function finalAnalyzer({
     },
   )) as IHigherMAModule | null;
 
-  // --- скоринг ---
+  // New modules (for data collection only, not used in scoring/validation)
+  modules.volume = (await analyzeVolume(symbol, candles)) as any;
+  modules.momentum = (await analyzeMomentum(symbol, candles)) as any;
+  modules.marketHours = (await analyzeMarketHours(symbol)) as any;
+
+  // --- скоринг (only scoring modules, not validation) ---
+  const scoringModuleNames = [
+    'trend',
+    'trendRegime',
+    'liquidity',
+    'openInterest',
+    'longShort',
+    'higherMA',
+    'rsiVolTrend',
+  ];
+
   function weightedScore(side: 'LONG' | 'SHORT'): number {
-    return Object.entries(modules).reduce((acc, [, v]) => {
-      if (!v) return acc;
+    return Object.entries(modules).reduce((acc, [key, v]) => {
+      if (!v || !scoringModuleNames.includes(key)) return acc; // Skip validation modules
       const value = Number(v.meta?.[side]) || 0;
-      const key = v.module as keyof typeof weights;
-      const threshold = Number(moduleThresholds[key]) || 0;
+      const moduleKey = v.module as keyof typeof weights;
+      const threshold = Number(moduleThresholds[moduleKey]) || 0;
       if (value < threshold) return acc;
-      const w = Number(weights[key]) || 0;
+      const w = Number(weights[moduleKey]) || 0;
       return acc + value * w;
     }, 0);
   }
@@ -212,9 +214,15 @@ export async function finalAnalyzer({
         ? 'SHORT'
         : 'NEUTRAL';
 
-  const filledModules = Object.values(modules).filter(
-    (m) => m && (Number(m.meta?.LONG) || 0) + (Number(m.meta?.SHORT) || 0) > 0,
-  ).length;
+  // Count only scoring modules with non-zero scores
+  const filledModules = Object.entries(modules).filter(([key, m]) => {
+    if (!m || !scoringModuleNames.includes(key)) return false;
+    const longScore = Number(m.meta?.LONG) || 0;
+    const shortScore = Number(m.meta?.SHORT) || 0;
+    return longScore > 0 || shortScore > 0;
+  }).length;
+
+  const totalScoringModules = scoringModuleNames.length;
 
   const result: IAnalysis = {
     time: new Date(),
@@ -225,11 +233,11 @@ export async function finalAnalyzer({
       LONG: Number(scoreLONG.toFixed(1)),
       SHORT: Number(scoreSHORT.toFixed(1)),
     },
-    coverage: `${filledModules}/${Object.keys(modules).length}`,
+    coverage: `${filledModules}/${totalScoringModules}`,
     bias,
     decision,
   };
 
-  await saveDoc('analysis', result as IAnalysis);
+  await submitAnalysis(result as IAnalysis);
   return result;
 }

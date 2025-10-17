@@ -12,10 +12,6 @@ export const TIPS: Record<string, string> = {
     'Кількість свічок для розрахунку Open Interest (вікно зміни OI). Більше — плавніше, повільніше.',
   'analysisConfig.liqWindow':
     'Кількість точок orderbook/ліквідності для усереднення. Занадто мале вікно дає шум.',
-  'analysisConfig.liqSentWindow':
-    'Скільки останніх “ліквідаційних” свічок усереднюємо для sentiment по ліквідаціях.',
-  'analysisConfig.fundingWindow':
-    'Скільки періодів беремо для середнього funding (у годинах/періодах).',
   'analysisConfig.volWindow':
     'Вікно для ATR/волатильності. Впливає на позначки DEAD/EXTREME.',
   'analysisConfig.corrWindow':
@@ -29,11 +25,7 @@ export const TIPS: Record<string, string> = {
   'analysisConfig.weights.trendRegime':
     'Вага ADX/DI режиму тренду. Підсилює сигнали сили/слабкості тренду.',
   'analysisConfig.weights.liquidity':
-    'Вага ліквідності/балансу книги заявок. Підвищуйте для монет із частими “сквізами”.',
-  'analysisConfig.weights.funding':
-    'Вага середнього funding (перекоси лонгерів/шортерів).',
-  'analysisConfig.weights.liquidations':
-    'Вага ліквідацій (де ріжуть лонги/шорти). Корисно для ловлі імпульсів.',
+    'Вага ліквідності/балансу книги заявок. Підвищуйте для монет із частими "сквізами".',
   'analysisConfig.weights.openInterest':
     'Вага зміни OI (нові позиції/закриття). Часто корелює з продовженням руху.',
   'analysisConfig.weights.longShort':
@@ -48,10 +40,6 @@ export const TIPS: Record<string, string> = {
     'Мінімальна сила ADX/DI, щоб рахувати режим тренду.',
   'analysisConfig.moduleThresholds.liquidity':
     'Поріг для модуля ліквідності. Низькі значення зазвичай = шум.',
-  'analysisConfig.moduleThresholds.funding':
-    'Поріг для funding. Допомагає ігнорувати малі перекоси.',
-  'analysisConfig.moduleThresholds.liquidations':
-    'Поріг для ліквідацій, щоби уникати слабких дисбалансів.',
   'analysisConfig.moduleThresholds.openInterest':
     'Поріг зміни OI. Високі пороги — тільки явні притоки/відтоки.',
   'analysisConfig.moduleThresholds.longShort': 'Поріг дисбалансу Long/Short.',
@@ -89,16 +77,14 @@ export const TIPS: Record<string, string> = {
     'Мінімальна пауза (хв) між новими входами по цьому символу.',
   'strategy.entry.avoidWhen.volatility':
     'Пропускати угоди при певному режимі волатильності (напр., DEAD).',
-  'strategy.entry.avoidWhen.fundingExtreme.absOver':
-    'Пропускати торговлю, якщо |funding| > порога (надмірний перекіс учасників).',
   'strategy.entry.sideBiasTolerance':
     'Дозволена різниця між LONG і SHORT скором, щоб прийняти сторону. Менше — суворіше.',
 
   // ====== STRATEGY — VOLATILITY FILTER ======
-  'strategy.volatilityFilter.deadBelow':
-    'ATR% нижче якого ринок вважаємо DEAD (млявий).',
-  'strategy.volatilityFilter.extremeAbove':
-    'ATR% вище якого ринок EXTREME (ризик ривків/слипейджу).',
+  'strategy.volatilityFilter.minThreshold':
+    'Min ATR% threshold - below this level, volatility is too low (INACTIVE).',
+  'strategy.volatilityFilter.maxThreshold':
+    'Max ATR% threshold - above this level, volatility is too high (INACTIVE).',
 
   // ====== STRATEGY — CAPITAL ======
   'strategy.capital.account':

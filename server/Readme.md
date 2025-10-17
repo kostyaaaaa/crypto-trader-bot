@@ -87,3 +87,59 @@ The server automatically connects to MongoDB on startup using the configuration 
 ## API Endpoints
 
 The server uses a modular routing system. All routes are defined in the `src/routes/` directory.
+
+### Account Endpoints
+
+- **GET** `/account` - Get account information
+
+### Analytics Endpoints
+
+- **POST** `/analytics` - Save an analysis document
+  - Body: Analysis document object
+
+- **GET** `/analytics` - Get analysis documents
+  - Query params: `symbol` (optional), `limit` (optional, default: 100)
+
+- **GET** `/analytics/history` - Get analysis data by date range and symbol
+  - Query params: `symbol` (required), `dateFrom` (required), `dateTo` (required)
+
+### Positions Endpoints
+
+- **POST** `/positions` - Save a position document
+  - Body: Position document object
+
+- **GET** `/positions` - Get position documents
+  - Query params: `symbol` (optional), `limit` (optional, default: 100)
+
+- **PATCH** `/positions/:id` - Update a position by ID
+  - Body: Any position fields to update (e.g., `{ adjustments, stopPrice, takeProfits, status, closedAt, closedBy, finalPnl, size, fees }`)
+
+- **GET** `/positions/history` - Get closed positions history
+  - Query params: `symbol` (optional), `dateFrom` (required), `dateTo` (required)
+
+- **POST** `/positions/close` - Close a position
+  - Body: `{ symbol: string }`
+
+### Liquidations Endpoints
+
+- **POST** `/liquidations` - Save a liquidations document
+  - Body: Liquidations document object
+
+- **GET** `/liquidations` - Get liquidations documents
+  - Query params: `symbol` (optional), `limit` (optional, default: 100)
+
+### Liquidity Endpoints
+
+- **POST** `/liquidity` - Save a liquidity document
+  - Body: Liquidity document object
+
+- **GET** `/liquidity` - Get liquidity documents
+  - Query params: `symbol` (optional), `limit` (optional, default: 100)
+
+### Coin Config Endpoints
+
+- **GET** `/coinconfig` - Get all coin configurations
+- **GET** `/coinconfig/:symbol` - Get specific coin configuration
+- **POST** `/coinconfig` - Create new coin configuration
+- **PUT** `/coinconfig/:symbol` - Update coin configuration
+- **DELETE** `/coinconfig/:symbol` - Delete coin configuration

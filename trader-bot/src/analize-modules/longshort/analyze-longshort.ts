@@ -40,23 +40,19 @@ export async function analyzeLongShort(
     const avgShort = data.reduce((s, c) => s + c.shortPct, 0) / data.length;
 
     const total = avgLong + avgShort;
+
+    // Calculate independent scores for LONG and SHORT (0-100 each)
+    // Based on long/short ratio from Binance
     const longPct = total > 0 ? (avgLong / total) * 100 : 50;
     const shortPct = total > 0 ? (avgShort / total) * 100 : 50;
-
-    const diff = Math.abs(longPct - shortPct);
-    let signal: string = 'NEUTRAL';
-    if (diff > 5) signal = longPct > shortPct ? 'LONG' : 'SHORT';
-
-    const strength = Number(diff.toFixed(2));
 
     const minutesCovered = window * 5;
     const hoursCovered = (minutesCovered / 60).toFixed(1);
 
     return {
+      type: 'scoring',
       module: 'longShort',
       symbol,
-      signal,
-      strength,
       meta: {
         LONG: Number(longPct.toFixed(3)),
         SHORT: Number(shortPct.toFixed(3)),
