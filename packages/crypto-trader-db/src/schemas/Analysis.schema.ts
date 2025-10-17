@@ -124,6 +124,52 @@ export interface IRsiVolTrendMeta {
   rsiBoostShort?: number;
 }
 
+// New meta interfaces
+export interface IVolumeMeta {
+  LONG: number;
+  SHORT: number;
+  volumeAvg: number;
+  volumeRatio: number;
+  volumeTrend: number;
+  volumeSpike: number;
+  candlesUsed: number;
+}
+
+export interface IMomentumMeta {
+  LONG: number;
+  SHORT: number;
+  momentum: number;
+  acceleration: number;
+  velocity: number;
+  momentumStrength: number;
+  candlesUsed: number;
+}
+
+export interface IMarketHoursMeta {
+  currentHour: number;
+  timezone: string;
+  tradingSession: string;
+  liquidityLevel: string;
+  candlesUsed: number;
+}
+
+export interface INewsEventsMeta {
+  hasMajorNews: boolean;
+  hasMinorNews: boolean;
+  newsCount: number;
+  lastNewsTime: string | null;
+  riskLevel: string;
+  candlesUsed: number;
+}
+
+export interface IExchangeHealthMeta {
+  exchangeStatus: string;
+  apiLatency: number;
+  hasIssues: boolean;
+  lastCheck: string;
+  candlesUsed: number;
+}
+
 // Module type
 export type ModuleType = 'validation' | 'scoring';
 
@@ -187,6 +233,28 @@ export interface IRsiVolTrendModule extends IScoringModuleBase {
   meta: IRsiVolTrendMeta;
 }
 
+// New scoring modules
+export interface IVolumeModule extends IScoringModuleBase {
+  meta: IVolumeMeta;
+}
+
+export interface IMomentumModule extends IScoringModuleBase {
+  meta: IMomentumMeta;
+}
+
+// New validation modules
+export interface IMarketHoursModule extends IValidationModuleBase {
+  meta: IMarketHoursMeta;
+}
+
+export interface INewsEventsModule extends IValidationModuleBase {
+  meta: INewsEventsMeta;
+}
+
+export interface IExchangeHealthModule extends IValidationModuleBase {
+  meta: IExchangeHealthMeta;
+}
+
 export interface IAnalysisModules {
   trend: ITrendModule | null;
   volatility: IVolatilityModule | null;
@@ -197,6 +265,12 @@ export interface IAnalysisModules {
   longShort: ILongShortModule | null;
   higherMA: IHigherMAModule | null;
   rsiVolTrend: IRsiVolTrendModule | null;
+  // New modules (for data collection only)
+  volume: IVolumeModule | null;
+  momentum: IMomentumModule | null;
+  marketHours: IMarketHoursModule | null;
+  newsEvents: INewsEventsModule | null;
+  exchangeHealth: IExchangeHealthModule | null;
 }
 
 // Scores interface
