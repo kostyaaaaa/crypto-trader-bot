@@ -1,13 +1,11 @@
 import axios from 'axios';
 import {
-  analyzeExchangeHealth,
   analyzeHigherMA,
   analyzeLiquidations,
   analyzeLiquidity,
   analyzeLongShort,
   analyzeMarketHours,
   analyzeMomentum,
-  analyzeNewsEvents,
   analyzeOpenInterest,
   analyzeRsiVolumeTrend,
   analyzeTrend,
@@ -109,8 +107,6 @@ export async function finalAnalyzer({
     volume: null,
     momentum: null,
     marketHours: null,
-    newsEvents: null,
-    exchangeHealth: null,
   };
 
   modules.trend = (await analyzeTrend(symbol, candles)) as ITrendModule | null;
@@ -172,8 +168,6 @@ export async function finalAnalyzer({
   modules.volume = (await analyzeVolume(symbol, candles)) as any;
   modules.momentum = (await analyzeMomentum(symbol, candles)) as any;
   modules.marketHours = (await analyzeMarketHours(symbol)) as any;
-  modules.newsEvents = (await analyzeNewsEvents(symbol)) as any;
-  modules.exchangeHealth = (await analyzeExchangeHealth(symbol)) as any;
 
   // --- скоринг (only scoring modules, not validation) ---
   const scoringModuleNames = [

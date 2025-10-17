@@ -132,6 +132,35 @@ export interface IRsiVolTrendMeta {
   maLong: number;
 }
 
+// New meta interfaces
+export interface IVolumeMeta {
+  LONG: number;
+  SHORT: number;
+  volumeAvg: number;
+  volumeRatio: number;
+  volumeTrend: number;
+  volumeSpike: number;
+  candlesUsed: number;
+}
+
+export interface IMomentumMeta {
+  LONG: number;
+  SHORT: number;
+  momentum: number;
+  acceleration: number;
+  velocity: number;
+  momentumStrength: number;
+  candlesUsed: number;
+}
+
+export interface IMarketHoursMeta {
+  currentHour: number;
+  timezone: string;
+  tradingSession: string;
+  liquidityLevel: string;
+  candlesUsed: number;
+}
+
 // Module interfaces - Scoring modules
 export interface ITrendModule extends IScoringModuleBase {
   meta: ITrendMeta;
@@ -179,6 +208,20 @@ export interface IRsiVolTrendModule extends IScoringModuleBase {
   meta: IRsiVolTrendMeta;
 }
 
+// New scoring modules
+export interface IVolumeModule extends IScoringModuleBase {
+  meta: IVolumeMeta;
+}
+
+export interface IMomentumModule extends IScoringModuleBase {
+  meta: IMomentumMeta;
+}
+
+// New validation modules
+export interface IMarketHoursModule extends IValidationModuleBase {
+  meta: IMarketHoursMeta;
+}
+
 // Analysis modules container
 export interface IAnalysisModules {
   trend: ITrendModule;
@@ -190,4 +233,8 @@ export interface IAnalysisModules {
   longShort: ILongShortModule;
   higherMA: IHigherMAModule;
   rsiVolTrend: IRsiVolTrendModule;
+  // New modules (for data collection only)
+  volume: IVolumeModule;
+  momentum: IMomentumModule;
+  marketHours: IMarketHoursModule;
 }
