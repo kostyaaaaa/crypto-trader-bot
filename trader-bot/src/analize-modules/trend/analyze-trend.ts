@@ -40,15 +40,12 @@ export async function analyzeTrend(
   const emaGapPct = hasEMAs
     ? ((((emaFast as number) - emaSlow) as number) / (emaSlow as number)) * 100
     : 0;
-  console.log(emaGapPct, 'emaGapPct');
 
   let longScore = 50;
   let shortScore = 50;
 
   const gapAbs = Math.abs(emaGapPct);
   const gapEff = gapAbs < 0.1 ? 0 : gapAbs;
-  console.log(gapAbs, 'gapAbs');
-  console.log(gapEff, 'gapEff');
 
   if (emaGapPct > 0) {
     longScore += Math.min(30, gapEff * 5);
