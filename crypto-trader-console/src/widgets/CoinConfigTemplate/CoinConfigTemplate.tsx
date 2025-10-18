@@ -245,13 +245,6 @@ const CoinConfigTemplate: FC<ICoinConfigTemplateProps> = ({
               register={register}
               control={control}
             />
-            <FormField
-              name="analysisConfig.longShortWindow"
-              label="LongShort Window"
-              type="number"
-              register={register}
-              control={control}
-            />
           </div>
         </Tabs.Panel>
 
@@ -650,7 +643,6 @@ const moduleKeys = [
   'trendRegime',
   'liquidity',
   'openInterest',
-  'longShort',
   'higherMA',
   'rsiVolTrend',
 ] as const;

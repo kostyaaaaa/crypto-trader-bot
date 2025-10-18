@@ -18,7 +18,6 @@ export type TCoinConfig = {
     liqWindow: number;
     volWindow: number;
     corrWindow: number;
-    longShortWindow: number;
     higherMA: THigherMAConfig;
     weights: TAnalysisModule;
     moduleThresholds: TAnalysisModule;
@@ -94,7 +93,6 @@ type TAnalysisModule = {
   trendRegime: number;
   liquidity: number;
   openInterest: number;
-  longShort: number;
   higherMA: number;
   rsiVolTrend: number;
 };

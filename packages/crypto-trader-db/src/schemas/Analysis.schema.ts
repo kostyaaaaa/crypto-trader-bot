@@ -66,15 +66,6 @@ export interface IOpenInterestMeta {
   priceChangePct: number;
 }
 
-export interface ILongShortMeta {
-  LONG: number;
-  SHORT: number;
-  pointsUsed: number;
-  avgLong: number;
-  avgShort: number;
-  periodCovered: string;
-}
-
 export interface IHigherMAMeta {
   LONG: number;
   SHORT: number;
@@ -196,10 +187,6 @@ export interface IOpenInterestModule extends IScoringModuleBase {
   meta: IOpenInterestMeta;
 }
 
-export interface ILongShortModule extends IScoringModuleBase {
-  meta: ILongShortMeta;
-}
-
 export interface IHigherMAModule extends IScoringModuleBase {
   meta: IHigherMAMeta;
 }
@@ -224,7 +211,6 @@ export interface IAnalysisModules {
   liquidity: ILiquidityModule | null;
   liquidations: ILiquidationsModule | null;
   openInterest: IOpenInterestModule | null;
-  longShort: ILongShortModule | null;
   higherMA: IHigherMAModule | null;
   rsiVolTrend: IRsiVolTrendModule | null;
   // New modules (for data collection only)
@@ -348,18 +334,6 @@ const openInterestMetaSchema = new Schema(
     oiChangePct: { type: Number, required: true },
     oiValueChangePct: { type: Number, required: true },
     priceChangePct: { type: Number, required: true },
-  },
-  { _id: false },
-);
-
-const longShortMetaSchema = new Schema(
-  {
-    LONG: { type: Number, required: true },
-    SHORT: { type: Number, required: true },
-    pointsUsed: { type: Number, required: true },
-    avgLong: { type: Number, required: true },
-    avgShort: { type: Number, required: true },
-    periodCovered: { type: String, required: true },
   },
   { _id: false },
 );
@@ -517,21 +491,6 @@ const openInterestModuleSchema = new Schema(
   { _id: false },
 );
 
-const longShortModuleSchema = new Schema(
-  {
-    type: {
-      type: String,
-      enum: ['scoring'],
-      required: true,
-      default: 'scoring',
-    },
-    module: { type: String, required: true },
-    symbol: { type: String, required: true },
-    meta: { type: longShortMetaSchema, required: true },
-  },
-  { _id: false },
-);
-
 const higherMAModuleSchema = new Schema(
   {
     type: {
@@ -643,7 +602,6 @@ const analysisModulesSchema = new Schema(
       required: false,
       default: null,
     },
-    longShort: { type: longShortModuleSchema, required: false, default: null },
     higherMA: { type: higherMAModuleSchema, required: false, default: null },
     rsiVolTrend: {
       type: rsiVolTrendModuleSchema,

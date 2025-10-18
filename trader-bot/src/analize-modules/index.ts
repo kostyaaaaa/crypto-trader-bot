@@ -1,7 +1,6 @@
 import { analyzeHigherMA } from './higherMA/analyze-higher-ma';
 import { analyzeLiquidations } from './liquidations/analyze-liquidations';
 import { analyzeLiquidity } from './liquidity/analyze-liquidity';
-import { analyzeLongShort } from './longshort/analyze-longshort';
 import { analyzeMomentum } from './momentum/analyze-momentum';
 import { analyzeOpenInterest } from './openinterest/analyze-openinterest';
 import { analyzeRsiVolumeTrend } from './rsiVolTrend/rsiVolTrend-module';
@@ -14,7 +13,6 @@ export {
   analyzeHigherMA,
   analyzeLiquidations,
   analyzeLiquidity,
-  analyzeLongShort,
   analyzeMomentum,
   analyzeOpenInterest,
   analyzeRsiVolumeTrend,

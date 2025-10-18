@@ -11,7 +11,6 @@ export const defaultPreset: TCoinConfig = {
     liqWindow: 30,
     volWindow: 14,
     corrWindow: 10,
-    longShortWindow: 10,
     higherMA: {
       timeframe: '1d',
       maShort: 7,
@@ -26,7 +25,6 @@ export const defaultPreset: TCoinConfig = {
       trendRegime: 0.15,
       liquidity: 0.2,
       openInterest: 0.15,
-      longShort: 0.02,
       higherMA: 0.08,
       rsiVolTrend: 0.1,
     },
@@ -35,7 +33,6 @@ export const defaultPreset: TCoinConfig = {
       trendRegime: 7,
       liquidity: 40,
       openInterest: 25,
-      longShort: 12,
       higherMA: 7,
       rsiVolTrend: 0,
     },
