@@ -1,5 +1,6 @@
 import { CoinConfigModel, type ICoinConfig } from 'crypto-trader-db';
 import { Types } from 'mongoose';
+import { CandlesStepWS } from './analize-modules/candles/candles-step';
 import { LiquidationsStepWS } from './analize-modules/liquidations/liquidations-step';
 import { LiquidityStepWS } from './analize-modules/liquidity/liquidity-step';
 import connectDB from './config/database';
@@ -15,6 +16,7 @@ type CoinConfigWithId = ICoinConfig & { _id: Types.ObjectId };
 interface ActiveService {
   analysisInterval: NodeJS.Timeout;
   monitorInterval: NodeJS.Timeout;
+  stopCandlesWS?: () => void;
   stopLiquidityWS?: () => void;
   stopLiq?: () => void;
 }
@@ -27,6 +29,9 @@ async function startConfig(config: CoinConfigWithId): Promise<void> {
   const { symbol, isActive, analysisConfig, strategy, isTrader } = config;
   if (!isActive) return;
 
+  // Запускаємо WebSocket колектори з правильними таймфреймами
+  const candleTimeframe = analysisConfig.candleTimeframe || '15m';
+  const stopCandlesWS = CandlesStepWS(symbol, candleTimeframe);
   const stopLiquidityWS = LiquidityStepWS(symbol);
   const stopLiq = LiquidationsStepWS(symbol);
 
@@ -44,6 +49,7 @@ async function startConfig(config: CoinConfigWithId): Promise<void> {
   activeIntervals[symbol] = {
     analysisInterval,
     monitorInterval,
+    stopCandlesWS,
     stopLiquidityWS,
     stopLiq,
   };
@@ -57,6 +63,7 @@ function stopConfig(symbol: string): void {
 
   clearInterval(svc.analysisInterval);
   clearInterval(svc.monitorInterval);
+  svc.stopCandlesWS?.();
   svc.stopLiquidityWS?.();
   svc.stopLiq?.();
 

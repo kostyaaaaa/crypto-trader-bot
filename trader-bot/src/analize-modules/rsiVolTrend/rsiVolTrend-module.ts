@@ -94,8 +94,9 @@ export async function analyzeRsiVolumeTrend(
   progress = Math.max(0.1, Math.min(1, progress));
 
   // ---------- volume logic ----------
-  const lastVol = (vols.at(-1) || 0) / progress;
-  const avgVol = avg(vols.slice(-VOL_LOOKBACK - 1, -1));
+  // All candles are now closed, so no need to adjust for progress
+  const lastVol = vols.at(-1) || 0;
+  const avgVol = avg(vols.slice(-VOL_LOOKBACK)); // Use last VOL_LOOKBACK candles
   const volRatio = avgVol ? lastVol / avgVol : 0;
 
   if (!avgVol || !lastVol) {

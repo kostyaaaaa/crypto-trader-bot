@@ -1,4 +1,3 @@
-import axios from 'axios';
 import {
   analyzeHigherMA,
   analyzeLiquidations,
@@ -13,7 +12,8 @@ import {
   analyzeVolume,
 } from '../analize-modules/index';
 import { submitAnalysis } from '../api';
-import type { BinanceKline, Candle } from '../types/index';
+import type { Candle } from '../types/index';
+import { getCandlesWithFallback } from './candles-helper';
 
 import logger from './db-logger';
 
@@ -66,12 +66,24 @@ export async function finalAnalyzer({
       neededRsiVol,
     ) + 5;
 
-  let klineRes: { data: BinanceKline[] } | undefined;
+  let candles: Candle[] = [];
 
   try {
-    klineRes = await axios.get('https://fapi.binance.com/fapi/v1/klines', {
-      params: { symbol, interval: candleTimeframe, limit: needed },
-    });
+    // Отримуємо свічки з WebSocket даних з fallback на HTTP
+    const candlesData = await getCandlesWithFallback(
+      symbol,
+      candleTimeframe,
+      needed,
+    );
+
+    candles = candlesData.map((candle) => ({
+      time: candle.time.toISOString(),
+      open: candle.open,
+      high: candle.high,
+      low: candle.low,
+      close: candle.close,
+      volume: candle.volume,
+    }));
   } catch (err: any) {
     if (err && err.code === 'ENOTFOUND') {
       logger.warn(`⚠️ ${symbol} skipped (DNS error)`);
@@ -79,16 +91,8 @@ export async function finalAnalyzer({
     }
     throw err;
   }
-  if (!klineRes) return null;
 
-  const candles: Candle[] = klineRes.data.map((k) => ({
-    time: new Date(k[0]).toISOString(),
-    open: parseFloat(k[1]),
-    high: parseFloat(k[2]),
-    low: parseFloat(k[3]),
-    close: parseFloat(k[4]),
-    volume: parseFloat(k[5]),
-  }));
+  if (candles.length === 0) return null;
 
   const lastPrice = candles[candles.length - 1]?.close ?? null;
 
