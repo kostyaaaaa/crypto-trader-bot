@@ -1,11 +1,10 @@
-import axios from 'axios';
 import type {
   IEMASeed,
   IHigherMAConfig,
   IHigherMAModule,
   IMAType,
 } from 'crypto-trader-db';
-import type { BinanceKline } from '../../types/index';
+import { getCandlesWithFallback } from '../../utils/candles-helper';
 import { EMA as calcEMA, SMA } from '../../utils/getEMAAndRSI';
 const DEFAULT_CFG: IHigherMAConfig = {
   timeframe: '1d',
@@ -35,13 +34,13 @@ export async function analyzeHigherMA(
   const emaSeed: IEMASeed = merged.emaSeed || 'sma';
 
   const limit = Math.max(maLong + 20, 200);
-  const res = await axios.get<BinanceKline[]>(
-    'https://fapi.binance.com/fapi/v1/klines',
-    { params: { symbol, interval: timeframe, limit } },
-  );
 
-  const closes = (res.data || [])
-    .map((k) => Number(k[4]))
+  // Отримуємо свічки з WebSocket даних з fallback на HTTP
+  const candlesData = await getCandlesWithFallback(symbol, timeframe, limit);
+  if (candlesData.length < maLong) return null;
+
+  const closes = candlesData
+    .map((candle) => candle.close)
     .filter(Number.isFinite);
 
   if (closes.length < maLong) return null;

@@ -1,7 +1,8 @@
 import axios, { type AxiosResponse } from 'axios';
 
 import type { IOpenInterestModule } from 'crypto-trader-db';
-import type { BinanceKline, OIHistItem } from '../../types/index';
+import type { OIHistItem } from '../../types/index';
+import { getCandlesWithFallback } from '../../utils/candles-helper';
 import logger from '../../utils/db-logger';
 
 export async function analyzeOpenInterest(
@@ -16,17 +17,14 @@ export async function analyzeOpenInterest(
     const oiData = oiRes.data ?? [];
     if (!Array.isArray(oiData) || oiData.length < window) return null;
 
-    const klineRes: AxiosResponse<BinanceKline[]> = await axios.get(
-      'https://fapi.binance.com/fapi/v1/klines',
-      { params: { symbol, interval: '5m', limit: window } },
-    );
-    const klineData = klineRes.data ?? [];
-    if (!Array.isArray(klineData) || klineData.length < window) return null;
+    // Отримуємо 5m свічки з WebSocket даних з fallback на HTTP
+    const candlesData = await getCandlesWithFallback(symbol, '5m', window);
+    if (candlesData.length < window) return null;
 
     const recent = Array.from({ length: window }, (_, i) => ({
       openInterest: parseFloat(oiData[i].sumOpenInterest),
       openInterestValue: parseFloat(oiData[i].sumOpenInterestValue),
-      price: parseFloat(klineData[i][4] as string),
+      price: candlesData[i].close, // Використовуємо close ціну з WebSocket даних
     }));
 
     const first = recent[0];

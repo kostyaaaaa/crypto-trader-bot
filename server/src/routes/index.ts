@@ -1,6 +1,7 @@
 import express from 'express';
 import accountRouter from './account.js';
 import analyticsRouter from './analytics.js';
+import candlesRouter from './candles.js';
 import coinConfigRouter from './coinConfig.js';
 import liquidationsRouter from './liquidations.js';
 import liquidityRouter from './liquidity.js';
@@ -17,6 +18,9 @@ router.use('/coinconfig', coinConfigRouter);
 
 // Mount analytics routes
 router.use('/analytics', analyticsRouter);
+
+// Mount candles routes
+router.use('/candles', candlesRouter);
 
 // Mount positions routes
 router.use('/positions', positionsRouter);
