@@ -29,9 +29,32 @@ async function startConfig(config: CoinConfigWithId): Promise<void> {
   const { symbol, isActive, analysisConfig, strategy, isTrader } = config;
   if (!isActive) return;
 
-  // Запускаємо WebSocket колектори з правильними таймфреймами
+  const { higherMA } = analysisConfig;
+
+  // Збираємо всі потрібні таймфрейми
   const candleTimeframe = analysisConfig.candleTimeframe || '15m';
-  const stopCandlesWS = CandlesStepWS(symbol, candleTimeframe);
+  const timeframes = new Set<string>();
+
+  // Основний таймфрейм
+  timeframes.add(candleTimeframe);
+
+  // Таймфрейм для openInterest (завжди 5m)
+  timeframes.add('5m');
+
+  // Таймфрейм для higherMA (якщо потрібен)
+  if (higherMA && higherMA.timeframe) {
+    timeframes.add(higherMA.timeframe);
+  }
+
+  const timeframesArray = Array.from(timeframes);
+
+  // Запускаємо один WebSocket для всіх таймфреймів
+  const stopCandlesWS = CandlesStepWS(symbol, timeframesArray);
+
+  logger.info(
+    `🕯️ Started WebSocket for ${symbol}@${timeframesArray.join(',')}`,
+  );
+
   const stopLiquidityWS = LiquidityStepWS(symbol);
   const stopLiq = LiquidationsStepWS(symbol);
 

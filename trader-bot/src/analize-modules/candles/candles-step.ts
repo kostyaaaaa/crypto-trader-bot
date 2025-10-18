@@ -16,11 +16,16 @@ export interface CandleItem {
 
 export function CandlesStepWS(
   symbol: string = 'ETHUSDT',
-  timeframe: string = '1m',
+  timeframe: string | string[] = '1m',
 ): () => void {
-  const ws = new WebSocket(
-    `wss://fstream.binance.com/ws/${symbol.toLowerCase()}@kline_${timeframe}`,
-  );
+  // Підтримуємо як один таймфрейм, так і масив
+  const timeframes = Array.isArray(timeframe) ? timeframe : [timeframe];
+
+  // Створюємо URL для множинних таймфреймів
+  const streams = timeframes
+    .map((tf) => `${symbol.toLowerCase()}@kline_${tf}`)
+    .join('/');
+  const ws = new WebSocket(`wss://fstream.binance.com/ws/${streams}`);
 
   ws.on('message', (msg: WebSocket.RawData) => {
     try {
@@ -54,7 +59,7 @@ export function CandlesStepWS(
 
       const candle: ICandle = {
         symbol: kline.s,
-        timeframe,
+        timeframe: kline.i, // i - інтервал свічки (1m, 5m, 15m, тощо)
         time: new Date(kline.t || Date.now()), // t - час відкриття свічки
         open,
         high,
@@ -77,7 +82,9 @@ export function CandlesStepWS(
   });
 
   ws.on('close', () => {
-    logger.warn(`⚠️ Candles WS connection closed for ${symbol}@${timeframe}`);
+    logger.warn(
+      `⚠️ Candles WS connection closed for ${symbol}@${timeframes.join(',')}`,
+    );
   });
 
   return () => {
