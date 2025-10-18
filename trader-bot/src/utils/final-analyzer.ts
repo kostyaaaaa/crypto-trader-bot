@@ -77,7 +77,7 @@ export async function finalAnalyzer({
     );
 
     candles = candlesData.map((candle) => ({
-      time: candle.time.toISOString(),
+      time: new Date(candle.time).toISOString(),
       open: candle.open,
       high: candle.high,
       low: candle.low,
