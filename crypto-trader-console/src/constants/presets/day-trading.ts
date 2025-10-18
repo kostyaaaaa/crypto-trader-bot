@@ -26,7 +26,6 @@ export const dayTradingPreset: TCoinConfig = {
       liquidity: 0.16,
       openInterest: 0.2,
       higherMA: 0,
-      rsiVolTrend: 0.28,
     },
     moduleThresholds: {
       trend: 50,
@@ -34,7 +33,6 @@ export const dayTradingPreset: TCoinConfig = {
       liquidity: 15,
       openInterest: 45,
       higherMA: 8,
-      rsiVolTrend: 30,
     },
   },
   strategy: {

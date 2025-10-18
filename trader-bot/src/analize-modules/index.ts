@@ -3,7 +3,6 @@ import { analyzeLiquidations } from './liquidations/analyze-liquidations';
 import { analyzeLiquidity } from './liquidity/analyze-liquidity';
 import { analyzeMomentum } from './momentum/analyze-momentum';
 import { analyzeOpenInterest } from './openinterest/analyze-openinterest';
-import { analyzeRsiVolumeTrend } from './rsiVolTrend/rsiVolTrend-module';
 import { analyzeTrend } from './trend/analyze-trend';
 import { analyzeTrendRegime } from './trendRegime/analyze-trend-regime';
 import { analyzeVolatility } from './volatility/analyze-volatility';
@@ -15,7 +14,6 @@ export {
   analyzeLiquidity,
   analyzeMomentum,
   analyzeOpenInterest,
-  analyzeRsiVolumeTrend,
   analyzeTrend,
   analyzeTrendRegime,
   analyzeVolatility,

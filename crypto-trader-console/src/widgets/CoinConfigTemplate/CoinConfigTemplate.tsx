@@ -644,5 +644,4 @@ const moduleKeys = [
   'liquidity',
   'openInterest',
   'higherMA',
-  'rsiVolTrend',
 ] as const;

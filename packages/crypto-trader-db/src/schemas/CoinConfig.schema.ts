@@ -6,7 +6,6 @@ export interface IModules {
   liquidity: number;
   openInterest: number;
   higherMA: number;
-  rsiVolTrend: number;
 }
 export interface IAnalysisConfig {
   candleTimeframe: string;
@@ -136,7 +135,6 @@ const weightsSchema = new Schema(
     liquidity: { type: Number, required: true },
     openInterest: { type: Number, required: true },
     higherMA: { type: Number, required: true },
-    rsiVolTrend: { type: Number, required: true },
   },
   { _id: false },
 );
@@ -148,7 +146,6 @@ const moduleThresholdsSchema = new Schema(
     liquidity: { type: Number, required: true },
     openInterest: { type: Number, required: true },
     higherMA: { type: Number, required: true },
-    rsiVolTrend: { type: Number, required: true },
   },
   { _id: false },
 );

@@ -4,7 +4,6 @@ import {
   analyzeLiquidity,
   analyzeMomentum,
   analyzeOpenInterest,
-  analyzeRsiVolumeTrend,
   analyzeTrend,
   analyzeTrendRegime,
   analyzeVolatility,
@@ -24,7 +23,6 @@ import type {
   ILiquidationsModule,
   ILiquidityModule,
   IOpenInterestModule,
-  IRsiVolTrendModule,
   IStrategyConfig,
   ITrendModule,
   ITrendRegimeModule,
@@ -94,7 +92,6 @@ export async function finalAnalyzer({
     liquidations: null,
     openInterest: null,
     higherMA: null,
-    rsiVolTrend: null,
     // New modules (not used in scoring/validation yet)
     volume: null,
     momentum: null,
@@ -120,11 +117,6 @@ export async function finalAnalyzer({
     period: 14,
     adxSignalMin: moduleThresholds['trendRegime'] ?? 20,
   })) as ITrendRegimeModule | null;
-
-  modules.rsiVolTrend = (await analyzeRsiVolumeTrend(
-    symbol,
-    candles,
-  )) as IRsiVolTrendModule | null;
 
   modules.liquidity = (await analyzeLiquidity(
     symbol,
@@ -161,7 +153,6 @@ export async function finalAnalyzer({
     'liquidity',
     'openInterest',
     'higherMA',
-    'rsiVolTrend',
   ];
 
   function weightedScore(side: 'LONG' | 'SHORT'): number {

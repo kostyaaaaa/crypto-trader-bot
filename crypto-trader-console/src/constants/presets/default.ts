@@ -26,7 +26,6 @@ export const defaultPreset: TCoinConfig = {
       liquidity: 0.2,
       openInterest: 0.15,
       higherMA: 0.08,
-      rsiVolTrend: 0.1,
     },
     moduleThresholds: {
       trend: 50,
@@ -34,7 +33,6 @@ export const defaultPreset: TCoinConfig = {
       liquidity: 40,
       openInterest: 25,
       higherMA: 7,
-      rsiVolTrend: 0,
     },
   },
   strategy: {
