@@ -4,7 +4,6 @@ import {
   analyzeLiquidations,
   analyzeLiquidity,
   analyzeLongShort,
-  analyzeMarketHours,
   analyzeMomentum,
   analyzeOpenInterest,
   analyzeRsiVolumeTrend,
@@ -106,7 +105,6 @@ export async function finalAnalyzer({
     // New modules (not used in scoring/validation yet)
     volume: null,
     momentum: null,
-    marketHours: null,
   };
 
   modules.trend = (await analyzeTrend(symbol, candles)) as ITrendModule | null;
@@ -167,7 +165,6 @@ export async function finalAnalyzer({
   // New modules (for data collection only, not used in scoring/validation)
   modules.volume = (await analyzeVolume(symbol, candles)) as any;
   modules.momentum = (await analyzeMomentum(symbol, candles)) as any;
-  modules.marketHours = (await analyzeMarketHours(symbol)) as any;
 
   // --- скоринг (only scoring modules, not validation) ---
   const scoringModuleNames = [

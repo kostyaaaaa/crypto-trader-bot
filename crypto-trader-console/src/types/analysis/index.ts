@@ -112,14 +112,6 @@ export interface IMomentumMeta {
   candlesUsed: number;
 }
 
-export interface IMarketHoursMeta {
-  currentHour: number;
-  timezone: string;
-  tradingSession: string;
-  liquidityLevel: string;
-  candlesUsed: number;
-}
-
 // Module interfaces
 export interface IModuleBase {
   module: string;
@@ -183,9 +175,6 @@ export interface IMomentumModule extends IModuleBase {
 }
 
 // New validation modules
-export interface IMarketHoursModule extends IModuleBase {
-  meta: IMarketHoursMeta;
-}
 
 // Analysis modules container
 export interface IAnalysisModules {
@@ -201,7 +190,6 @@ export interface IAnalysisModules {
   // New modules (for data collection only)
   volume: IVolumeModule;
   momentum: IMomentumModule;
-  marketHours: IMarketHoursModule;
 }
 
 // Scores interface
