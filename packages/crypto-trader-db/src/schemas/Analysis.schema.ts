@@ -84,37 +84,6 @@ export interface IHigherMAMeta {
   emaSeed: IEMASeed;
 }
 
-export interface IRsiVolTrendMeta {
-  LONG: number;
-  SHORT: number;
-  candlesUsed: number;
-  needBars?: number;
-  reason?: 'LowVolume' | 'RSI extreme';
-  progress?: string;
-  rsi?: number | null;
-  rsiLongScore?: number;
-  rsiShortScore?: number;
-  volRatio?: number;
-  trendLong?: number;
-  trendShort?: number;
-  price?: number;
-  ma7?: number;
-  ma25?: number;
-  maSlope?: number;
-  volume?: number;
-  avgVol?: number;
-  rsiPeriod?: number;
-  rsiWarmup?: number;
-  volLookback?: number;
-  maShort?: number;
-  maLong?: number;
-  deadZone?: number;
-  candleOpen?: string;
-  candleDurationMs?: number;
-  rsiBoostLong?: number;
-  rsiBoostShort?: number;
-}
-
 // New meta interfaces
 export interface IVolumeMeta {
   LONG: number;
@@ -191,10 +160,6 @@ export interface IHigherMAModule extends IScoringModuleBase {
   meta: IHigherMAMeta;
 }
 
-export interface IRsiVolTrendModule extends IScoringModuleBase {
-  meta: IRsiVolTrendMeta;
-}
-
 // New scoring modules
 export interface IVolumeModule extends IScoringModuleBase {
   meta: IVolumeMeta;
@@ -212,7 +177,6 @@ export interface IAnalysisModules {
   liquidations: ILiquidationsModule | null;
   openInterest: IOpenInterestModule | null;
   higherMA: IHigherMAModule | null;
-  rsiVolTrend: IRsiVolTrendModule | null;
   // New modules (for data collection only)
   volume: IVolumeModule | null;
   momentum: IMomentumModule | null;
@@ -359,42 +323,6 @@ const higherMAMetaSchema = new Schema(
   { _id: false },
 );
 
-const rsiVolTrendMetaSchema = new Schema(
-  {
-    LONG: { type: Number, required: true },
-    SHORT: { type: Number, required: true },
-    candlesUsed: { type: Number, required: true },
-    needBars: { type: Number, required: false },
-    reason: {
-      type: String,
-      enum: ['LowVolume', 'RSI extreme'],
-      required: false,
-    },
-    progress: { type: String, required: false },
-    rsi: { type: Number, required: false },
-    rsiLongScore: { type: Number, required: false },
-    rsiShortScore: { type: Number, required: false },
-    volRatio: { type: Number, required: false },
-    trendLong: { type: Number, required: false },
-    trendShort: { type: Number, required: false },
-    price: { type: Number, required: false },
-    ma7: { type: Number, required: false },
-    ma25: { type: Number, required: false },
-    maSlope: { type: Number, required: false },
-    volume: { type: Number, required: false },
-    avgVol: { type: Number, required: false },
-    rsiPeriod: { type: Number, required: false },
-    rsiWarmup: { type: Number, required: false },
-    volLookback: { type: Number, required: false },
-    maShort: { type: Number, required: false },
-    maLong: { type: Number, required: false },
-    deadZone: { type: Number, required: false },
-    candleOpen: { type: String, required: false },
-    candleDurationMs: { type: Number, required: false },
-  },
-  { _id: false },
-);
-
 const trendModuleSchema = new Schema(
   {
     type: {
@@ -506,21 +434,6 @@ const higherMAModuleSchema = new Schema(
   { _id: false },
 );
 
-const rsiVolTrendModuleSchema = new Schema(
-  {
-    type: {
-      type: String,
-      enum: ['scoring'],
-      required: true,
-      default: 'scoring',
-    },
-    module: { type: String, required: true },
-    symbol: { type: String, required: true },
-    meta: { type: rsiVolTrendMetaSchema, required: true },
-  },
-  { _id: false },
-);
-
 // New module schemas
 const volumeMetaSchema = new Schema(
   {
@@ -603,11 +516,7 @@ const analysisModulesSchema = new Schema(
       default: null,
     },
     higherMA: { type: higherMAModuleSchema, required: false, default: null },
-    rsiVolTrend: {
-      type: rsiVolTrendModuleSchema,
-      required: false,
-      default: null,
-    },
+
     // New modules (for data collection only)
     volume: { type: volumeModuleSchema, required: false, default: null },
     momentum: { type: momentumModuleSchema, required: false, default: null },

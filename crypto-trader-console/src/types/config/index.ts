@@ -94,7 +94,6 @@ type TAnalysisModule = {
   liquidity: number;
   openInterest: number;
   higherMA: number;
-  rsiVolTrend: number;
 };
 
 export type TCoinConfigResponse = TCoinConfig & {

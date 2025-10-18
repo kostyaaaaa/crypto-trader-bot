@@ -107,23 +107,6 @@ export interface IHigherMAMeta {
   emaSeed: string;
 }
 
-export interface IRsiVolTrendMeta {
-  LONG: number;
-  SHORT: number;
-  candlesUsed: number;
-  rsi: number;
-  price: number;
-  ma7: number;
-  ma25: number;
-  volume: number;
-  avgVol: number;
-  rsiPeriod: number;
-  rsiWarmup: number;
-  volLookback: number;
-  maShort: number;
-  maLong: number;
-}
-
 // New meta interfaces
 export interface IVolumeMeta {
   LONG: number;
@@ -184,10 +167,6 @@ export interface IHigherMAModule extends IScoringModuleBase {
   meta: IHigherMAMeta;
 }
 
-export interface IRsiVolTrendModule extends IScoringModuleBase {
-  meta: IRsiVolTrendMeta;
-}
-
 // New scoring modules
 export interface IVolumeModule extends IScoringModuleBase {
   meta: IVolumeMeta;
@@ -208,7 +187,6 @@ export interface IAnalysisModules {
   liquidations: ILiquidationsModule;
   openInterest: IOpenInterestModule;
   higherMA: IHigherMAModule;
-  rsiVolTrend: IRsiVolTrendModule;
   // New modules (for data collection only)
   volume: IVolumeModule;
   momentum: IMomentumModule;

@@ -26,7 +26,6 @@ export const scalpingPreset: TCoinConfig = {
       liquidity: 0.176,
       openInterest: 0.597,
       higherMA: 0.0,
-      rsiVolTrend: 0.014,
     },
     moduleThresholds: {
       trend: 25,
@@ -34,7 +33,6 @@ export const scalpingPreset: TCoinConfig = {
       liquidity: 5,
       openInterest: 10,
       higherMA: 5,
-      rsiVolTrend: 0,
     },
   },
   strategy: {

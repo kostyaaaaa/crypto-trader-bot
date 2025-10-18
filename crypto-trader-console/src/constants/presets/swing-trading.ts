@@ -25,7 +25,6 @@ export const swingTradingPreset: TCoinConfig = {
       liquidity: 0.15,
       openInterest: 0.16,
       higherMA: 0.05,
-      rsiVolTrend: 0.03,
     },
     moduleThresholds: {
       trend: 25,
@@ -33,7 +32,6 @@ export const swingTradingPreset: TCoinConfig = {
       liquidity: 15,
       openInterest: 10,
       higherMA: 10,
-      rsiVolTrend: 0,
     },
   },
   strategy: {
