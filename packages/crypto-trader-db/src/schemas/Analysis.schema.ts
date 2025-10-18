@@ -145,14 +145,6 @@ export interface IMomentumMeta {
   candlesUsed: number;
 }
 
-export interface IMarketHoursMeta {
-  currentHour: number;
-  timezone: string;
-  tradingSession: string;
-  liquidityLevel: string;
-  candlesUsed: number;
-}
-
 // Module type
 export type ModuleType = 'validation' | 'scoring';
 
@@ -225,11 +217,6 @@ export interface IMomentumModule extends IScoringModuleBase {
   meta: IMomentumMeta;
 }
 
-// New validation modules
-export interface IMarketHoursModule extends IValidationModuleBase {
-  meta: IMarketHoursMeta;
-}
-
 export interface IAnalysisModules {
   trend: ITrendModule | null;
   volatility: IVolatilityModule | null;
@@ -243,7 +230,6 @@ export interface IAnalysisModules {
   // New modules (for data collection only)
   volume: IVolumeModule | null;
   momentum: IMomentumModule | null;
-  marketHours: IMarketHoursModule | null;
 }
 
 // Scores interface
@@ -633,37 +619,6 @@ const momentumModuleSchema = new Schema(
   { _id: false },
 );
 
-const marketHoursMetaSchema = new Schema(
-  {
-    currentHour: { type: Number, required: true },
-    timezone: { type: String, required: true },
-    tradingSession: { type: String, required: true },
-    liquidityLevel: { type: String, required: true },
-    candlesUsed: { type: Number, required: true },
-  },
-  { _id: false },
-);
-
-const marketHoursModuleSchema = new Schema(
-  {
-    type: {
-      type: String,
-      enum: ['validation'],
-      required: true,
-      default: 'validation',
-    },
-    module: { type: String, required: true },
-    symbol: { type: String, required: true },
-    signal: {
-      type: String,
-      enum: ['ACTIVE', 'NEUTRAL', 'INACTIVE'],
-      required: true,
-    },
-    meta: { type: marketHoursMetaSchema, required: true },
-  },
-  { _id: false },
-);
-
 const analysisModulesSchema = new Schema(
   {
     trend: { type: trendModuleSchema, required: false, default: null },
@@ -698,11 +653,6 @@ const analysisModulesSchema = new Schema(
     // New modules (for data collection only)
     volume: { type: volumeModuleSchema, required: false, default: null },
     momentum: { type: momentumModuleSchema, required: false, default: null },
-    marketHours: {
-      type: marketHoursModuleSchema,
-      required: false,
-      default: null,
-    },
   },
   { _id: false },
 );
