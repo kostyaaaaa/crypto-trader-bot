@@ -23,3 +23,10 @@ export interface ListResponse<T> extends ApiResponse {
 export interface UpdateResponse<T> extends ApiResponse {
   data: T | null;
 }
+
+/**
+ * Response with data object
+ */
+export interface DataResponse<T> extends ApiResponse {
+  data: T;
+}
