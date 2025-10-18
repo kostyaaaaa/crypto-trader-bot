@@ -187,3 +187,103 @@ export const getCandles = async (
     });
   }
 };
+
+// POST /candles/batch - Save multiple candles at once
+export const saveCandlesBatch = async (
+  req: Request,
+  res: Response<
+    DataResponse<{ saved: number; updated: number }> | ApiErrorResponse
+  >,
+): Promise<void> => {
+  try {
+    const candlesData: ICandle[] = req.body;
+
+    if (!Array.isArray(candlesData) || candlesData.length === 0) {
+      res.status(400).json({
+        error: 'Invalid request body',
+        message: 'Request body must be a non-empty array of candles',
+      });
+      return;
+    }
+
+    // Валідація обов'язкових полів для кожної свічки
+    const requiredFields = [
+      'symbol',
+      'timeframe',
+      'time',
+      'open',
+      'high',
+      'low',
+      'close',
+      'volume',
+    ];
+
+    for (let i = 0; i < candlesData.length; i++) {
+      const candle = candlesData[i];
+      for (const field of requiredFields) {
+        if (!(candle as any)[field]) {
+          res.status(400).json({
+            error: 'Missing required field',
+            message: `Missing required field '${field}' in candle at index ${i}`,
+          });
+          return;
+        }
+      }
+    }
+
+    let savedCount = 0;
+    let updatedCount = 0;
+
+    // Використовуємо bulkWrite для ефективного збереження
+    const bulkOps = candlesData.map((candleData) => ({
+      updateOne: {
+        filter: {
+          symbol: candleData.symbol,
+          timeframe: candleData.timeframe,
+          time: new Date(candleData.time),
+        },
+        update: { $set: candleData },
+        upsert: true, // Створюємо якщо не існує
+      },
+    }));
+
+    const result = await CandleModel.bulkWrite(bulkOps);
+    savedCount = result.upsertedCount;
+    updatedCount = result.modifiedCount;
+
+    // Clean up old documents if limit exceeded
+    const count = await CandleModel.countDocuments();
+    if (count > DB_MAX_DOCUMENTS) {
+      const oldest = await CandleModel.find()
+        .sort({ _id: 1 })
+        .limit(count - DB_MAX_DOCUMENTS);
+      const ids = oldest.map((d) => d._id);
+      await CandleModel.deleteMany({ _id: { $in: ids } });
+      logger.info(
+        `Cleaned up ${ids.length} old documents from candles collection`,
+      );
+    }
+
+    logger.success(
+      `Successfully saved ${savedCount} new candles and updated ${updatedCount} existing candles`,
+    );
+
+    res.json({
+      success: true,
+      message: 'Candles batch saved successfully',
+      data: { saved: savedCount, updated: updatedCount },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error('Error saving candles batch:', {
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
+    res.status(500).json({
+      error: 'Failed to save candles batch',
+      message: errorMessage,
+    });
+  }
+};

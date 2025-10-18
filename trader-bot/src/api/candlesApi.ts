@@ -1,7 +1,7 @@
 // src/api/candlesApi.ts
 import type { ICandle } from 'crypto-trader-db';
 import { apiClient } from '../config/api-client';
-import { ApiResponse, ListResponse } from '../types';
+import { ApiResponse, DataResponse, ListResponse } from '../types';
 
 /**
  * Submit candle data to the server
@@ -13,6 +13,25 @@ export async function submitCandle(candle: ICandle): Promise<void> {
     const message =
       error.response?.data?.message || error.message || 'Unknown error';
     throw new Error(`Failed to submit candle: ${message}`);
+  }
+}
+
+/**
+ * Submit multiple candles to the server at once
+ */
+export async function submitCandlesBatch(candles: ICandle[]): Promise<{
+  saved: number;
+  updated: number;
+}> {
+  try {
+    const response = await apiClient.post<
+      DataResponse<{ saved: number; updated: number }>
+    >('/candles/batch', candles);
+    return response.data.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message || error.message || 'Unknown error';
+    throw new Error(`Failed to submit candles batch: ${message}`);
   }
 }
 

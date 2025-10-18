@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { ICandle } from 'crypto-trader-db';
-import { getCandles } from '../api';
+import { getCandles, submitCandlesBatch } from '../api';
 import logger from './db-logger';
 
 /**
@@ -42,6 +42,36 @@ export async function getCandlesWithFallback(
       close: parseFloat(k[4]),
       volume: parseFloat(k[5]),
     }));
+
+    // Зберігаємо HTTP свічки в DB для майбутнього використання
+    logger.info(
+      `💾 Saving ${httpCandles.length} HTTP candles to DB for ${symbol}@${timeframe}...`,
+    );
+
+    // Фільтруємо тільки нові свічки (яких немає в DB)
+    const existingTimes = new Set(dbCandles.map((c) => c.time.getTime()));
+    const newCandles = httpCandles.filter(
+      (candle) => !existingTimes.has(candle.time.getTime()),
+    );
+
+    if (newCandles.length > 0) {
+      // Зберігаємо тільки нові свічки масово
+      try {
+        const result = await submitCandlesBatch(newCandles);
+        logger.success(
+          `✅ Successfully saved ${result.saved} new candles and updated ${result.updated} existing candles for ${symbol}@${timeframe}`,
+        );
+      } catch (error: any) {
+        logger.error(
+          `❌ Failed to save HTTP candles to DB for ${symbol}@${timeframe}:`,
+          error?.message || error,
+        );
+      }
+    } else {
+      logger.info(
+        `ℹ️ All ${httpCandles.length} HTTP candles already exist in DB for ${symbol}@${timeframe}`,
+      );
+    }
 
     logger.info(
       `✅ Got ${httpCandles.length} candles from HTTP for ${symbol}@${timeframe}`,
