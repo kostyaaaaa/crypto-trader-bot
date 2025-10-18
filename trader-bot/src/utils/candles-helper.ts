@@ -49,9 +49,11 @@ export async function getCandlesWithFallback(
     );
 
     // Фільтруємо тільки нові свічки (яких немає в DB)
-    const existingTimes = new Set(dbCandles.map((c) => c.time.getTime()));
+    const existingTimes = new Set(
+      dbCandles.map((c) => new Date(c.time).getTime()),
+    );
     const newCandles = httpCandles.filter(
-      (candle) => !existingTimes.has(candle.time.getTime()),
+      (candle) => !existingTimes.has(new Date(candle.time).getTime()),
     );
 
     if (newCandles.length > 0) {
