@@ -16,8 +16,6 @@ export const TIPS: Record<string, string> = {
     'Вікно для ATR/волатильності. Впливає на позначки DEAD/EXTREME.',
   'analysisConfig.corrWindow':
     'Скільки свічок беремо для кореляції з BTC. Більше — стабільніше, повільніше.',
-  'analysisConfig.longShortWindow':
-    'Вікно для метрики Long/Short ratio (біржова статистика/рикети).',
 
   // Weights — множники модульних балів у фінальному скорі:
   'analysisConfig.weights.trend':
@@ -28,8 +26,7 @@ export const TIPS: Record<string, string> = {
     'Вага ліквідності/балансу книги заявок. Підвищуйте для монет із частими "сквізами".',
   'analysisConfig.weights.openInterest':
     'Вага зміни OI (нові позиції/закриття). Часто корелює з продовженням руху.',
-  'analysisConfig.weights.longShort':
-    'Вага біржового Long/Short балансу. Малий обсяг — обережно з довірою.',
+
   'analysisConfig.weights.higherMA':
     'Вага старшого таймфрейму MA-кросу як фільтра глобального тренду.',
 
@@ -42,7 +39,7 @@ export const TIPS: Record<string, string> = {
     'Поріг для модуля ліквідності. Низькі значення зазвичай = шум.',
   'analysisConfig.moduleThresholds.openInterest':
     'Поріг зміни OI. Високі пороги — тільки явні притоки/відтоки.',
-  'analysisConfig.moduleThresholds.longShort': 'Поріг дисбалансу Long/Short.',
+
   'analysisConfig.moduleThresholds.higherMA':
     'Поріг для сигналу MA-кросу старшого ТФ.',
 

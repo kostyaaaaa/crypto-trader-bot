@@ -49,14 +49,6 @@ export interface IOpenInterestMeta {
   priceChangePct: number;
 }
 
-export interface ILongShortMeta {
-  LONG: number;
-  SHORT: number;
-  candlesUsed: number;
-  avgLong: number;
-  avgShort: number;
-}
-
 export interface IHigherMAMeta {
   LONG: number;
   SHORT: number;
@@ -157,10 +149,6 @@ export interface IHigherMAModule extends IModuleBase {
   meta: IHigherMAMeta;
 }
 
-export interface ILongShortModule extends IModuleBase {
-  meta: ILongShortMeta;
-}
-
 export interface IRsiVolTrendModule extends IModuleBase {
   meta: IRsiVolTrendMeta;
 }
@@ -184,7 +172,6 @@ export interface IAnalysisModules {
   liquidity: ILiquidityModule;
   liquidations: ILiquidationsModule;
   openInterest: IOpenInterestModule;
-  longShort: ILongShortModule;
   higherMA: IHigherMAModule;
   rsiVolTrend: IRsiVolTrendModule;
   // New modules (for data collection only)

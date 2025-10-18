@@ -37,7 +37,6 @@
 - `fundingWindow` → Скільки часу усереднюємо funding rate.
 - `volWindow` → ATR (волатильність).
 - `corrWindow` → Період для кореляції з BTC.
-- `longShortWindow` → Період для long/short ratio.
 
 **Рекомендації**:
 
@@ -58,7 +57,6 @@
 - `funding` → Фандінг.
 - `liquidations` → Ліквідації.
 - `openInterest` → OI зміни.
-- `longShort` → Співвідношення лонгів/шортів.
 
 **Рекомендації**:
 
@@ -183,7 +181,6 @@
     "fundingWindow": 10,
     "volWindow": 14,
     "corrWindow": 2,
-    "longShortWindow": 2,
     "weights": {
       "trend": 0.25,
       "liquidity": 0.3,

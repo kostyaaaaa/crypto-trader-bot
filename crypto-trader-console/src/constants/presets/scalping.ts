@@ -11,7 +11,6 @@ export const scalpingPreset: TCoinConfig = {
     liqWindow: 10,
     volWindow: 14,
     corrWindow: 5,
-    longShortWindow: 5,
     higherMA: {
       timeframe: '4h',
       maShort: 5,
@@ -26,7 +25,6 @@ export const scalpingPreset: TCoinConfig = {
       trendRegime: 0.05,
       liquidity: 0.176,
       openInterest: 0.597,
-      longShort: 0.006,
       higherMA: 0.0,
       rsiVolTrend: 0.014,
     },
@@ -35,7 +33,6 @@ export const scalpingPreset: TCoinConfig = {
       trendRegime: 12,
       liquidity: 5,
       openInterest: 10,
-      longShort: 15,
       higherMA: 5,
       rsiVolTrend: 0,
     },

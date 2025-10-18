@@ -5,7 +5,6 @@ export interface IModules {
   trendRegime: number;
   liquidity: number;
   openInterest: number;
-  longShort: number;
   higherMA: number;
   rsiVolTrend: number;
 }
@@ -15,7 +14,6 @@ export interface IAnalysisConfig {
   liqWindow: number;
   volWindow: number;
   corrWindow: number;
-  longShortWindow: number;
   weights: IModules;
   moduleThresholds: IModules;
   higherMA: IHigherMAConfig;
@@ -137,7 +135,6 @@ const weightsSchema = new Schema(
     trendRegime: { type: Number, required: true },
     liquidity: { type: Number, required: true },
     openInterest: { type: Number, required: true },
-    longShort: { type: Number, required: true },
     higherMA: { type: Number, required: true },
     rsiVolTrend: { type: Number, required: true },
   },
@@ -150,7 +147,6 @@ const moduleThresholdsSchema = new Schema(
     trendRegime: { type: Number, required: true },
     liquidity: { type: Number, required: true },
     openInterest: { type: Number, required: true },
-    longShort: { type: Number, required: true },
     higherMA: { type: Number, required: true },
     rsiVolTrend: { type: Number, required: true },
   },
@@ -177,7 +173,6 @@ const analysisConfigSchema = new Schema(
     liqWindow: { type: Number, required: true },
     volWindow: { type: Number, required: true },
     corrWindow: { type: Number, required: true },
-    longShortWindow: { type: Number, required: true },
     weights: { type: weightsSchema, required: true },
     moduleThresholds: { type: moduleThresholdsSchema, required: true },
     higherMA: { type: higherMASchema, required: true },

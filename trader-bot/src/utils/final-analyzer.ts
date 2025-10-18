@@ -2,7 +2,6 @@ import {
   analyzeHigherMA,
   analyzeLiquidations,
   analyzeLiquidity,
-  analyzeLongShort,
   analyzeMomentum,
   analyzeOpenInterest,
   analyzeRsiVolumeTrend,
@@ -24,7 +23,6 @@ import type {
   IHigherMAModule,
   ILiquidationsModule,
   ILiquidityModule,
-  ILongShortModule,
   IOpenInterestModule,
   IRsiVolTrendModule,
   IStrategyConfig,
@@ -49,7 +47,6 @@ export async function finalAnalyzer({
     liqWindow = 20,
     volWindow = 14,
     corrWindow = 5,
-    longShortWindow = 5,
     weights,
     moduleThresholds,
     higherMA,
@@ -57,14 +54,7 @@ export async function finalAnalyzer({
 
   const neededRsiVol = Math.max(100 + 50 + 5, 25 + 10 + 5);
   const needed =
-    Math.max(
-      21,
-      volWindow,
-      corrWindow,
-      oiWindow,
-      longShortWindow,
-      neededRsiVol,
-    ) + 5;
+    Math.max(21, volWindow, corrWindow, oiWindow, neededRsiVol) + 5;
 
   let candles: Candle[] = [];
 
@@ -103,7 +93,6 @@ export async function finalAnalyzer({
     liquidity: null,
     liquidations: null,
     openInterest: null,
-    longShort: null,
     higherMA: null,
     rsiVolTrend: null,
     // New modules (not used in scoring/validation yet)
@@ -148,11 +137,6 @@ export async function finalAnalyzer({
     oiWindow,
   )) as IOpenInterestModule | null;
 
-  modules.longShort = (await analyzeLongShort(
-    symbol,
-    longShortWindow,
-  )) as ILongShortModule | null;
-
   modules.higherMA = (await analyzeHigherMA(
     symbol,
     higherMA || {
@@ -176,7 +160,6 @@ export async function finalAnalyzer({
     'trendRegime',
     'liquidity',
     'openInterest',
-    'longShort',
     'higherMA',
     'rsiVolTrend',
   ];

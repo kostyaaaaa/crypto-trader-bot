@@ -11,7 +11,6 @@ export const dayTradingPreset: TCoinConfig = {
     liqWindow: 15,
     volWindow: 14,
     corrWindow: 8,
-    longShortWindow: 24,
     higherMA: {
       timeframe: '4h',
       maShort: 7,
@@ -26,7 +25,6 @@ export const dayTradingPreset: TCoinConfig = {
       trendRegime: 0.23,
       liquidity: 0.16,
       openInterest: 0.2,
-      longShort: 0.03,
       higherMA: 0,
       rsiVolTrend: 0.28,
     },
@@ -35,7 +33,6 @@ export const dayTradingPreset: TCoinConfig = {
       trendRegime: 53,
       liquidity: 15,
       openInterest: 45,
-      longShort: 25,
       higherMA: 8,
       rsiVolTrend: 30,
     },
