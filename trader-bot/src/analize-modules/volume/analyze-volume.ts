@@ -32,19 +32,18 @@ export async function analyzeVolume(
   const lows = candles.map((c) => c.low);
 
   // Calculate volume statistics
-  // Volume average (only CLOSED candles, excluding current open candle)
-  const closedVolumes = volumes.slice(0, -1); // All except the last (current open) candle
+  // Volume average (all candles are now closed)
   const volumeAvg =
-    closedVolumes.length > 0
-      ? closedVolumes.reduce((sum, vol) => sum + vol, 0) / closedVolumes.length
+    volumes.length > 0
+      ? volumes.reduce((sum, vol) => sum + vol, 0) / volumes.length
       : 0;
 
-  // Volume ratio (current open candle vs average of closed candles)
+  // Volume ratio (current candle vs average of all candles)
   const currentVolume = volumes[volumes.length - 1] || 0;
   const volumeRatio = volumeAvg > 0 ? currentVolume / volumeAvg : 1;
 
-  // Volume trend (slope of volume over time, using only closed candles)
-  const volumeTrend = calculateVolumeTrend(closedVolumes);
+  // Volume trend (slope of volume over time, using all candles)
+  const volumeTrend = calculateVolumeTrend(volumes);
 
   // Volume spike detection (current open candle vs average of closed candles)
   const volumeSpike = detectVolumeSpike(volumes, volumeAvg);
