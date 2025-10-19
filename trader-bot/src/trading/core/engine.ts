@@ -37,7 +37,6 @@ export async function tradingEngine({
   if (!cooldownHub.isStarted()) cooldownHub.start();
   const hasOpen = await hasActivePosition(symbol);
   if (hasOpen) {
-    logger.info(`⏸️ ${symbol}: skip, active positions exist`);
     return;
   }
   const lookback = strategy?.entry?.lookback || 3;
@@ -53,11 +52,6 @@ export async function tradingEngine({
     if (lastClosed) {
       const minutesSince = (Date.now() - lastClosed.getTime()) / 60000;
       if (minutesSince < cooldownMin) {
-        logger.info(
-          `⏸️ ${symbol}: cooldown ${cooldownMin}m, залишилось ${(
-            cooldownMin - minutesSince
-          ).toFixed(1)}m`,
-        );
         return;
       }
     }
@@ -90,7 +84,6 @@ export async function tradingEngine({
   const riskFactor = 1;
 
   if (entryPrice == null || !Number.isFinite(entryPrice)) {
-    logger.warn(`⚠️ ${symbol}: skip, no fresh mark price available`);
     return;
   }
 
@@ -98,9 +91,6 @@ export async function tradingEngine({
     JSON.stringify({ strategy, analysisConfig }),
   );
   runConfig.strategy.capital.riskPerTradePct = baseRiskPct * riskFactor;
-  logger.info(
-    `[RISK] ${symbol} base=${baseRiskPct}% × factor=${riskFactor} → effective=${runConfig.strategy.capital.riskPerTradePct}%`,
-  );
 
   let position: any;
 

@@ -36,7 +36,6 @@ export async function executeTrailingStop(params: {
 
   const trailingCfg = strategy?.exits?.trailing;
   if (!trailingCfg?.use) {
-    logger.info(`🚫 TRAIL disabled in config for ${symbol}`);
     return;
   }
 
@@ -164,10 +163,6 @@ export async function executeTrailingStop(params: {
           reason: 'TRAIL',
         });
         await updateStopPrice(symbol, newStop, 'TRAIL');
-      } else {
-        logger.info(
-          `⛔ TRAIL no move ${symbol}: newStop=${newStop.toFixed(6)} vs currentSL=${currentSL ?? '—'}`,
-        );
       }
     }
   } catch (e: unknown) {

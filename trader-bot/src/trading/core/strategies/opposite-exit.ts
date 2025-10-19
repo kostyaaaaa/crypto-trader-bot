@@ -1,5 +1,4 @@
 import type { Side } from '../../../types';
-import logger from '../../../utils/db-logger';
 import {
   cancelStopOrders,
   openMarketOrder,
@@ -38,10 +37,6 @@ export async function checkOppositeExit(params: {
     lastN.length === oppExitN && lastN.every((a) => isOpposite(getAnaSide(a)));
 
   if (!allOpposite) return false;
-
-  logger.info(
-    `⏹️ ${symbol}: exit by opposite signals x${oppExitN} (pos=${side})`,
-  );
 
   if (TRADE_MODE === 'live') {
     try {

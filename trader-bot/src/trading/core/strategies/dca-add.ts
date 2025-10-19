@@ -68,10 +68,6 @@ export async function checkDcaAdd(params: {
   const shouldAdd = pnlRoiPct <= -roiTrigger;
   const canAdd = addsCount < Number(sizing.maxAdds);
 
-  logger.info(
-    `📉 ADD check ${symbol}: ROI=${pnlRoiPct.toFixed(2)}% <= -${roiTrigger}%? ${shouldAdd} | adds=${addsCount}/${sizing.maxAdds}`,
-  );
-
   if (!shouldAdd || !canAdd) {
     return openDoc;
   }
@@ -94,12 +90,7 @@ export async function checkDcaAdd(params: {
   const addNotionalUsd = addMarginUsd * levForNotional;
   const addQty = addNotionalUsd / price;
 
-  logger.info(
-    `🧮 ADD calc ${symbol}: baseNotional=${baseNotionalUsd.toFixed(2)}$ baseMargin=${baseMarginUsd.toFixed(2)}$ mult=${mult} lev=${levForNotional} -> notional=${addNotionalUsd.toFixed(2)}$ qtyRaw=${addQty}`,
-  );
-
   if (!Number.isFinite(addQty) || addQty <= 0) {
-    logger.info(`⛔ ADD qty too small/invalid for ${symbol}: calc=${addQty}`);
     return openDoc;
   }
 
@@ -116,7 +107,6 @@ export async function checkDcaAdd(params: {
       price,
       size: Number(addQty),
     });
-    logger.info(`✅ ADD persisted ${symbol}: qty=${Number(addQty)} @ ${price}`);
   } catch (e: unknown) {
     logger.error(`❌ ADD persist failed ${symbol}: ${errMsg(e)}`);
   }
