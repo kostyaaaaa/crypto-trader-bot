@@ -6,32 +6,20 @@ import type {
 } from 'crypto-trader-db';
 import { getCandlesWithFallback } from '../../utils/candles-helper';
 import { EMA as calcEMA, SMA } from '../../utils/getEMAAndRSI';
-const DEFAULT_CFG: IHigherMAConfig = {
-  timeframe: '1d',
-  maShort: 7,
-  maLong: 14,
-  type: 'SMA',
-  thresholdPct: 0.2,
-  scale: 12,
-  emaSeed: 'sma',
-};
 
 export async function analyzeHigherMA(
   symbol: string = 'ETHUSDT',
   cfg: Partial<IHigherMAConfig> = {},
 ): Promise<IHigherMAModule | null> {
-  const merged: IHigherMAConfig = { ...DEFAULT_CFG, ...cfg };
-  const timeframe: string = merged.timeframe || '1d';
-  const maShort: number = Number(merged.maShort ?? 7);
-  const maLong: number = Number(merged.maLong ?? 14);
+  const timeframe: string = cfg.timeframe || '1d';
+  const maShort: number = Number(cfg.maShort ?? 7);
+  const maLong: number = Number(cfg.maLong ?? 14);
   const type: IMAType = (
-    (merged.type || 'SMA') as IMAType
+    (cfg.type || 'SMA') as IMAType
   ).toUpperCase() as IMAType;
-  const thresholdPct: number = Number(merged.thresholdPct ?? 0.2);
-  const scale: number = Number.isFinite(merged.scale)
-    ? Number(merged.scale)
-    : 12;
-  const emaSeed: IEMASeed = merged.emaSeed || 'sma';
+  const thresholdPct: number = Number(cfg.thresholdPct ?? 0.2);
+  const scale: number = Number.isFinite(cfg.scale) ? Number(cfg.scale) : 12;
+  const emaSeed: IEMASeed = cfg.emaSeed || 'sma';
 
   const limit = Math.max(maLong + 20, 200);
 
