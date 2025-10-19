@@ -48,10 +48,10 @@ export async function checkOppositeExit(params: {
     } catch {}
   }
 
-  // In DB — this is final CLOSE
+  // DB: just log an adjustment about opposite exit; HUB will reconcile/close and compute PnL
   try {
     await adjustPosition(symbol, {
-      type: 'CLOSE',
+      type: 'OPPOSITE_SIGNAL',
       price,
       size: liveQty,
       reason: `EXIT_OPPOSITE x${oppExitN}`,
