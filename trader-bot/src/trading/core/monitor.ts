@@ -96,10 +96,6 @@ export async function monitorPositions(params: {
       continue;
     }
 
-    logger.info(
-      `🔎 ${symbol} MON: liveQty=${liveQty}, adds=${openDoc?.adds?.length || 0}`,
-    );
-
     /* ===== 0) Current SL (from DB or live orders) ===== */
     let currentSL: number | null = Number.isFinite(Number(openDoc?.stopPrice))
       ? Number(openDoc?.stopPrice)
