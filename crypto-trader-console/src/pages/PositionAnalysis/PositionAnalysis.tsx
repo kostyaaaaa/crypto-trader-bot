@@ -34,6 +34,28 @@ type ModuleMeta = { LONG?: number; SHORT?: number };
 type ModuleShape = { signal?: string; strength?: number; meta?: ModuleMeta };
 type ModulesMap = Record<string, ModuleShape>;
 
+// Raw executions/adjustments as stored in Position
+// Numbers may arrive as strings; we coerce when rendering
+type PositionExecution = {
+  ts: number | string;
+  price?: number | string;
+  qty?: number | string;
+  side?: 'BUY' | 'SELL' | string;
+  fee?: number | string;
+  orderId?: number | string;
+  tradeId?: number | string;
+  pnl?: number | string;
+  kind?: string;
+};
+
+type PositionAdjustment = {
+  type?: string;
+  ts?: number | string;
+  price?: number | string;
+  size?: number | string;
+  reason?: string;
+};
+
 type AnyMeta = Record<string, unknown>;
 const fmtAny = (v: unknown, d = 3) => {
   if (v == null) return '-';
@@ -194,35 +216,54 @@ const PositionAnalysis: FC = () => {
 
   const historyItems = useMemo<HistoryItem[]>(() => {
     if (!position) return [];
-    const execs = Array.isArray((position as any).executions)
-      ? ((position as any).executions as any[])
-      : [];
-    const adjs = Array.isArray((position as any).adjustments)
-      ? ((position as any).adjustments as any[])
+
+    const execs: PositionExecution[] = Array.isArray(
+      (position as Position).executions,
+    )
+      ? ((position as Position).executions as PositionExecution[])
       : [];
 
-    const eItems = execs.map((e) => ({
-      ts: Number(e?.ts ?? 0),
-      when: new Date(Number(e?.ts ?? 0)).toISOString(),
-      event: e?.kind
-        ? String(e.kind)
-        : e?.side
+    const adjs: PositionAdjustment[] = Array.isArray(
+      (position as Position).adjustments,
+    )
+      ? ((position as Position).adjustments as PositionAdjustment[])
+      : [];
+
+    const eItems = execs.map((e) => {
+      const ts = Number(e?.ts ?? 0);
+      return {
+        ts,
+        when: new Date(ts).toISOString(),
+        event: e?.side
           ? `TRADE ${String(e.side)}`
-          : 'EXEC',
-      price: typeof e?.price === 'number' ? e.price : Number(e?.price),
-      qty: typeof e?.qty === 'number' ? e.qty : Number(e?.qty),
-      pnl: typeof e?.pnl === 'number' ? e.pnl : Number(e?.pnl),
-      note: e?.orderId ? `order ${e.orderId}` : undefined,
-    }));
+          : e?.kind
+            ? String(e.kind)
+            : 'EXEC',
+        price: e?.price != null ? Number(e.price) : undefined,
+        qty: e?.qty != null ? Number(e.qty) : undefined,
+        pnl: e?.pnl != null ? Number(e.pnl) : undefined,
+        note:
+          e?.orderId != null && e?.tradeId != null
+            ? `order ${Number(e.orderId)}, trade ${Number(e.tradeId)}`
+            : e?.orderId != null
+              ? `order ${Number(e.orderId)}`
+              : e?.tradeId != null
+                ? `trade ${Number(e.tradeId)}`
+                : undefined,
+      };
+    });
 
-    const aItems = adjs.map((a) => ({
-      ts: Number(a?.ts ?? 0),
-      when: new Date(Number(a?.ts ?? 0)).toISOString(),
-      event: a?.type ? String(a.type) : 'ADJUST',
-      price: typeof a?.price === 'number' ? a.price : Number(a?.price),
-      size: typeof a?.size === 'number' ? a.size : Number(a?.size),
-      note: a?.reason ? String(a.reason) : undefined,
-    }));
+    const aItems = adjs.map((a) => {
+      const ts = Number(a?.ts ?? 0);
+      return {
+        ts,
+        when: new Date(ts).toISOString(),
+        event: a?.type ? String(a.type) : 'ADJUST',
+        price: a?.price != null ? Number(a.price) : undefined,
+        size: a?.size != null ? Number(a.size) : undefined,
+        note: a?.reason ? String(a.reason) : undefined,
+      };
+    });
 
     return [...eItems, ...aItems]
       .filter((i) => Number.isFinite(i.ts) && i.ts > 0)
