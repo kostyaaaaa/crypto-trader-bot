@@ -9,6 +9,7 @@ import {
   FMPevents,
   InfoPage,
   Logs,
+  PositionAnalysis,
   PositionsPage,
 } from '../pages';
 
@@ -25,6 +26,10 @@ export const router = createBrowserRouter([
       { path: ROUTERS_PATH.coinConfigIdPattern, element: <CoinConfig /> },
       { path: ROUTERS_PATH.positions, element: <PositionsPage /> },
       { path: ROUTERS_PATH.analysis, element: <Analysis /> },
+      {
+        path: ROUTERS_PATH.positionId(':posId'),
+        element: <PositionAnalysis />,
+      },
       { path: ROUTERS_PATH.logs, element: <Logs /> },
       { path: ROUTERS_PATH.fmpEvents, element: <FMPevents /> },
       { path: ROUTERS_PATH.info, element: <InfoPage /> },

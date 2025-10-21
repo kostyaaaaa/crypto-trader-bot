@@ -6,6 +6,7 @@ export const ROUTERS_PATH = {
   coinConfigId: (symbol: string) => `/config/create/${symbol}`,
   positions: '/positions',
   analysis: '/analysis',
+  positionId: (posId: string) => `/analysis/${posId}`,
   logs: '/logs',
   info: '/info',
   fmpEvents: '/fmp-events',

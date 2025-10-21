@@ -6,4 +6,5 @@ export * from './Dashboard';
 export * from './FMPevents';
 export * from './Info';
 export * from './Logs';
+export * from './PositionAnalysis';
 export * from './PositionsPage';
