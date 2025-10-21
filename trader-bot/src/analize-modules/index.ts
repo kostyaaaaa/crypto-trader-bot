@@ -7,6 +7,7 @@ import { analyzeTrend } from './trend/analyze-trend';
 import { analyzeTrendRegime } from './trendRegime/analyze-trend-regime';
 import { analyzeVolatility } from './volatility/analyze-volatility';
 import { analyzeVolume } from './volume/analyze-volume';
+import { analyzeZones } from './zonesModule/analyze-zones';
 
 export {
   analyzeHigherMA,
@@ -18,4 +19,5 @@ export {
   analyzeTrendRegime,
   analyzeVolatility,
   analyzeVolume,
+  analyzeZones,
 };

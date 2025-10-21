@@ -8,6 +8,7 @@ import {
   analyzeTrendRegime,
   analyzeVolatility,
   analyzeVolume,
+  analyzeZones,
 } from '../analize-modules/index';
 import { submitAnalysis } from '../api';
 import type { Candle } from '../types/index';
@@ -50,9 +51,7 @@ export async function finalAnalyzer({
     higherMA,
   } = analysisConfig;
 
-  const neededRsiVol = Math.max(100 + 50 + 5, 25 + 10 + 5);
-  const needed =
-    Math.max(21, volWindow, corrWindow, oiWindow, neededRsiVol) + 5;
+  const needed = Math.max(21, volWindow, corrWindow, oiWindow) + 5;
 
   let candles: Candle[] = [];
 
@@ -95,6 +94,7 @@ export async function finalAnalyzer({
     // New modules (not used in scoring/validation yet)
     volume: null,
     momentum: null,
+    zones: null,
   };
 
   modules.trend = (await analyzeTrend(symbol, candles)) as ITrendModule | null;
@@ -145,6 +145,7 @@ export async function finalAnalyzer({
   // New modules (for data collection only, not used in scoring/validation)
   modules.volume = (await analyzeVolume(symbol, candles)) as any;
   modules.momentum = (await analyzeMomentum(symbol, candles)) as any;
+  modules.zones = (await analyzeZones(symbol, candles)) as any;
 
   // --- скоринг (only scoring modules, not validation) ---
   const scoringModuleNames = [

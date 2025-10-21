@@ -1,9 +1,7 @@
+import { ILiquidity } from 'crypto-trader-db';
 import WebSocket from 'ws';
 import { submitLiquiditySnapshot } from '../../api';
-import type {
-  BinanceDepthPartialUpdate,
-  LiquidityCandle,
-} from '../../types/index';
+import type { BinanceDepthPartialUpdate } from '../../types/index';
 import logger from '../../utils/db-logger';
 
 function avg(arr: number[]): number {
@@ -75,9 +73,9 @@ export function LiquidityStepWS(symbol: string = 'BTCUSDT'): () => void {
     const avgImbalance = avg(imbalances);
     const avgSpread = avg(spreads);
 
-    const liquidityCandle: LiquidityCandle = {
+    const liquidityCandle: ILiquidity = {
       symbol,
-      time: new Date().toISOString(),
+      time: new Date(),
       avgImbalance: Number(avgImbalance.toFixed(5)),
       avgSpread: Number(avgSpread.toFixed(6)),
     };

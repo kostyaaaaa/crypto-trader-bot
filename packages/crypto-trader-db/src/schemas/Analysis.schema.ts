@@ -105,6 +105,18 @@ export interface IMomentumMeta {
   candlesUsed: number;
 }
 
+export interface IZonesMeta {
+  LONG: number;
+  SHORT: number;
+  support1: number | null;
+  support2: number | null;
+  resistance1: number | null;
+  resistance2: number | null;
+  referencePrice: number;
+  currentPrice: number;
+  candlesUsed: number;
+}
+
 // Module type
 export type ModuleType = 'validation' | 'scoring';
 
@@ -169,6 +181,10 @@ export interface IMomentumModule extends IScoringModuleBase {
   meta: IMomentumMeta;
 }
 
+export interface IZonesModule extends IScoringModuleBase {
+  meta: IZonesMeta;
+}
+
 export interface IAnalysisModules {
   trend: ITrendModule | null;
   volatility: IVolatilityModule | null;
@@ -180,6 +196,7 @@ export interface IAnalysisModules {
   // New modules (for data collection only)
   volume: IVolumeModule | null;
   momentum: IMomentumModule | null;
+  zones: IZonesModule | null;
 }
 
 // Scores interface
