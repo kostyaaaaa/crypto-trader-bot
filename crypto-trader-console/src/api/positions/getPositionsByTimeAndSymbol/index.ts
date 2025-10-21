@@ -19,6 +19,15 @@ export const getPositionsByTimeAndSymbol = async (
   return data;
 };
 
+export const getPositionById = async (
+  id: string,
+): Promise<ApiPositionResponse> => {
+  const { data } = await axiosInterceptor.get(
+    `/positions/${encodeURIComponent(id)}`,
+  );
+  return data;
+};
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Expanded Position types (used by Positions page, TP timeline, etc.)
 // ──────────────────────────────────────────────────────────────────────────────
@@ -131,5 +140,12 @@ export interface ApiPositionsResponse {
   data: Position[];
   message: string;
   success: boolean;
+  timestamp: string;
+}
+
+export interface ApiPositionResponse {
+  success: boolean;
+  message: string;
+  data: Position;
   timestamp: string;
 }

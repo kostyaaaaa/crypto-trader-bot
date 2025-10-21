@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   closePosition,
+  getPositionById,
   getPositions,
   getPositionsByDateRangeAndSymbol,
   savePosition,
@@ -24,6 +25,9 @@ router.patch('/:id', updatePosition);
 // Query params: symbol (optional), dateFrom (required, ISO timestamp string), dateTo (required, ISO timestamp string)
 // Returns only CLOSED positions within the timestamp range (history endpoint)
 router.get('/history', getPositionsByDateRangeAndSymbol);
+
+// GET /positions/:id - Get a single position by ID
+router.get('/:id', getPositionById);
 
 // POST /positions/close - Close a position
 router.post('/close', closePosition);
