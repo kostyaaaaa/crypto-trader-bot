@@ -87,6 +87,18 @@ export interface IMomentumMeta {
   candlesUsed: number;
 }
 
+export interface IZonesMeta {
+  LONG: number;
+  SHORT: number;
+  support1: number | null;
+  support2: number | null;
+  resistance1: number | null;
+  resistance2: number | null;
+  referencePrice: number;
+  currentPrice: number;
+  candlesUsed: number;
+}
+
 // Module interfaces
 export interface IModuleBase {
   module: string;
@@ -141,6 +153,10 @@ export interface IMomentumModule extends IModuleBase {
   meta: IMomentumMeta;
 }
 
+export interface IZonesModule extends IModuleBase {
+  meta: IZonesMeta;
+}
+
 // New validation modules
 
 // Analysis modules container
@@ -155,6 +171,7 @@ export interface IAnalysisModules {
   // New modules (for data collection only)
   volume: IVolumeModule;
   momentum: IMomentumModule;
+  zones: IZonesModule;
 }
 
 // Scores interface
