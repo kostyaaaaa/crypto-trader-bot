@@ -66,7 +66,11 @@ async function startConfig(config: CoinConfigWithId): Promise<void> {
 
   // 🔹 Моніторинг позицій раз на 10 секунд
   const monitorInterval = setInterval(async () => {
-    await monitorPositions({ symbol, strategy });
+    // Add random delay to prevent simultaneous calls
+    const delay = Math.random() * 5000; // 0-5 seconds random delay
+    setTimeout(async () => {
+      await monitorPositions({ symbol, strategy });
+    }, delay);
   }, 10_000);
 
   activeIntervals[symbol] = {
