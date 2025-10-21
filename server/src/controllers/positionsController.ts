@@ -104,6 +104,57 @@ const getPositionsByDateRangeAndSymbol = async (
   }
 };
 
+// GET /positions/:id - Get a single position by ID
+const getPositionById = async (
+  req: Request,
+  res: Response<DataResponse<IPosition> | ApiErrorResponse>,
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      res.status(400).json({
+        error: 'Missing parameters',
+        message: 'Position ID is required',
+      });
+      return;
+    }
+
+    const doc = await PositionModel.findById(id)
+      .populate('analysis')
+      .lean()
+      .exec();
+
+    if (!doc) {
+      res.status(404).json({
+        error: 'Not found',
+        message: `Position with id ${id} not found`,
+      });
+      return;
+    }
+
+    logger.success(`Successfully loaded position document ${id}`);
+
+    res.json({
+      success: true,
+      message: 'Position document loaded successfully',
+      data: doc,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error('Error loading position by id:', {
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
+    res.status(500).json({
+      error: 'Failed to load position by id',
+      message: errorMessage,
+    });
+  }
+};
+
 // Close position data interface
 interface ClosePositionData {
   symbol: string;
@@ -404,6 +455,7 @@ const updatePosition = async (
 
 export {
   closePosition,
+  getPositionById,
   getPositions,
   getPositionsByDateRangeAndSymbol,
   savePosition,

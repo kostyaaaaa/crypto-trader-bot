@@ -14,6 +14,8 @@ import {
 import { DatePickerInput } from '@mantine/dates';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
+import { ROUTERS_PATH } from '../../router/constants';
+
 import { useCallback, useEffect, useState, type FC } from 'react';
 import type {
   Adjustment,
@@ -342,6 +344,13 @@ const PositionsPage: FC = () => {
               className={styles.wrapper__actionButton}
             >
               {isOpen ? 'Hide' : 'Details'}
+            </UnstyledButton>
+            <UnstyledButton
+              className={styles.wrapper__actionButton}
+              component="a"
+              href={ROUTERS_PATH.positionId(pos._id)}
+            >
+              Full info
             </UnstyledButton>
           </Group>
         </Table.Td>
