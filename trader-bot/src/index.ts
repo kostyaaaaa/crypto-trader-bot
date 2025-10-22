@@ -25,7 +25,13 @@ const activeIntervals: Record<string, ActiveService> = {};
 const idToSymbol: Record<string, string> = {};
 const isBotActive = process.env.IS_BOT_ACTIVE === 'true';
 
+const START_STAGGER_MS = Number(process.env.START_STAGGER_MS ?? '10000');
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
+
 async function startConfig(config: CoinConfigWithId): Promise<void> {
+  console.log('start', config?.symbol);
+
   const { symbol, isActive, analysisConfig, strategy, isTrader } = config;
   if (!isActive) return;
 
@@ -109,7 +115,12 @@ export async function subscribeCoinConfigs(): Promise<void> {
     allConfigs.map((c) => c.symbol),
   );
 
-  for (const cfg of allConfigs) await startConfig(cfg);
+  for (const [idx, cfg] of allConfigs.entries()) {
+    if (idx > 0) {
+      await sleep(START_STAGGER_MS);
+    }
+    await startConfig(cfg);
+  }
 
   const changeStream = CoinConfigModel.watch([], {
     fullDocument: 'updateLookup',
