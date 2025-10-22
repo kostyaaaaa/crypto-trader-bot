@@ -27,6 +27,10 @@ export function CandlesStepWS(
     .join('/');
   const ws = new WebSocket(`wss://fstream.binance.com/ws/${streams}`);
 
+  // Throttling для незакритих свічок - оновлюємо раз на 10 секунд
+  const lastUpdateTime: Record<string, number> = {};
+  const UPDATE_INTERVAL_MS = 10_000; // 10 секунд
+
   ws.on('message', (msg: WebSocket.RawData) => {
     try {
       const raw = JSON.parse(msg.toString());
@@ -39,8 +43,26 @@ export function CandlesStepWS(
       // Фільтруємо по символу
       if (kline.s !== symbol) return;
 
-      // Зберігаємо тільки закриті свічки
-      if (!kline.x) return; // x: true означає що свічка закрита
+      // Зберігаємо закриті свічки для всіх символів
+      // Для ETHUSDT і BTCUSDT також зберігаємо незакриті свічки (з throttling)
+      const isClosedCandle = kline.x; // x: true означає що свічка закрита
+      const isTargetSymbol = symbol === 'ETHUSDT' || symbol === 'BTCUSDT';
+
+      // Для незакритих свічок перевіряємо throttling
+      if (!isClosedCandle) {
+        if (!isTargetSymbol) return; // Не зберігаємо незакриті свічки для інших символів
+
+        // Перевіряємо чи можна оновити (раз на 10 секунд)
+        const candleKey = `${kline.s}_${kline.i}`;
+        const now = Date.now();
+        const lastUpdate = lastUpdateTime[candleKey] || 0;
+
+        if (now - lastUpdate < UPDATE_INTERVAL_MS) {
+          return; // Пропускаємо оновлення, ще не пройшло 10 секунд
+        }
+
+        lastUpdateTime[candleKey] = now;
+      }
 
       const open = parseFloat(kline.o || '0');
       const high = parseFloat(kline.h || '0');
@@ -69,8 +91,12 @@ export function CandlesStepWS(
       };
 
       // Зберігаємо свічку в DB
+      const candleType = isClosedCandle ? 'closed' : 'non-closed (throttled)';
       submitCandle(candle).catch((e: any) => {
-        logger.error('❌ Failed to submit candle:', e?.message || e);
+        logger.error(
+          `❌ Failed to submit ${candleType} candle:`,
+          e?.message || e,
+        );
       });
     } catch (e: any) {
       logger.error('❌ Candles WS parse error:', e?.message || e);
