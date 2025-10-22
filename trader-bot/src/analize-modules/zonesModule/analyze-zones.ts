@@ -1,4 +1,5 @@
 import type { IZonesModule } from 'crypto-trader-db';
+import { getMarkFromHub } from '../../trading/core/helpers/monitor-helpers';
 import type { Candle } from '../../types/candles';
 
 export async function analyzeZones(
@@ -8,11 +9,12 @@ export async function analyzeZones(
   if (!candles || candles.length < 5) return null;
 
   const recentCandles = candles.slice(-100);
-  const lastClosedCandle = recentCandles[recentCandles.length - 2];
+  const lastClosedCandle = recentCandles[recentCandles.length - 1];
   if (!lastClosedCandle) return null;
 
   const referencePrice = lastClosedCandle.close;
-  const currentPrice = recentCandles[recentCandles.length - 1].close;
+
+  const currentPrice = (await getMarkFromHub(symbol)) ?? lastClosedCandle.open;
 
   const resistanceLevels: number[] = [];
   const supportLevels: number[] = [];
