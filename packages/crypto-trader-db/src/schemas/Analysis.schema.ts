@@ -493,6 +493,21 @@ const momentumMetaSchema = new Schema(
   { _id: false },
 );
 
+const zonesMetaSchema = new Schema(
+  {
+    LONG: { type: Number, required: true },
+    SHORT: { type: Number, required: true },
+    support1: { type: Number, required: true },
+    support2: { type: Number, required: true },
+    resistance1: { type: Number, required: true },
+    resistance2: { type: Number, required: true },
+    referencePrice: { type: Number, required: true },
+    currentPrice: { type: Number, required: true },
+    candlesUsed: { type: Number, required: true },
+  },
+  { _id: false },
+);
+
 const momentumModuleSchema = new Schema(
   {
     type: {
@@ -504,6 +519,21 @@ const momentumModuleSchema = new Schema(
     module: { type: String, required: true },
     symbol: { type: String, required: true },
     meta: { type: momentumMetaSchema, required: true },
+  },
+  { _id: false },
+);
+
+const zonesModuleSchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: ['scoring'],
+      required: true,
+      default: 'scoring',
+    },
+    module: { type: String, required: true },
+    symbol: { type: String, required: true },
+    meta: { type: zonesMetaSchema, required: true },
   },
   { _id: false },
 );
@@ -537,6 +567,7 @@ const analysisModulesSchema = new Schema(
     // New modules (for data collection only)
     volume: { type: volumeModuleSchema, required: false, default: null },
     momentum: { type: momentumModuleSchema, required: false, default: null },
+    zones: { type: zonesModuleSchema, required: false, default: null },
   },
   { _id: false },
 );
